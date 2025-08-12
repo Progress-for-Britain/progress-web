@@ -2,7 +2,7 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "build" ]
 
 jobs:
   build-and-deploy:
@@ -24,9 +24,9 @@ jobs:
   
       - name: 🏗️ Build Expo web app
         working-directory: ./frontend
-        env:
-            REACT_APP_API_BASE_URL: ${{ secrets.APP_URL }}
-            EXPO_PUBLIC_STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUB_KEY }}
+        # env:
+        #     REACT_APP_API_BASE_URL: ${{ secrets.APP_URL }}
+        #     EXPO_PUBLIC_STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUB_KEY }}
         run: npm run build:web
   
       - name: 🔐 Set up SSH
