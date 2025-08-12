@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { AuthProvider } from "../lib/auth-context";
+import { AuthProvider } from "../util/auth-context";
 import "../global.css";
 
 export default function Layout() {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { Stack, useRouter, Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../lib/auth-context';
+import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
 
 export default function Register() {

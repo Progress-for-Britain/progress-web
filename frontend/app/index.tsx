@@ -1,208 +1,682 @@
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Platform } from "react-native";
+import React, { useEffect } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Platform, Dimensions, ImageBackground } from "react-native";
 import { Link, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  withSpring,
+  withRepeat,
+  withSequence,
+  interpolate,
+  Extrapolate
+} from "react-native-reanimated";
 import Header from "../components/Header";
 
 export default function Home() {
-  const PartyValue = ({ title, description, delay = 0 }: { title: string; description: string; delay?: number }) => (
-    <View 
-      className="bg-white rounded-xl p-6 shadow-lg animate-fade-in"
-      style={{ 
-        backgroundColor: '#ffffff', 
-        borderRadius: 12, 
-        padding: 24, 
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 8,
-        marginBottom: 24,
-        ...(Platform.OS === 'web' && {
-          animationDelay: `${delay}ms`,
-        })
-      }}
-    >
-      <Text className="text-xl font-bold text-gray-900 mb-3" style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 12 }}>
-        {title}
-      </Text>
-      <Text className="text-gray-600 leading-relaxed" style={{ color: '#4B5563', lineHeight: 24 }}>
-        {description}
-      </Text>
-    </View>
-  );
+  const fadeAnim = useSharedValue(0);
+  const slideAnim = useSharedValue(50);
+  const rotateAnim = useSharedValue(0);
 
-  const ActionButton = ({ href, children, variant = 'primary' }: { href: string; children: React.ReactNode; variant?: 'primary' | 'secondary' }) => (
-    <Link href={href} asChild>
-      <TouchableOpacity
-        style={{
-          backgroundColor: variant === 'primary' ? '#d946ef' : 'transparent',
-          borderWidth: variant === 'primary' ? 0 : 2,
-          borderColor: '#d946ef',
-          borderRadius: 12,
-          paddingHorizontal: 32,
-          paddingVertical: 16,
-          marginHorizontal: 8,
-          marginBottom: 16,
-          ...(Platform.OS === 'web' && { cursor: 'pointer' })
-        }}
+  useEffect(() => {
+    // Animate elements on mount
+    fadeAnim.value = withTiming(1, { duration: 1000 });
+    slideAnim.value = withSpring(0, { damping: 15 });
+
+    // Rotation animation for decorative elements
+    rotateAnim.value = withRepeat(
+      withTiming(360, { duration: 20000 }),
+      -1
+    );
+  }, []);
+
+  const fadeInStyle = useAnimatedStyle(() => ({
+    opacity: fadeAnim.value,
+    transform: [{ translateY: slideAnim.value }],
+  }));
+
+  const rotateStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotateAnim.value}deg` }],
+  }));
+
+  const PartyValue = ({ 
+    title, 
+    description, 
+    icon, 
+    iconLibrary = 'Ionicons',
+    delay = 0,
+    color = '#d946ef' 
+  }: { 
+    title: string; 
+    description: string; 
+    icon: string;
+    iconLibrary?: 'Ionicons' | 'MaterialIcons' | 'FontAwesome5';
+    delay?: number;
+    color?: string;
+  }) => {
+    const itemAnim = useSharedValue(0);
+    const scaleAnim = useSharedValue(0.8);
+
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        itemAnim.value = withSpring(1, { damping: 12 });
+        scaleAnim.value = withSpring(1, { damping: 15 });
+      }, delay);
+      return () => clearTimeout(timer);
+    }, [delay]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      opacity: itemAnim.value,
+      transform: [
+        { scale: scaleAnim.value },
+        { translateY: interpolate(itemAnim.value, [0, 1], [30, 0], Extrapolate.CLAMP) }
+      ],
+    }));
+
+    const IconComponent = iconLibrary === 'MaterialIcons' ? MaterialIcons : 
+                         iconLibrary === 'FontAwesome5' ? FontAwesome5 : Ionicons;
+
+    return (
+      <Animated.View 
+        style={[
+          {
+            backgroundColor: '#ffffff',
+            borderRadius: 20,
+            padding: 24,
+            marginBottom: 20,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.12,
+            shadowRadius: 20,
+            elevation: 12,
+            borderLeftWidth: 5,
+            borderLeftColor: color,
+            ...(Platform.OS === 'web' && {
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+            })
+          },
+          animatedStyle
+        ]}
       >
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+          <View 
+            style={{
+              backgroundColor: color + '20',
+              borderRadius: 12,
+              padding: 12,
+              marginRight: 16,
+            }}
+          >
+            <IconComponent name={icon as any} size={28} color={color} />
+          </View>
+          <Text 
+            style={{ 
+              fontSize: 22, 
+              fontWeight: 'bold', 
+              color: '#111827',
+              flex: 1,
+              lineHeight: 28
+            }}
+          >
+            {title}
+          </Text>
+        </View>
         <Text 
           style={{ 
-            color: variant === 'primary' ? '#ffffff' : '#d946ef',
-            fontSize: 18,
-            fontWeight: '600',
-            textAlign: 'center'
+            color: '#4B5563', 
+            lineHeight: 24,
+            fontSize: 16
           }}
         >
-          {children}
+          {description}
         </Text>
-      </TouchableOpacity>
-    </Link>
+      </Animated.View>
+    );
+  };
+
+  const ActionButton = ({ 
+    href, 
+    children, 
+    variant = 'primary',
+    icon,
+    iconLibrary = 'Ionicons'
+  }: { 
+    href: string; 
+    children: React.ReactNode; 
+    variant?: 'primary' | 'secondary' | 'accent';
+    icon?: string;
+    iconLibrary?: 'Ionicons' | 'MaterialIcons' | 'FontAwesome5';
+  }) => {
+    const buttonAnim = useSharedValue(1);
+    
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: buttonAnim.value }],
+    }));
+
+    const handlePressIn = () => {
+      buttonAnim.value = withSpring(0.95);
+    };
+
+    const handlePressOut = () => {
+      buttonAnim.value = withSpring(1);
+    };
+
+    const getButtonStyles = () => {
+      switch (variant) {
+        case 'primary':
+          return {
+            backgroundColor: '#d946ef',
+            borderWidth: 0,
+          };
+        case 'secondary':
+          return {
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderColor: '#d946ef',
+          };
+        case 'accent':
+          return {
+            backgroundColor: '#0ea5e9',
+            borderWidth: 0,
+          };
+        default:
+          return {
+            backgroundColor: '#d946ef',
+            borderWidth: 0,
+          };
+      }
+    };
+
+    const getTextColor = () => {
+      return variant === 'secondary' ? '#d946ef' : '#ffffff';
+    };
+
+    const IconComponent = iconLibrary === 'MaterialIcons' ? MaterialIcons : 
+                         iconLibrary === 'FontAwesome5' ? FontAwesome5 : Ionicons;
+
+    return (
+      <Link href={href} asChild>
+        <TouchableOpacity
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          style={{
+            ...getButtonStyles(),
+            borderRadius: 16,
+            paddingHorizontal: 32,
+            paddingVertical: 18,
+            marginHorizontal: 8,
+            marginBottom: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 200,
+            ...(Platform.OS === 'web' && { cursor: 'pointer' })
+          }}
+        >
+          <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }, animatedStyle]}>
+            {icon && (
+              <IconComponent 
+                name={icon as any} 
+                size={20} 
+                color={getTextColor()} 
+                style={{ marginRight: 8 }} 
+              />
+            )}
+            <Text 
+              style={{ 
+                color: getTextColor(),
+                fontSize: 18,
+                fontWeight: '700',
+                textAlign: 'center'
+              }}
+            >
+              {children}
+            </Text>
+          </Animated.View>
+        </TouchableOpacity>
+      </Link>
+    );
+  };
+
+  const StatCard = ({ number, label, icon }: { number: string; label: string; icon: string }) => (
+    <Animated.View 
+      style={[
+        {
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: 16,
+          padding: 20,
+          alignItems: 'center',
+          marginHorizontal: 8,
+          minWidth: 120,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8,
+        }
+      ]}
+    >
+      <Ionicons name={icon as any} size={32} color="#d946ef" style={{ marginBottom: 8 }} />
+      <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#111827', marginBottom: 4 }}>
+        {number}
+      </Text>
+      <Text style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', fontWeight: '600' }}>
+        {label}
+      </Text>
+    </Animated.View>
   );
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="dark" />
-      <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <StatusBar style="light" />
+      <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
         <Header />
         
-        <ScrollView style={{ flex: 1 }}>
-          {/* Hero Section */}
-          <View 
-            className="bg-gradient-to-br from-magenta-500 to-magenta-700"
-            style={{ 
-              backgroundColor: '#d946ef',
-              paddingVertical: 80,
-              paddingHorizontal: 16,
-              alignItems: 'center',
-              justifyContent: 'center'
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          {/* Hero Section with Background Image */}
+          <ImageBackground
+            source={{ 
+              uri: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'
             }}
+            style={{ 
+              paddingVertical: 100,
+              paddingHorizontal: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            resizeMode="cover"
           >
-            <Text 
-              className="text-4xl md:text-6xl font-bold text-white text-center mb-6 animate-slide-up"
-              style={{ 
-                fontSize: Platform.OS === 'web' ? 48 : 32,
-                fontWeight: 'bold',
-                color: '#ffffff',
-                textAlign: 'center',
-                marginBottom: 24,
-                lineHeight: Platform.OS === 'web' ? 56 : 40
+            {/* Dark overlay for better text readability */}
+            <View 
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(30, 41, 59, 0.7)', // Dark overlay
               }}
-            >
-              Building Progress Together
-            </Text>
-            <Text 
-              className="text-xl text-magenta-100 text-center max-w-2xl mb-8 animate-fade-in"
-              style={{ 
-                fontSize: 18,
-                color: '#f5d0fe',
-                textAlign: 'center',
-                marginBottom: 32,
-                lineHeight: 28,
-                maxWidth: 600
-              }}
-            >
-              Join us in creating a future where equality, sustainability, and innovation drive meaningful change for all.
-            </Text>
-            
-            <View style={{ flexDirection: Platform.OS === 'web' ? 'row' : 'column', alignItems: 'center' }}>
-              <ActionButton href="/join">Join Our Movement</ActionButton>
-              <ActionButton href="/donate" variant="secondary">Support Our Cause</ActionButton>
-            </View>
-          </View>
+            />
+            {/* Animated Background Elements */}
+            <Animated.View 
+              style={[
+                {
+                  position: 'absolute',
+                  top: 50,
+                  right: 30,
+                  width: 100,
+                  height: 100,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: 50,
+                },
+                rotateStyle
+              ]}
+            />
+            <Animated.View 
+              style={[
+                {
+                  position: 'absolute',
+                  bottom: 40,
+                  left: 20,
+                  width: 60,
+                  height: 60,
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  borderRadius: 30,
+                },
+                rotateStyle
+              ]}
+            />
+
+            <Animated.View style={fadeInStyle}>
+              <View style={{ alignItems: 'center', maxWidth: 800 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+                  <FontAwesome5 name="flag" size={32} color="#ffffff" style={{ marginRight: 12 }} />
+                  <Text 
+                    style={{ 
+                      fontSize: 18,
+                      fontWeight: '600',
+                      color: '#f0f9ff',
+                      letterSpacing: 2,
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    Progressive UK
+                  </Text>
+                </View>
+                
+                <Text 
+                  style={{ 
+                    fontSize: Platform.OS === 'web' ? 56 : 36,
+                    fontWeight: 'bold',
+                    color: '#ffffff',
+                    textAlign: 'center',
+                    marginBottom: 24,
+                    lineHeight: Platform.OS === 'web' ? 64 : 44,
+                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                    textShadowOffset: { width: 0, height: 2 },
+                    textShadowRadius: 4,
+                  }}
+                >
+                  Unleashing Britain's Potential
+                </Text>
+                
+                <Text 
+                  style={{ 
+                    fontSize: 20,
+                    color: '#e0f2fe',
+                    textAlign: 'center',
+                    marginBottom: 40,
+                    lineHeight: 30,
+                    maxWidth: 600,
+                    fontWeight: '400'
+                  }}
+                >
+                  From unicorn farms to prosperity zones, building the innovation economy that works for everyone, everywhere.
+                </Text>
+                
+                {/* Statistics Row */}
+                <View style={{ 
+                  flexDirection: Platform.OS === 'web' ? 'row' : 'column', 
+                  alignItems: 'center',
+                  marginBottom: 40,
+                  flexWrap: 'wrap',
+                  justifyContent: 'center'
+                }}>
+                  <StatCard number="50K+" label="Members" icon="people" />
+                  <StatCard number="200+" label="Constituencies" icon="location" />
+                  <StatCard number="£2M+" label="Raised" icon="trending-up" />
+                </View>
+                
+                <View style={{ 
+                  flexDirection: Platform.OS === 'web' ? 'row' : 'column', 
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center'
+                }}>
+                  <ActionButton href="/join" icon="person-add" iconLibrary="Ionicons">
+                    Join Our Movement
+                  </ActionButton>
+                  <ActionButton href="/donate" variant="secondary" icon="heart" iconLibrary="Ionicons">
+                    Support Our Cause
+                  </ActionButton>
+                </View>
+              </View>
+            </Animated.View>
+          </ImageBackground>
 
           {/* Party Values Section */}
-          <View style={{ maxWidth: 1200, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 80 }}>
-            <Text 
-              className="text-3xl font-bold text-center text-gray-900 mb-4"
-              style={{ fontSize: 32, fontWeight: 'bold', textAlign: 'center', color: '#111827', marginBottom: 16 }}
-            >
-              Our Core Values
-            </Text>
-            <Text 
-              className="text-lg text-gray-600 text-center mb-12"
-              style={{ fontSize: 18, color: '#6B7280', textAlign: 'center', marginBottom: 48, lineHeight: 28 }}
-            >
-              The principles that guide our vision for a better tomorrow
-            </Text>
+          <View style={{ maxWidth: 1200, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 80 }}>
+            <Animated.View style={fadeInStyle}>
+              <View style={{ alignItems: 'center', marginBottom: 60 }}>
+                <MaterialIcons name="stars" size={48} color="#d946ef" style={{ marginBottom: 16 }} />
+                <Text 
+                  style={{ 
+                    fontSize: 40, 
+                    fontWeight: 'bold', 
+                    textAlign: 'center', 
+                    color: '#111827', 
+                    marginBottom: 16 
+                  }}
+                >
+                  Our Policy Vision
+                </Text>
+                <Text 
+                  style={{ 
+                    fontSize: 20, 
+                    color: '#6B7280', 
+                    textAlign: 'center', 
+                    lineHeight: 30,
+                    maxWidth: 600
+                  }}
+                >
+                  Bold policies to drive innovation, prosperity, and justice across Britain
+                </Text>
+              </View>
+            </Animated.View>
 
-            <View style={{ maxWidth: 800, alignSelf: 'center' }}>
+            <View style={{ maxWidth: 900, alignSelf: 'center' }}>
               <PartyValue
-                title="🌍 Environmental Justice"
-                description="We believe in protecting our planet for future generations through sustainable policies, renewable energy initiatives, and environmental restoration programs that create jobs while healing our Earth."
+                title="Innovation Economy"
+                description="Making Britain the world's largest unicorn farm through targeted investment in technology, startups, and R&D. Funding innovation with smart property policies that drive growth in every region."
+                icon="rocket"
+                iconLibrary="Ionicons"
+                color="#8b5cf6"
                 delay={200}
               />
               
               <PartyValue
-                title="⚖️ Social Equality"
-                description="Every person deserves equal rights, opportunities, and dignity regardless of their background, identity, or circumstances. We fight for justice in healthcare, education, housing, and employment."
+                title="Prosperity Zones"
+                description="Special Economic Zones giving the North its own back - dedicated areas with tax incentives, streamlined regulations, and focused investment to rebalance the UK economy away from London."
+                icon="trending-up"
+                iconLibrary="Ionicons"
+                color="#10b981"
                 delay={400}
               />
               
               <PartyValue
-                title="💡 Innovation & Progress"
-                description="Embracing technology and innovation to solve complex problems, while ensuring that progress benefits everyone, not just the privileged few. We invest in education, research, and digital infrastructure."
+                title="Cost of Living Relief"
+                description="Driving down everyday costs through strategic policies on housing, energy, and essentials. Making life affordable for working families while building long-term economic resilience."
+                icon="cash"
+                iconLibrary="Ionicons"
+                color="#f59e0b"
                 delay={600}
               />
               
               <PartyValue
-                title="🤝 Community Empowerment"
-                description="Strengthening local communities through grassroots democracy, supporting small businesses, and ensuring every voice is heard in the decisions that affect their lives."
+                title="Skill Capital Investment"
+                description="Deep focus on building Britain's human capital through vocational training, apprenticeships, and lifelong learning. Creating the skilled workforce for tomorrow's economy."
+                icon="school"
+                iconLibrary="Ionicons"
+                color="#ef4444"
                 delay={800}
               />
               
               <PartyValue
-                title="🏥 Universal Healthcare"
-                description="Healthcare is a human right. We advocate for accessible, affordable healthcare for all, including mental health services, preventive care, and support for vulnerable populations."
+                title="Worker Partnership"
+                description="Returning paid overtime and creating employee partnership schemes. Dual-mandate unions that balance worker rights with economic competitiveness and productivity growth."
+                icon="people"
+                iconLibrary="Ionicons"
+                color="#0ea5e9"
                 delay={1000}
               />
               
               <PartyValue
-                title="📚 Education for All"
-                description="Quality education should be accessible to everyone, from early childhood through higher education and vocational training. We support teachers, modernize curricula, and eliminate educational debt barriers."
+                title="Open Justice & Safety"
+                description="Championing open justice with transparent courts and processes. Building an anti-crime culture through community engagement, prevention, and unified judicial services."
+                icon="shield-checkmark"
+                iconLibrary="Ionicons"
+                color="#d946ef"
                 delay={1200}
               />
+            </View>
+          </View>
+
+          {/* Featured Initiatives Section */}
+          <View 
+            style={{ 
+              backgroundColor: '#f1f5f9',
+              paddingVertical: 80,
+              paddingHorizontal: 20,
+            }}
+          >
+            <View style={{ maxWidth: 1200, alignSelf: 'center' }}>
+              <Text 
+                style={{ 
+                  fontSize: 36,
+                  fontWeight: 'bold',
+                  color: '#111827',
+                  textAlign: 'center',
+                  marginBottom: 16
+                }}
+              >
+                Current Campaigns
+              </Text>
+              <Text 
+                style={{ 
+                  fontSize: 18,
+                  color: '#6B7280',
+                  textAlign: 'center',
+                  marginBottom: 50,
+                  lineHeight: 28
+                }}
+              >
+                Active initiatives making real change happen today
+              </Text>
+
+              <View style={{ 
+                flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+                flexWrap: 'wrap',
+                justifyContent: 'space-between',
+                gap: 20
+              }}>
+                {[
+                  { title: "Unicorn Farms", icon: "rocket", color: "#8b5cf6" },
+                  { title: "Prosperity Zones", icon: "business", color: "#10b981" },
+                  { title: "Skills Capital", icon: "school", color: "#f59e0b" },
+                  { title: "Open Justice", icon: "shield-checkmark", color: "#ef4444" }
+                ].map((campaign, index) => (
+                  <Animated.View 
+                    key={campaign.title}
+                    style={[
+                      {
+                        backgroundColor: '#ffffff',
+                        borderRadius: 16,
+                        padding: 30,
+                        alignItems: 'center',
+                        flex: Platform.OS === 'web' ? 1 : undefined,
+                        minWidth: 200,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 6 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 15,
+                        elevation: 10,
+                      }
+                    ]}
+                  >
+                    <View 
+                      style={{
+                        backgroundColor: campaign.color + '20',
+                        borderRadius: 20,
+                        padding: 20,
+                        marginBottom: 16,
+                      }}
+                    >
+                      <Ionicons name={campaign.icon as any} size={36} color={campaign.color} />
+                    </View>
+                    <Text 
+                      style={{ 
+                        fontSize: 18, 
+                        fontWeight: 'bold', 
+                        color: '#111827',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {campaign.title}
+                    </Text>
+                  </Animated.View>
+                ))}
+              </View>
             </View>
           </View>
 
           {/* Call to Action Section */}
           <View 
             style={{ 
-              backgroundColor: '#f3f4f6',
-              paddingVertical: 60,
-              paddingHorizontal: 16,
-              alignItems: 'center'
+              backgroundColor: '#1e293b',
+              paddingVertical: 80,
+              paddingHorizontal: 20,
+              alignItems: 'center',
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
-            <Text 
-              style={{ 
-                fontSize: 28,
-                fontWeight: 'bold',
-                color: '#111827',
-                textAlign: 'center',
-                marginBottom: 16
-              }}
-            >
-              Ready to Make a Difference?
-            </Text>
-            <Text 
-              style={{ 
-                fontSize: 18,
-                color: '#6B7280',
-                textAlign: 'center',
-                marginBottom: 32,
-                lineHeight: 28,
-                maxWidth: 600
-              }}
-            >
-              Your voice matters. Join thousands of progressive citizens working together to build a better future.
-            </Text>
+            {/* Animated background elements */}
+            <Animated.View 
+              style={[
+                {
+                  position: 'absolute',
+                  top: -50,
+                  right: -50,
+                  width: 200,
+                  height: 200,
+                  backgroundColor: 'rgba(217, 70, 239, 0.1)',
+                  borderRadius: 100,
+                },
+                rotateStyle
+              ]}
+            />
             
-            <View style={{ flexDirection: Platform.OS === 'web' ? 'row' : 'column', alignItems: 'center' }}>
-              <ActionButton href="/join">Become a Member</ActionButton>
-              <ActionButton href="/volunteer" variant="secondary">Volunteer Today</ActionButton>
+            <View style={{ maxWidth: 800, alignItems: 'center' }}>
+              <Text 
+                style={{ 
+                  fontSize: 40,
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  textAlign: 'center',
+                  marginBottom: 20
+                }}
+              >
+                Ready to Unleash Britain's Potential?
+              </Text>
+              <Text 
+                style={{ 
+                  fontSize: 20,
+                  color: '#cbd5e1',
+                  textAlign: 'center',
+                  marginBottom: 40,
+                  lineHeight: 30
+                }}
+              >
+                Join the movement for innovation, prosperity, and progress. From unicorn farms to prosperity zones - let's build the future together.
+              </Text>
+              
+              <View style={{ 
+                flexDirection: Platform.OS === 'web' ? 'row' : 'column', 
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                justifyContent: 'center'
+              }}>
+                <ActionButton href="/join" icon="person-add" iconLibrary="Ionicons">
+                  Become a Member
+                </ActionButton>
+                <ActionButton href="/volunteer" variant="accent" icon="people" iconLibrary="Ionicons">
+                  Volunteer Today
+                </ActionButton>
+                <ActionButton href="/donate" variant="secondary" icon="heart" iconLibrary="Ionicons">
+                  Donate Now
+                </ActionButton>
+              </View>
+
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                marginTop: 40,
+                flexWrap: 'wrap',
+                justifyContent: 'center'
+              }}>
+                <Text style={{ color: '#94a3b8', fontSize: 16, marginRight: 20 }}>
+                  Follow our progress:
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 15 }}>
+                  <TouchableOpacity style={{ padding: 10 }}>
+                    <FontAwesome5 name="twitter" size={24} color="#1da1f2" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={{ padding: 10 }}>
+                    <FontAwesome5 name="facebook" size={24} color="#4267b2" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={{ padding: 10 }}>
+                    <FontAwesome5 name="instagram" size={24} color="#e4405f" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={{ padding: 10 }}>
+                    <FontAwesome5 name="youtube" size={24} color="#ff0000" />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           </View>
         </ScrollView>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, ScrollView, TextInput } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../lib/auth-context';
+import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
 
 export default function Newsroom() {

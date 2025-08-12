@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Platform, ScrollView } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../lib/auth-context';
+import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
 
 export default function Account() {
