@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import { useContext } from 'react';
 import AuthContext from '../context/AuthContext';
@@ -7,24 +7,41 @@ export default function Header() {
   const { user, logout } = useContext(AuthContext);
 
   return (
-    <View className="bg-primary p-4">
+    <View style={styles.header}>
       {user ? (
-        <View className="flex-row space-x-4">
-          <Link href="/account" className="text-white font-bold">Account Home</Link>
-          <Link href="/newsroom" className="text-white font-bold">Newsroom</Link>
-          <Link href="/settings" className="text-white font-bold">Settings</Link>
+        <View style={styles.row}>
+          <Link href="/account" style={styles.link}>Account Home</Link>
+          <Link href="/newsroom" style={styles.link}>Newsroom</Link>
+          <Link href="/settings" style={styles.link}>Settings</Link>
           <Pressable onPress={logout}>
-            <Text className="text-white font-bold">Logout</Text>
+            <Text style={styles.link}>Logout</Text>
           </Pressable>
         </View>
       ) : (
-        <View className="flex-row space-x-4">
-          <Link href="/" className="text-white font-bold">Home</Link>
-          <Link href="/donate" className="text-white font-bold">Donate</Link>
-          <Link href="/join-us" className="text-white font-bold">Join Us</Link>
-          <Link href="/login" className="text-white font-bold">Login</Link>
+        <View style={styles.row}>
+          <Link href="/" style={styles.link}>Home</Link>
+          <Link href="/donate" style={styles.link}>Donate</Link>
+          <Link href="/join-us" style={styles.link}>Join Us</Link>
+          <Link href="/login" style={styles.link}>Login</Link>
         </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    backgroundColor: '#007bff', // Replace with your primary color
+    padding: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  link: {
+    color: '#fff',
+    fontWeight: 'bold',
+    marginRight: 16,
+  },
+});

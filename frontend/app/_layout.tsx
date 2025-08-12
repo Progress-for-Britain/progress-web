@@ -6,7 +6,7 @@ import { AuthProvider } from "../src/context/AuthContext";
 export default function Layout() {
   return (
     <AuthProvider>
-      <View className="flex-1">
+      <View style={{ flex: 1 }}>
         <Header />
         <Stack screenOptions={{ headerShown: false }} />
       </View>
