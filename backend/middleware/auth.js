@@ -59,9 +59,21 @@ const requireUserOrAdmin = (req, res, next) => {
   next();
 };
 
+// Middleware for writer or admin access (for creating posts)
+const requireWriterOrAdmin = (req, res, next) => {
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'WRITER') {
+    return res.status(403).json({
+      success: false,
+      message: 'Writer or Admin access required'
+    });
+  }
+  next();
+};
+
 module.exports = {
   authenticateToken,
   requireAdmin,
   requireOwnerOrAdmin,
-  requireUserOrAdmin
+  requireUserOrAdmin,
+  requireWriterOrAdmin
 };

@@ -15,6 +15,7 @@ datasource db {
 
 enum UserRole {
   ADMIN
+  WRITER
   MEMBER
   VOLUNTEER
 }
@@ -22,6 +23,21 @@ enum UserRole {
 enum SubStatus {
   ACTIVE
   INACTIVE
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PostCategory {
+  NEWS
+  POLICY
+  CAMPAIGNS
+  EVENTS
+  VICTORIES
+  PRESS
 }
 
 model User {
@@ -39,6 +55,8 @@ model User {
   payments               Payment[]
   notificationPreferences NotificationPreferences?
   privacySettings        PrivacySettings?
+  posts                  Post[]
+  reactions              Reaction[]
   
   @@map("users")
 }
@@ -92,4 +110,45 @@ model PrivacySettings {
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("privacy_settings")
+}
+
+model Post {
+  id          String      @id @default(cuid())
+  title       String
+  content     String      @db.Text
+  excerpt     String?     // Short summary for preview
+  category    PostCategory @default(NEWS)
+  status      PostStatus  @default(DRAFT)
+  featured    Boolean     @default(false)
+  readTime    Int?        // Estimated read time in minutes
+  imageUrl    String?     // Optional featured image
+  tags        String[]    // Array of tags for better organization
+  publishedAt DateTime?   // When the post was published
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Foreign key to User (author)
+  authorId    String
+  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Relationships
+  reactions   Reaction[]
+  
+  @@map("posts")
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  emoji     String   // The emoji used for reaction (👍, ❤️, 🎉, etc.)
+  createdAt DateTime @default(now())
+  
+  // Foreign keys
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  // Ensure one reaction per user per post
+  @@unique([userId, postId])
+  @@map("reactions")
 }

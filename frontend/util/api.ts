@@ -7,7 +7,7 @@ export interface User {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  role: 'ADMIN' | 'MEMBER' | 'VOLUNTEER';
+  role: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
   address: string | null;
   createdAt: string;
   updatedAt?: string;
@@ -76,7 +76,7 @@ export interface RegisterRequest {
   firstName?: string;
   lastName?: string;
   address?: string;
-  role?: 'ADMIN' | 'MEMBER' | 'VOLUNTEER';
+  role?: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
 }
 
 export interface UpdateUserRequest {
@@ -84,7 +84,92 @@ export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
   address?: string;
-  role?: 'ADMIN' | 'MEMBER' | 'VOLUNTEER';
+  role?: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
+}
+
+// News/Posts interfaces
+export interface Post {
+  id: string;
+  title: string;
+  content: string;
+  excerpt: string | null;
+  category: 'NEWS' | 'POLICY' | 'CAMPAIGNS' | 'EVENTS' | 'VICTORIES' | 'PRESS';
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  featured: boolean;
+  readTime: number | null;
+  imageUrl: string | null;
+  tags: string[];
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  authorId: string;
+  author: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    role: string;
+  };
+  reactionCounts: { [emoji: string]: number };
+  _count: {
+    reactions: number;
+  };
+}
+
+export interface Reaction {
+  id: string;
+  emoji: string;
+  createdAt: string;
+  userId: string;
+  postId: string;
+  user: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+  };
+}
+
+export interface CreatePostRequest {
+  title: string;
+  content: string;
+  excerpt?: string;
+  category?: 'NEWS' | 'POLICY' | 'CAMPAIGNS' | 'EVENTS' | 'VICTORIES' | 'PRESS';
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  featured?: boolean;
+  readTime?: number;
+  imageUrl?: string;
+  tags?: string[];
+}
+
+export interface UpdatePostRequest {
+  title?: string;
+  content?: string;
+  excerpt?: string;
+  category?: 'NEWS' | 'POLICY' | 'CAMPAIGNS' | 'EVENTS' | 'VICTORIES' | 'PRESS';
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  featured?: boolean;
+  readTime?: number;
+  imageUrl?: string;
+  tags?: string[];
+}
+
+export interface PostsResponse {
+  posts: Post[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface ReactionSummary {
+  emoji: string;
+  count: number;
+  users: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+  }[];
 }
 
 export interface AuthResponse {
@@ -94,7 +179,7 @@ export interface AuthResponse {
     user: {
       id: string;
       email: string;
-      role: 'ADMIN' | 'MEMBER' | 'VOLUNTEER';
+      role: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
       firstName: string | null;
       lastName: string | null;
       address?: string | null;
@@ -227,15 +312,95 @@ class ApiClient {
     return response.data;
   }
 
-  // News endpoints
-  async getNews(): Promise<any[]> {
-    const response = await this.client.get<any[]>('/news');
+  // News/Posts endpoints
+  async getAllPosts(params?: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    search?: string;
+    featured?: boolean;
+  }): Promise<PostsResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.featured !== undefined) queryParams.append('featured', params.featured.toString());
+
+    const response = await this.client.get<{success: boolean; data: PostsResponse}>(
+      `/api/news?${queryParams.toString()}`
+    );
+    return response.data.data;
+  }
+
+  async getPostById(id: string): Promise<Post> {
+    const response = await this.client.get<{success: boolean; data: Post}>(`/api/news/${id}`);
+    return response.data.data;
+  }
+
+  async createPost(postData: CreatePostRequest): Promise<Post> {
+    const response = await this.client.post<{success: boolean; data: Post; message: string}>(
+      '/api/news', 
+      postData
+    );
+    return response.data.data;
+  }
+
+  async updatePost(id: string, postData: UpdatePostRequest): Promise<Post> {
+    const response = await this.client.put<{success: boolean; data: Post; message: string}>(
+      `/api/news/${id}`, 
+      postData
+    );
+    return response.data.data;
+  }
+
+  async deletePost(id: string): Promise<void> {
+    await this.client.delete<{success: boolean; message: string}>(`/api/news/${id}`);
+  }
+
+  async getMyPosts(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }): Promise<PostsResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.status) queryParams.append('status', params.status);
+
+    const response = await this.client.get<{success: boolean; data: PostsResponse}>(
+      `/api/news/author/my-posts?${queryParams.toString()}`
+    );
+    return response.data.data;
+  }
+
+  async toggleReaction(postId: string, emoji: string): Promise<{
+    success: boolean;
+    data?: Reaction;
+    message: string;
+    action: 'added' | 'updated' | 'removed';
+  }> {
+    const response = await this.client.post<{
+      success: boolean;
+      data?: Reaction;
+      message: string;
+      action: 'added' | 'updated' | 'removed';
+    }>(`/api/news/${postId}/reactions`, { emoji });
     return response.data;
   }
 
-  async getNewsById(id: string): Promise<any> {
-    const response = await this.client.get<any>(`/news/${id}`);
-    return response.data;
+  async getPostReactions(postId: string): Promise<{
+    reactions: Reaction[];
+    summary: ReactionSummary[];
+  }> {
+    const response = await this.client.get<{
+      success: boolean;
+      data: {
+        reactions: Reaction[];
+        summary: ReactionSummary[];
+      };
+    }>(`/api/news/${postId}/reactions`);
+    return response.data.data;
   }
 }
 
