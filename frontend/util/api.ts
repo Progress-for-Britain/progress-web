@@ -12,6 +12,44 @@ export interface User {
   createdAt: string;
   updatedAt?: string;
   payments?: Payment[];
+  notificationPreferences?: NotificationPreferences;
+  privacySettings?: PrivacySettings;
+}
+
+export interface NotificationPreferences {
+  id: string;
+  userId: string;
+  emailNewsletter: boolean;
+  eventNotifications: boolean;
+  donationReminders: boolean;
+  pushNotifications: boolean;
+  smsUpdates: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PrivacySettings {
+  id: string;
+  userId: string;
+  publicProfile: boolean;
+  shareActivity: boolean;
+  allowMessages: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateNotificationPreferencesRequest {
+  emailNewsletter?: boolean;
+  eventNotifications?: boolean;
+  donationReminders?: boolean;
+  pushNotifications?: boolean;
+  smsUpdates?: boolean;
+}
+
+export interface UpdatePrivacySettingsRequest {
+  publicProfile?: boolean;
+  shareActivity?: boolean;
+  allowMessages?: boolean;
 }
 
 export interface Payment {
@@ -147,6 +185,28 @@ class ApiClient {
 
   async deleteUser(id: string): Promise<void> {
     await this.client.delete<{success: boolean; message: string}>(`/api/users/${id}`);
+  }
+
+  // Notification preferences endpoints
+  async getNotificationPreferences(userId: string): Promise<NotificationPreferences> {
+    const response = await this.client.get<{success: boolean; data: NotificationPreferences}>(`/api/users/${userId}/notifications`);
+    return response.data.data;
+  }
+
+  async updateNotificationPreferences(userId: string, preferences: UpdateNotificationPreferencesRequest): Promise<NotificationPreferences> {
+    const response = await this.client.put<{success: boolean; message: string; data: NotificationPreferences}>(`/api/users/${userId}/notifications`, preferences);
+    return response.data.data;
+  }
+
+  // Privacy settings endpoints
+  async getPrivacySettings(userId: string): Promise<PrivacySettings> {
+    const response = await this.client.get<{success: boolean; data: PrivacySettings}>(`/api/users/${userId}/privacy`);
+    return response.data.data;
+  }
+
+  async updatePrivacySettings(userId: string, settings: UpdatePrivacySettingsRequest): Promise<PrivacySettings> {
+    const response = await this.client.put<{success: boolean; message: string; data: PrivacySettings}>(`/api/users/${userId}/privacy`, settings);
+    return response.data.data;
   }
 
   // Health check endpoint

@@ -28,7 +28,9 @@ const getAllUsers = async (req, res) => {
             endDate: true,
             nextBillingDate: true
           }
-        }
+        },
+        notificationPreferences: true,
+        privacySettings: true
       }
     });
 
@@ -75,7 +77,9 @@ const getUserById = async (req, res) => {
             endDate: true,
             nextBillingDate: true
           }
-        }
+        },
+        notificationPreferences: true,
+        privacySettings: true
       }
     });
 
@@ -338,11 +342,189 @@ const loginUser = async (req, res) => {
   }
 };
 
+// Get user's notification preferences
+const getNotificationPreferences = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let preferences = await prisma.notificationPreferences.findUnique({
+      where: { userId: id }
+    });
+
+    // If preferences don't exist, create default ones
+    if (!preferences) {
+      preferences = await prisma.notificationPreferences.create({
+        data: {
+          userId: id,
+          emailNewsletter: true,
+          eventNotifications: true,
+          donationReminders: false,
+          pushNotifications: true,
+          smsUpdates: false
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: preferences
+    });
+  } catch (error) {
+    console.error('Error fetching notification preferences:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch notification preferences',
+      error: error.message
+    });
+  }
+};
+
+// Update user's notification preferences
+const updateNotificationPreferences = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { emailNewsletter, eventNotifications, donationReminders, pushNotifications, smsUpdates } = req.body;
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Upsert notification preferences
+    const preferences = await prisma.notificationPreferences.upsert({
+      where: { userId: id },
+      create: {
+        userId: id,
+        emailNewsletter: emailNewsletter ?? true,
+        eventNotifications: eventNotifications ?? true,
+        donationReminders: donationReminders ?? false,
+        pushNotifications: pushNotifications ?? true,
+        smsUpdates: smsUpdates ?? false
+      },
+      update: {
+        ...(emailNewsletter !== undefined && { emailNewsletter }),
+        ...(eventNotifications !== undefined && { eventNotifications }),
+        ...(donationReminders !== undefined && { donationReminders }),
+        ...(pushNotifications !== undefined && { pushNotifications }),
+        ...(smsUpdates !== undefined && { smsUpdates })
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Notification preferences updated successfully',
+      data: preferences
+    });
+  } catch (error) {
+    console.error('Error updating notification preferences:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update notification preferences',
+      error: error.message
+    });
+  }
+};
+
+// Get user's privacy settings
+const getPrivacySettings = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let settings = await prisma.privacySettings.findUnique({
+      where: { userId: id }
+    });
+
+    // If settings don't exist, create default ones
+    if (!settings) {
+      settings = await prisma.privacySettings.create({
+        data: {
+          userId: id,
+          publicProfile: true,
+          shareActivity: false,
+          allowMessages: true
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: settings
+    });
+  } catch (error) {
+    console.error('Error fetching privacy settings:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch privacy settings',
+      error: error.message
+    });
+  }
+};
+
+// Update user's privacy settings
+const updatePrivacySettings = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { publicProfile, shareActivity, allowMessages } = req.body;
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Upsert privacy settings
+    const settings = await prisma.privacySettings.upsert({
+      where: { userId: id },
+      create: {
+        userId: id,
+        publicProfile: publicProfile ?? true,
+        shareActivity: shareActivity ?? false,
+        allowMessages: allowMessages ?? true
+      },
+      update: {
+        ...(publicProfile !== undefined && { publicProfile }),
+        ...(shareActivity !== undefined && { shareActivity }),
+        ...(allowMessages !== undefined && { allowMessages })
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Privacy settings updated successfully',
+      data: settings
+    });
+  } catch (error) {
+    console.error('Error updating privacy settings:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update privacy settings',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
   deleteUser,
-  loginUser
+  loginUser,
+  getNotificationPreferences,
+  updateNotificationPreferences,
+  getPrivacySettings,
+  updatePrivacySettings
 };

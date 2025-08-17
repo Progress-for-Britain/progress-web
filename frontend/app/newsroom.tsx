@@ -6,17 +6,35 @@ import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
 
 export default function Newsroom() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (but wait for loading to complete)
   React.useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLoading]);
+
+  // Show loading screen while auth is being determined
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Show loading screen if not authenticated (while redirect is happening)
+  if (!isAuthenticated) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   const categories = [
     { id: 'all', label: 'All News' },
