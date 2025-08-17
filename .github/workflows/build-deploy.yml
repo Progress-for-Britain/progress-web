@@ -23,13 +23,24 @@ jobs:
         working-directory: ./frontend
         run: npm i
   
+      - name: 🔍 Debug Environment Variables
+        run: |
+          echo "Debug: EXPO_PUBLIC_API_URL secret value:"
+          echo "[${{ secrets.EXPO_PUBLIC_API_URL }}]"
+          echo "Length: ${#'${{ secrets.EXPO_PUBLIC_API_URL }}'}"
+
       - name: 🏗️ Build Expo web app
         working-directory: ./frontend
         env:
           EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
           # REACT_APP_API_BASE_URL: ${{ secrets.APP_URL }}
           # EXPO_PUBLIC_STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUB_KEY }}
-        run: npm run build:web
+        run: |
+          echo "Build: EXPO_PUBLIC_API_URL is set to: [$EXPO_PUBLIC_API_URL]"
+          # Clean the URL by removing any extra quotes
+          export EXPO_PUBLIC_API_URL=$(echo "$EXPO_PUBLIC_API_URL" | sed "s/'//g" | sed 's/"//g')
+          echo "Cleaned EXPO_PUBLIC_API_URL: [$EXPO_PUBLIC_API_URL]"
+          npm run build:web
   
       - name: 🔐 Set up SSH
         uses: webfactory/ssh-agent@v0.9.0
