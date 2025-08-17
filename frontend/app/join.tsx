@@ -254,155 +254,6 @@ export default function Join() {
             </Animated.View>
           </ImageBackground>
 
-          {/* Membership Benefits */}
-          <View style={{ paddingVertical: 60, paddingHorizontal: 20, backgroundColor: '#f8fafc' }}>
-            <Animated.View style={fadeInStyle}>
-              <View style={{ alignItems: 'center', marginBottom: 50 }}>
-                <MaterialIcons name="card-membership" size={48} color="#d946ef" style={{ marginBottom: 16 }} />
-                <Text 
-                  style={{ 
-                    fontSize: 36,
-                    fontWeight: 'bold',
-                    color: '#111827',
-                    textAlign: 'center',
-                    marginBottom: 16
-                  }}
-                >
-                  Why Join Progress UK?
-                </Text>
-                <Text 
-                  style={{ 
-                    fontSize: 18,
-                    color: '#6B7280',
-                    textAlign: 'center',
-                    lineHeight: 28,
-                    maxWidth: 600
-                  }}
-                >
-                  As a member, you'll have real influence in shaping Britain's progressive future
-                </Text>
-              </View>
-            </Animated.View>
-            
-            <View style={{ maxWidth: 1000, alignSelf: 'center' }}>
-              <View style={{ 
-                flexDirection: Platform.OS === 'web' ? 'row' : 'column', 
-                gap: 24, 
-                marginBottom: 40,
-                flexWrap: 'wrap',
-                justifyContent: 'center'
-              }}>
-                <Animated.View style={[
-                  {
-                    flex: 1,
-                    minWidth: 280,
-                    backgroundColor: '#ffffff',
-                    borderRadius: 20,
-                    padding: 32,
-                    alignItems: 'center',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 20,
-                    elevation: 10,
-                    borderLeftWidth: 4,
-                    borderLeftColor: '#d946ef',
-                  },
-                  fadeInStyle
-                ]}>
-                  <View 
-                    style={{
-                      backgroundColor: '#d946ef20',
-                      borderRadius: 16,
-                      padding: 16,
-                      marginBottom: 20,
-                    }}
-                  >
-                    <Ionicons name="people" size={32} color="#d946ef" />
-                  </View>
-                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 12, textAlign: 'center' }}>
-                    Policy Influence
-                  </Text>
-                  <Text style={{ color: '#6B7280', textAlign: 'center', lineHeight: 24, fontSize: 16 }}>
-                    Vote on party positions, candidate selections, and key policies that shape Britain's future
-                  </Text>
-                </Animated.View>
-                
-                <Animated.View style={[
-                  {
-                    flex: 1,
-                    minWidth: 280,
-                    backgroundColor: '#ffffff',
-                    borderRadius: 20,
-                    padding: 32,
-                    alignItems: 'center',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 20,
-                    elevation: 10,
-                    borderLeftWidth: 4,
-                    borderLeftColor: '#10b981',
-                  },
-                  fadeInStyle
-                ]}>
-                  <View 
-                    style={{
-                      backgroundColor: '#10b98120',
-                      borderRadius: 16,
-                      padding: 16,
-                      marginBottom: 20,
-                    }}
-                  >
-                    <Ionicons name="newspaper" size={32} color="#10b981" />
-                  </View>
-                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 12, textAlign: 'center' }}>
-                    Insider Access
-                  </Text>
-                  <Text style={{ color: '#6B7280', textAlign: 'center', lineHeight: 24, fontSize: 16 }}>
-                    Exclusive member events, policy briefings, and early access to campaign developments
-                  </Text>
-                </Animated.View>
-                
-                <Animated.View style={[
-                  {
-                    flex: 1,
-                    minWidth: 280,
-                    backgroundColor: '#ffffff',
-                    borderRadius: 20,
-                    padding: 32,
-                    alignItems: 'center',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 20,
-                    elevation: 10,
-                    borderLeftWidth: 4,
-                    borderLeftColor: '#f59e0b',
-                  },
-                  fadeInStyle
-                ]}>
-                  <View 
-                    style={{
-                      backgroundColor: '#f59e0b20',
-                      borderRadius: 16,
-                      padding: 16,
-                      marginBottom: 20,
-                    }}
-                  >
-                    <Ionicons name="location" size={32} color="#f59e0b" />
-                  </View>
-                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 12, textAlign: 'center' }}>
-                    Local Community
-                  </Text>
-                  <Text style={{ color: '#6B7280', textAlign: 'center', lineHeight: 24, fontSize: 16 }}>
-                    Connect with progressive activists in your constituency and across the UK
-                  </Text>
-                </Animated.View>
-              </View>
-            </View>
-          </View>
-
           {/* Membership Form */}
           <View style={{ paddingVertical: 60, paddingHorizontal: 20, backgroundColor: '#ffffff' }}>
             <Animated.View style={fadeInStyle}>
@@ -720,6 +571,154 @@ export default function Join() {
                 </Text>
               </View>
             </Animated.View>
+          </View>
+          {/* Membership Benefits */}
+          <View style={{ paddingVertical: 60, paddingHorizontal: 20, backgroundColor: '#f8fafc' }}>
+            <Animated.View style={fadeInStyle}>
+              <View style={{ alignItems: 'center', marginBottom: 50 }}>
+                <MaterialIcons name="card-membership" size={48} color="#d946ef" style={{ marginBottom: 16 }} />
+                <Text 
+                  style={{ 
+                    fontSize: 36,
+                    fontWeight: 'bold',
+                    color: '#111827',
+                    textAlign: 'center',
+                    marginBottom: 16
+                  }}
+                >
+                  Why Join Progress UK?
+                </Text>
+                <Text 
+                  style={{ 
+                    fontSize: 18,
+                    color: '#6B7280',
+                    textAlign: 'center',
+                    lineHeight: 28,
+                    maxWidth: 600
+                  }}
+                >
+                  As a member, you'll have real influence in shaping Britain's progressive future
+                </Text>
+              </View>
+            </Animated.View>
+            
+            <View style={{ maxWidth: 1000, alignSelf: 'center' }}>
+              <View style={{ 
+                flexDirection: Platform.OS === 'web' ? 'row' : 'column', 
+                gap: 24, 
+                marginBottom: 40,
+                flexWrap: 'wrap',
+                justifyContent: 'center'
+              }}>
+                <Animated.View style={[
+                  {
+                    flex: 1,
+                    minWidth: 280,
+                    backgroundColor: '#ffffff',
+                    borderRadius: 20,
+                    padding: 32,
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 20,
+                    elevation: 10,
+                    borderLeftWidth: 4,
+                    borderLeftColor: '#d946ef',
+                  },
+                  fadeInStyle
+                ]}>
+                  <View 
+                    style={{
+                      backgroundColor: '#d946ef20',
+                      borderRadius: 16,
+                      padding: 16,
+                      marginBottom: 20,
+                    }}
+                  >
+                    <Ionicons name="people" size={32} color="#d946ef" />
+                  </View>
+                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 12, textAlign: 'center' }}>
+                    Policy Influence
+                  </Text>
+                  <Text style={{ color: '#6B7280', textAlign: 'center', lineHeight: 24, fontSize: 16 }}>
+                    Vote on party positions, candidate selections, and key policies that shape Britain's future
+                  </Text>
+                </Animated.View>
+                
+                <Animated.View style={[
+                  {
+                    flex: 1,
+                    minWidth: 280,
+                    backgroundColor: '#ffffff',
+                    borderRadius: 20,
+                    padding: 32,
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 20,
+                    elevation: 10,
+                    borderLeftWidth: 4,
+                    borderLeftColor: '#10b981',
+                  },
+                  fadeInStyle
+                ]}>
+                  <View 
+                    style={{
+                      backgroundColor: '#10b98120',
+                      borderRadius: 16,
+                      padding: 16,
+                      marginBottom: 20,
+                    }}
+                  >
+                    <Ionicons name="newspaper" size={32} color="#10b981" />
+                  </View>
+                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 12, textAlign: 'center' }}>
+                    Insider Access
+                  </Text>
+                  <Text style={{ color: '#6B7280', textAlign: 'center', lineHeight: 24, fontSize: 16 }}>
+                    Exclusive member events, policy briefings, and early access to campaign developments
+                  </Text>
+                </Animated.View>
+                
+                <Animated.View style={[
+                  {
+                    flex: 1,
+                    minWidth: 280,
+                    backgroundColor: '#ffffff',
+                    borderRadius: 20,
+                    padding: 32,
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 20,
+                    elevation: 10,
+                    borderLeftWidth: 4,
+                    borderLeftColor: '#f59e0b',
+                  },
+                  fadeInStyle
+                ]}>
+                  <View 
+                    style={{
+                      backgroundColor: '#f59e0b20',
+                      borderRadius: 16,
+                      padding: 16,
+                      marginBottom: 20,
+                    }}
+                  >
+                    <Ionicons name="location" size={32} color="#f59e0b" />
+                  </View>
+                  <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 12, textAlign: 'center' }}>
+                    Local Community
+                  </Text>
+                  <Text style={{ color: '#6B7280', textAlign: 'center', lineHeight: 24, fontSize: 16 }}>
+                    Connect with progressive activists in your constituency and across the UK
+                  </Text>
+                </Animated.View>
+              </View>
+            </View>
           </View>
 
           {/* Bottom CTA Section */}

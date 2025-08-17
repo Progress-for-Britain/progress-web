@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Platform, ScrollView, Switch } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
+import api, { NotificationPreferences, PrivacySettings } from '../util/api';
 
 export default function Settings() {
-  const { user, isAuthenticated, logout, refreshUser } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, logout, refreshUser } = useAuth();
   const router = useRouter();
 
   const [profileData, setProfileData] = useState({
@@ -21,36 +22,105 @@ export default function Settings() {
   });
 
   const [notifications, setNotifications] = useState({
-    emailNews: true,
-    emailEvents: true,
-    emailDonations: false,
+    emailNewsletter: true,
+    eventNotifications: true,
+    donationReminders: false,
     pushNotifications: true,
     smsUpdates: false
   });
 
   const [privacy, setPrivacy] = useState({
-    profileVisible: true,
+    publicProfile: true,
     shareActivity: false,
     allowMessages: true
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingPreferences, setIsLoadingPreferences] = useState(true);
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (but wait for loading to complete)
   React.useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
+
+  // Show loading screen while auth is being determined
+  if (authLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Show loading screen if not authenticated (while redirect is happening)
+  if (!isAuthenticated || !user) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Load notification preferences and privacy settings
+  useEffect(() => {
+    const loadUserPreferences = async () => {
+      if (!user?.id) return;
+      
+      setIsLoadingPreferences(true);
+      try {
+        // Load notification preferences
+        try {
+          const notificationPrefs = await api.getNotificationPreferences(user.id);
+          setNotifications({
+            emailNewsletter: notificationPrefs.emailNewsletter,
+            eventNotifications: notificationPrefs.eventNotifications,
+            donationReminders: notificationPrefs.donationReminders,
+            pushNotifications: notificationPrefs.pushNotifications,
+            smsUpdates: notificationPrefs.smsUpdates
+          });
+        } catch (error) {
+          console.log('No notification preferences found, using defaults');
+        }
+
+        // Load privacy settings
+        try {
+          const privacySettings = await api.getPrivacySettings(user.id);
+          setPrivacy({
+            publicProfile: privacySettings.publicProfile,
+            shareActivity: privacySettings.shareActivity,
+            allowMessages: privacySettings.allowMessages
+          });
+        } catch (error) {
+          console.log('No privacy settings found, using defaults');
+        }
+      } catch (error) {
+        console.error('Error loading user preferences:', error);
+      } finally {
+        setIsLoadingPreferences(false);
+      }
+    };
+
+    loadUserPreferences();
+  }, [user?.id]);
 
   const handleSaveProfile = async () => {
+    if (!user?.id) return;
+    
     setIsLoading(true);
     try {
-      // In a real app, this would call the API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await api.updateUser(user.id, {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+        address: profileData.address
+      });
+      
       Alert.alert('Success', 'Profile updated successfully');
       await refreshUser();
     } catch (error) {
+      console.error('Error updating profile:', error);
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     } finally {
       setIsLoading(false);
@@ -83,12 +153,36 @@ export default function Settings() {
     setProfileData(prev => ({ ...prev, [field]: value }));
   };
 
-  const updateNotificationSetting = (setting: string, value: boolean) => {
+  const updateNotificationSetting = async (setting: string, value: boolean) => {
     setNotifications(prev => ({ ...prev, [setting]: value }));
+    
+    // Save to API
+    if (user?.id) {
+      try {
+        await api.updateNotificationPreferences(user.id, { [setting]: value });
+      } catch (error) {
+        console.error('Error updating notification setting:', error);
+        Alert.alert('Error', 'Failed to save notification setting. Please try again.');
+        // Revert the change
+        setNotifications(prev => ({ ...prev, [setting]: !value }));
+      }
+    }
   };
 
-  const updatePrivacySetting = (setting: string, value: boolean) => {
+  const updatePrivacySetting = async (setting: string, value: boolean) => {
     setPrivacy(prev => ({ ...prev, [setting]: value }));
+    
+    // Save to API
+    if (user?.id) {
+      try {
+        await api.updatePrivacySettings(user.id, { [setting]: value });
+      } catch (error) {
+        console.error('Error updating privacy setting:', error);
+        Alert.alert('Error', 'Failed to save privacy setting. Please try again.');
+        // Revert the change
+        setPrivacy(prev => ({ ...prev, [setting]: !value }));
+      }
+    }
   };
 
   const SettingSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -150,7 +244,7 @@ export default function Settings() {
     </View>
   );
 
-  if (!user) {
+  if (!user || isLoadingPreferences) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
         <Text>Loading...</Text>
@@ -286,22 +380,22 @@ export default function Settings() {
               <ToggleSetting
                 label="Email Newsletter"
                 description="Receive our weekly newsletter with party updates and news"
-                value={notifications.emailNews}
-                onValueChange={(value) => updateNotificationSetting('emailNews', value)}
+                value={notifications.emailNewsletter}
+                onValueChange={(value) => updateNotificationSetting('emailNewsletter', value)}
               />
               
               <ToggleSetting
                 label="Event Notifications"
                 description="Get notified about upcoming events and rallies in your area"
-                value={notifications.emailEvents}
-                onValueChange={(value) => updateNotificationSetting('emailEvents', value)}
+                value={notifications.eventNotifications}
+                onValueChange={(value) => updateNotificationSetting('eventNotifications', value)}
               />
               
               <ToggleSetting
                 label="Donation Reminders"
                 description="Occasional reminders about supporting our campaigns"
-                value={notifications.emailDonations}
-                onValueChange={(value) => updateNotificationSetting('emailDonations', value)}
+                value={notifications.donationReminders}
+                onValueChange={(value) => updateNotificationSetting('donationReminders', value)}
               />
               
               <ToggleSetting
@@ -324,8 +418,8 @@ export default function Settings() {
               <ToggleSetting
                 label="Public Profile"
                 description="Allow other members to see your profile and activity"
-                value={privacy.profileVisible}
-                onValueChange={(value) => updatePrivacySetting('profileVisible', value)}
+                value={privacy.publicProfile}
+                onValueChange={(value) => updatePrivacySetting('publicProfile', value)}
               />
               
               <ToggleSetting

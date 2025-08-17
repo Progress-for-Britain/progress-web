@@ -6,17 +6,27 @@ import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
 
 export default function Account() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (but wait for loading to complete)
   React.useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLoading]);
 
-  if (!user) {
+  // Show loading screen while auth is being determined
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Show loading screen if not authenticated (while redirect is happening)
+  if (!isAuthenticated || !user) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
         <Text>Loading...</Text>
@@ -123,7 +133,7 @@ export default function Account() {
                 marginBottom: 16
               }}
             >
-              Member since {new Date(user.joinedAt).toLocaleDateString('en-US', { 
+              Member since {new Date(user.createdAt).toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'long' 
               })}
@@ -138,8 +148,8 @@ export default function Account() {
               }}
             >
               <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '500' }}>
-                {user.membershipStatus === 'active' ? '✓ Active Member' : 
-                 user.membershipStatus === 'pending' ? '⏳ Membership Pending' : 
+                {user.payments && user.payments[0]?.status === 'active' ? '✓ Active Member' : 
+                 user.payments && user.payments[0]?.status === 'pending' ? '⏳ Membership Pending' : 
                  '⚠️ Membership Expired'}
               </Text>
             </View>

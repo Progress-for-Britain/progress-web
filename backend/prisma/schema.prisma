@@ -6,10 +6,90 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+  VOLUNTEER
+}
+
+enum SubStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  firstName String?
+  lastName  String?
+  email     String   @unique
+  password  String
+  role      UserRole @default(MEMBER)
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  payments               Payment[]
+  notificationPreferences NotificationPreferences?
+  privacySettings        PrivacySettings?
+  
+  @@map("users")
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  customerId     String        // Stripe customer ID or other payment provider ID
+  subscriptionId String?       // Subscription ID from payment providere
+  status         SubStatus     @default(INACTIVE)
+  amount         Decimal       @db.Decimal(10, 2)
+  currency       String        @default("USD")
+  startDate      DateTime
+  endDate        DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  
+  // Foreign key to User
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("payments")
+}
+
+model NotificationPreferences {
+  id                 String   @id @default(cuid())
+  emailNewsletter    Boolean  @default(true)   // Receive our weekly newsletter with party updates and news
+  eventNotifications Boolean  @default(true)   // Get notified about upcoming events and rallies in your area
+  donationReminders  Boolean  @default(true)   // Occasional reminders about supporting our campaigns
+  pushNotifications  Boolean  @default(true)   // Receive urgent updates and breaking news notifications
+  smsUpdates         Boolean  @default(false)  // Get text messages for time-sensitive campaign updates
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  
+  // Foreign key to User
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notification_preferences")
+}
+
+model PrivacySettings {
+  id             String   @id @default(cuid())
+  publicProfile  Boolean  @default(false)  // Allow other members to see your profile and activity
+  shareActivity  Boolean  @default(false)  // Show your donations and volunteer hours to other members
+  allowMessages  Boolean  @default(true)   // Let other members send you direct messages
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Foreign key to User
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("privacy_settings")
 }

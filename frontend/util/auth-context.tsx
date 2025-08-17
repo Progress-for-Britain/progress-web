@@ -31,12 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (token) {
         api.setToken(token);
-        const userData = await api.getProfile();
-        setUser(userData);
+        // We'll need to store the user ID to fetch profile, or use a different approach
+        // For now, let's try to decode the user ID from the token or store it separately
+        const userDataString = await AsyncStorage.getItem('@progress_user_data');
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          setUser(userData);
+        }
       }
     } catch (error) {
       console.error('Failed to load stored auth:', error);
       await AsyncStorage.removeItem(TOKEN_KEY);
+      await AsyncStorage.removeItem('@progress_user_data');
     } finally {
       setIsLoading(false);
     }
@@ -45,9 +51,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (credentials: LoginRequest) => {
     try {
       const response = await api.login(credentials);
-      await AsyncStorage.setItem(TOKEN_KEY, response.token);
-      api.setToken(response.token);
-      setUser(response.user);
+      await AsyncStorage.setItem(TOKEN_KEY, response.data.token);
+      
+      // Convert auth response user to full User type
+      const fullUser: User = {
+        ...response.data.user,
+        address: response.data.user.address || null,
+        createdAt: response.data.user.createdAt || new Date().toISOString(),
+        role: response.data.user.role as 'ADMIN' | 'MEMBER' | 'VOLUNTEER'
+      };
+      
+      await AsyncStorage.setItem('@progress_user_data', JSON.stringify(fullUser));
+      api.setToken(response.data.token);
+      setUser(fullUser);
     } catch (error) {
       throw error;
     }
@@ -56,9 +72,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (userData: RegisterRequest) => {
     try {
       const response = await api.register(userData);
-      await AsyncStorage.setItem(TOKEN_KEY, response.token);
-      api.setToken(response.token);
-      setUser(response.user);
+      await AsyncStorage.setItem(TOKEN_KEY, response.data.token);
+      
+      // Convert auth response user to full User type
+      const fullUser: User = {
+        ...response.data.user,
+        address: response.data.user.address || null,
+        createdAt: response.data.user.createdAt || new Date().toISOString(),
+        role: response.data.user.role as 'ADMIN' | 'MEMBER' | 'VOLUNTEER'
+      };
+      
+      await AsyncStorage.setItem('@progress_user_data', JSON.stringify(fullUser));
+      api.setToken(response.data.token);
+      setUser(fullUser);
     } catch (error) {
       throw error;
     }
@@ -71,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Logout API call failed:', error);
     } finally {
       await AsyncStorage.removeItem(TOKEN_KEY);
+      await AsyncStorage.removeItem('@progress_user_data');
       api.setToken(null);
       setUser(null);
     }
@@ -78,8 +105,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      const userData = await api.getProfile();
+      if (!user?.id) {
+        throw new Error('No user ID available for refresh');
+      }
+      const userData = await api.getUserById(user.id);
       setUser(userData);
+      await AsyncStorage.setItem('@progress_user_data', JSON.stringify(userData));
     } catch (error) {
       console.error('Failed to refresh user:', error);
       await logout();
