@@ -1,6 +1,5 @@
 import { Stack } from "expo-router";
 import { AuthProvider } from "../util/auth-context";
-import "../global.css";
 
 function RootLayoutNav() {
   return (
