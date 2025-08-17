@@ -6,9 +6,27 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Import routes
+const userRoutes = require('./routes/userRoutes');
+
+// Import test user seeding utility
+const { seedAllTestUsers } = require('./utils/seedTestUser');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// API Routes
+app.use('/api/users', userRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Server is running',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Serve static files from the frontend dist directory
 const frontendDistPath = path.join(__dirname, '..', 'frontend', 'dist');
@@ -33,9 +51,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Frontend served from: ${frontendDistPath}`);
+  
+  // Seed test users in development environment
+  if (process.env.NODE_ENV === 'development' || process.env.SEED_TEST_USERS === 'true') {
+    console.log('🌱 Seeding test users for development...');
+    try {
+      await seedAllTestUsers();
+    } catch (error) {
+      console.error('Failed to seed test users:', error);
+    }
+  }
 });
 
 module.exports = app;
