@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Platform, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Animated, Modal } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useAuth } from '../util/auth-context';
@@ -9,6 +9,7 @@ export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { isMobile } = useResponsive();
   
   // Animation values
@@ -59,14 +60,26 @@ export default function Header() {
     }
   }, [isMobileMenuOpen]);
 
-  const handleLogout = async () => {
+  const handleLogoutRequest = () => {
+    setShowLogoutConfirm(true);
+    if (isMobile) {
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutConfirm(false);
+    
     try {
       await logout();
-      setIsMobileMenuOpen(false); // Close mobile menu on logout
       // Don't manually navigate - let the auth state change handle the redirect
     } catch (error) {
       console.error('Logout failed:', error);
     }
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutConfirm(false);
   };
 
   const handleNavigation = (href?: string, onPress?: () => void) => {
@@ -314,7 +327,7 @@ export default function Header() {
                     <NavButton href="/account" icon="person">Account</NavButton>
                     <NavButton href="/newsroom" icon="newspaper">Newsroom</NavButton>
                     <NavButton href="/settings" icon="settings">Settings</NavButton>
-                    <NavButton onPress={handleLogout} icon="log-out" variant="secondary">
+                    <NavButton onPress={handleLogoutRequest} icon="log-out" variant="secondary">
                       Logout
                     </NavButton>
                   </>
@@ -422,7 +435,7 @@ export default function Header() {
                 <NavButton href="/newsroom" icon="newspaper" isMobileMenu animationDelay={100}>Newsroom</NavButton>
                 <NavButton href="/settings" icon="settings" isMobileMenu animationDelay={200}>Settings</NavButton>
                 <View style={{ height: 8 }} />
-                <NavButton onPress={handleLogout} icon="log-out" variant="secondary" isMobileMenu animationDelay={300}>
+                <NavButton onPress={handleLogoutRequest} icon="log-out" variant="secondary" isMobileMenu animationDelay={300}>
                   Logout
                 </NavButton>
               </>
@@ -430,6 +443,126 @@ export default function Header() {
           </Animated.View>
         </Animated.View>
       )}
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        visible={showLogoutConfirm}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleLogoutCancel}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: 16,
+              padding: 24,
+              width: '100%',
+              maxWidth: 400,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 12,
+              elevation: 10,
+            }}
+          >
+            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  backgroundColor: '#fee2e2',
+                  borderRadius: 32,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                }}
+              >
+                <Ionicons name="log-out" size={28} color="#dc2626" />
+              </View>
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: 'bold',
+                  color: '#111827',
+                  textAlign: 'center',
+                  marginBottom: 8,
+                }}
+              >
+                Confirm Logout
+              </Text>
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: '#6B7280',
+                  textAlign: 'center',
+                  lineHeight: 24,
+                }}
+              >
+                Are you sure you want to log out of your account?
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                onPress={handleLogoutCancel}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: 8,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
+                }}
+              >
+                <Text
+                  style={{
+                    color: '#374151',
+                    fontSize: 16,
+                    fontWeight: '600',
+                  }}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleLogoutConfirm}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#dc2626',
+                  borderRadius: 8,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  shadowColor: '#dc2626',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: 4,
+                  ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
+                }}
+              >
+                <Text
+                  style={{
+                    color: '#ffffff',
+                    fontSize: 16,
+                    fontWeight: '600',
+                  }}
+                >
+                  Yes, Logout
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
