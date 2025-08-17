@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Platform, Animated, Modal } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { Link, useRouter, usePathname } from 'expo-router';
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useAuth } from '../util/auth-context';
 import { useResponsive } from '../util/useResponsive';
@@ -8,6 +8,7 @@ import { useResponsive } from '../util/useResponsive';
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { isMobile } = useResponsive();
@@ -115,6 +116,14 @@ export default function Header() {
     
     const itemAnim = useRef(new Animated.Value(0)).current;
 
+    // Check if this nav item is active
+    const isActive = href ? (
+      pathname === href || 
+      (href === '/events' && pathname.startsWith('/events/')) ||
+      (href === '/newsroom' && pathname.startsWith('/news/')) ||
+      (href === '/account' && pathname.startsWith('/account'))
+    ) : false;
+
     useEffect(() => {
       if (isMobileMenu && isMobileMenuOpen) {
         Animated.timing(itemAnim, {
@@ -136,6 +145,15 @@ export default function Header() {
         borderRadius: isMobileMenu ? 10 : 10,
         ...(isMobileMenu && { width: '100%' as const }),
       };
+
+      // Handle active state - just add bottom border for underline
+      if (isActive && variant === 'default') {
+        return {
+          ...baseStyles,
+          borderBottomWidth: 2,
+          borderBottomColor: '#d946ef',
+        };
+      }
 
       switch (variant) {
         case 'primary':
@@ -162,6 +180,11 @@ export default function Header() {
     };
 
     const getTextColor = () => {
+      // Handle active state - keep normal text color but make it bolder
+      if (isActive && variant === 'default') {
+        return '#374151'; // Keep the same color, just make it bold
+      }
+
       switch (variant) {
         case 'primary':
           return '#ffffff';
@@ -193,7 +216,7 @@ export default function Header() {
               backgroundColor: variant === 'default' ? '#f9fafb' : undefined,
             }),
           },
-          variant !== 'default' && {
+          (variant !== 'default') && {
             shadowColor: variant === 'primary' ? '#d946ef' : '#000',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: variant === 'primary' ? 0.2 : 0.1,
@@ -230,7 +253,8 @@ export default function Header() {
             <Text 
               style={{ 
                 color: getTextColor(), 
-                fontWeight: variant === 'default' ? '500' : '600',
+                fontWeight: isActive && variant === 'default' ? '700' : 
+                           variant === 'default' ? '500' : '600',
                 fontSize: isMobileMenu ? 16 : 15
               }}
             >
