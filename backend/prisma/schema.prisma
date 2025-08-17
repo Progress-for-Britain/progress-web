@@ -40,6 +40,32 @@ enum PostCategory {
   PRESS
 }
 
+enum EventType {
+  RALLY
+  MEETING
+  FUNDRAISER
+  CAMPAIGN
+  VOLUNTEER
+  TRAINING
+  CONFERENCE
+  SOCIAL
+}
+
+enum EventStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum ParticipantStatus {
+  REGISTERED
+  CONFIRMED
+  ATTENDED
+  NO_SHOW
+  CANCELLED
+}
+
 model User {
   id        String   @id @default(cuid())
   firstName String?
@@ -57,6 +83,9 @@ model User {
   privacySettings        PrivacySettings?
   posts                  Post[]
   reactions              Reaction[]
+  eventParticipants      EventParticipant[]
+  volunteerHours         VolunteerHours[]
+  createdEvents          Event[] @relation("EventCreator")
   
   @@map("users")
 }
@@ -67,7 +96,8 @@ model Payment {
   subscriptionId String?       // Subscription ID from payment providere
   status         SubStatus     @default(INACTIVE)
   amount         Decimal       @db.Decimal(10, 2)
-  currency       String        @default("USD")
+  totalDonated   Decimal       @default(0) @db.Decimal(10, 2) // Total amount donated by user
+  currency       String        @default("GDP")
   startDate      DateTime
   endDate        DateTime?
   createdAt      DateTime      @default(now())
@@ -151,4 +181,75 @@ model Reaction {
   // Ensure one reaction per user per post
   @@unique([userId, postId])
   @@map("reactions")
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  title       String
+  description String      @db.Text
+  eventType   EventType   @default(MEETING)
+  status      EventStatus @default(UPCOMING)
+  location    String?     // Physical location or virtual link
+  address     String?     // Full address for physical events
+  latitude    Float?      // For mapping functionality
+  longitude   Float?      // For mapping functionality
+  capacity    Int?        // Maximum number of participants
+  isVirtual   Boolean     @default(false)
+  virtualLink String?     // Zoom/Meet link for virtual events
+  startDate   DateTime @default(now())
+  endDate     DateTime @default(dbgenerated("(now() + interval '1 hour')"))
+  imageUrl    String?     // Event banner/image
+  tags        String[]    // Event tags for categorization
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Foreign key to User (event creator)
+  createdById String
+  createdBy   User        @relation("EventCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  
+  // Relationships
+  participants EventParticipant[]
+  volunteerHours VolunteerHours[]
+  
+  @@map("events")
+}
+
+model EventParticipant {
+  id       String            @id @default(cuid())
+  status   ParticipantStatus @default(REGISTERED)
+  notes    String?           // Additional notes about participation
+  registeredAt DateTime      @default(now())
+  checkedInAt  DateTime?     // When participant checked in
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  // Foreign keys
+  userId   String
+  eventId  String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  // Ensure one participation record per user per event
+  @@unique([userId, eventId])
+  @@map("event_participants")
+}
+
+model VolunteerHours {
+  id          String   @id @default(cuid())
+  hours       Float    // Number of hours volunteered
+  description String?  // Description of volunteer work
+  date        DateTime // Date of volunteer work
+  approved    Boolean  @default(false) // Whether hours are approved by admin
+  approvedBy  String?  // ID of admin who approved
+  notes       String?  // Additional notes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Foreign keys
+  userId      String
+  eventId     String?  // Optional - if volunteer work was for a specific event
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event       Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  
+  @@map("volunteer_hours")
 }

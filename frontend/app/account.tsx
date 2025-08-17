@@ -1,13 +1,106 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Platform, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Platform, ScrollView, Alert, Modal, TextInput, Switch } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  withSpring,
+  interpolate,
+  Extrapolate
+} from 'react-native-reanimated';
 import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
+import api, { UserStats, UserActivity } from '../util/api';
 
 export default function Account() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [showQuickActions, setShowQuickActions] = useState(true);
+
+  // API data state
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [userActivity, setUserActivity] = useState<UserActivity[]>([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingActivity, setLoadingActivity] = useState(true);
+
+  // Animation values
+  const fadeAnim = useSharedValue(0);
+  const slideAnim = useSharedValue(50);
+  const scaleAnim = useSharedValue(0.8);
+
+  useEffect(() => {
+    // Animate elements on mount
+    fadeAnim.value = withTiming(1, { duration: 1000 });
+    slideAnim.value = withSpring(0, { damping: 15 });
+    scaleAnim.value = withSpring(1, { damping: 12 });
+  }, []);
+
+  const fadeInStyle = useAnimatedStyle(() => ({
+    opacity: fadeAnim.value,
+    transform: [{ translateY: slideAnim.value }],
+  }));
+
+  const scaleInStyle = useAnimatedStyle(() => ({
+    opacity: fadeAnim.value,
+    transform: [{ scale: scaleAnim.value }],
+  }));
+
+  // Load user data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadUserData();
+    }
+  }, [isAuthenticated, user]);
+
+  const loadUserData = async () => {
+    try {
+      setLoadingStats(true);
+      setLoadingActivity(true);
+
+      // Load stats and activity in parallel
+      const [statsData, activityData] = await Promise.all([
+        api.getUserStats().catch(error => {
+          console.warn('Failed to load user stats:', error);
+          return {
+            eventsAttended: 0,
+            totalVolunteerHours: 0,
+            totalDonated: 0,
+            thisMonth: {
+              eventsAttended: 0,
+              volunteerHours: 0,
+              donationAmount: 0
+            }
+          };
+        }),
+        api.getUserActivity(10).catch(error => {
+          console.warn('Failed to load user activity:', error);
+          return [];
+        })
+      ]);
+
+      setUserStats(statsData);
+      setUserActivity(activityData);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      Alert.alert(
+        'Error', 
+        'Failed to load your account data. Please check your connection and try again.',
+        [
+          { text: 'Retry', onPress: loadUserData },
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      );
+    } finally {
+      setLoadingStats(false);
+      setLoadingActivity(false);
+    }
+  };
 
   // Redirect if not authenticated (but wait for loading to complete)
   React.useEffect(() => {
@@ -16,289 +109,870 @@ export default function Account() {
     }
   }, [isAuthenticated, isLoading]);
 
-  const QuickActionCard = ({ title, description, onPress, icon }: { 
+  const QuickActionCard = ({ 
+    title, 
+    description, 
+    onPress, 
+    icon, 
+    iconLibrary = 'Ionicons',
+    color = '#d946ef',
+    delay = 0 
+  }: { 
     title: string; 
     description: string; 
     onPress: () => void; 
     icon: string;
-  }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      style={{
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 20,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-        borderLeftWidth: 4,
-        borderLeftColor: '#d946ef',
-        ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
-      }}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <Text style={{ fontSize: 24, marginRight: 12 }}>{icon}</Text>
-        <Text style={{ fontSize: 18, fontWeight: '600', color: '#111827', flex: 1 }}>
-          {title}
-        </Text>
-        <Text style={{ fontSize: 18, color: '#d946ef' }}>→</Text>
-      </View>
-      <Text style={{ color: '#6B7280', lineHeight: 20 }}>
-        {description}
-      </Text>
-    </TouchableOpacity>
-  );
+    iconLibrary?: 'Ionicons' | 'MaterialIcons' | 'FontAwesome5';
+    color?: string;
+    delay?: number;
+  }) => {
+    const cardAnim = useSharedValue(0);
+    const buttonAnim = useSharedValue(1);
 
-  const StatCard = ({ label, value, trend }: { label: string; value: string; trend?: string }) => (
-    <View
-      style={{
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        padding: 16,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-        flex: 1,
-        marginHorizontal: 4
-      }}
-    >
-      <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#d946ef', marginBottom: 4 }}>
-        {value}
-      </Text>
-      <Text style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 4 }}>
-        {label}
-      </Text>
-      {trend && (
-        <Text style={{ fontSize: 12, color: '#10B981' }}>
-          {trend}
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        cardAnim.value = withSpring(1, { damping: 12 });
+      }, delay);
+      return () => clearTimeout(timer);
+    }, [delay]);
+
+    const cardAnimatedStyle = useAnimatedStyle(() => ({
+      opacity: cardAnim.value,
+      transform: [
+        { scale: interpolate(cardAnim.value, [0, 1], [0.9, 1], Extrapolate.CLAMP) },
+        { translateY: interpolate(cardAnim.value, [0, 1], [20, 0], Extrapolate.CLAMP) }
+      ],
+    }));
+
+    const buttonAnimatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: buttonAnim.value }],
+    }));
+
+    const handlePressIn = () => {
+      buttonAnim.value = withSpring(0.98);
+    };
+
+    const handlePressOut = () => {
+      buttonAnim.value = withSpring(1);
+    };
+
+    const IconComponent = iconLibrary === 'MaterialIcons' ? MaterialIcons : 
+                         iconLibrary === 'FontAwesome5' ? FontAwesome5 : Ionicons;
+
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={{
+          ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+        }}
+      >
+        <Animated.View
+          style={[
+            {
+              backgroundColor: '#ffffff',
+              borderRadius: 16,
+              padding: 24,
+              marginBottom: 16,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+              borderLeftWidth: 5,
+              borderLeftColor: color,
+              ...(Platform.OS === 'web' && {
+                boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)',
+              })
+            },
+            cardAnimatedStyle,
+            buttonAnimatedStyle
+          ]}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+            <View 
+              style={{
+                backgroundColor: color + '20',
+                borderRadius: 12,
+                padding: 12,
+                marginRight: 16,
+              }}
+            >
+              <IconComponent name={icon as any} size={24} color={color} />
+            </View>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', flex: 1 }}>
+              {title}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={color} />
+          </View>
+          <Text style={{ color: '#6B7280', lineHeight: 22, fontSize: 15 }}>
+            {description}
+          </Text>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
+  const StatCard = ({ 
+    label, 
+    value, 
+    trend, 
+    icon, 
+    color = '#d946ef' 
+  }: { 
+    label: string; 
+    value: string; 
+    trend?: string; 
+    icon: string;
+    color?: string;
+  }) => {
+    const statAnim = useSharedValue(0);
+
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        statAnim.value = withSpring(1, { damping: 15 });
+      }, 300);
+      return () => clearTimeout(timer);
+    }, []);
+
+    const statAnimatedStyle = useAnimatedStyle(() => ({
+      opacity: statAnim.value,
+      transform: [
+        { scale: interpolate(statAnim.value, [0, 1], [0.8, 1], Extrapolate.CLAMP) },
+        { translateY: interpolate(statAnim.value, [0, 1], [20, 0], Extrapolate.CLAMP) }
+      ],
+    }));
+
+    return (
+      <Animated.View
+        style={[
+          {
+            backgroundColor: '#ffffff',
+            borderRadius: 16,
+            padding: 20,
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+            flex: 1,
+            marginHorizontal: 6,
+            borderTopWidth: 3,
+            borderTopColor: color,
+            ...(Platform.OS === 'web' && {
+              boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)',
+            })
+          },
+          statAnimatedStyle
+        ]}
+      >
+        <View 
+          style={{
+            backgroundColor: color + '20',
+            borderRadius: 12,
+            padding: 12,
+            marginBottom: 12,
+          }}
+        >
+          <Ionicons name={icon as any} size={24} color={color} />
+        </View>
+        <Text style={{ fontSize: 28, fontWeight: 'bold', color: color, marginBottom: 4 }}>
+          {value}
         </Text>
-      )}
-    </View>
-  );
+        <Text style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 4, fontWeight: '600' }}>
+          {label}
+        </Text>
+        {trend && (
+          <Text style={{ fontSize: 12, color: '#10B981', fontWeight: '600' }}>
+            {trend}
+          </Text>
+        )}
+      </Animated.View>
+    );
+  };
+
+  const SettingsModal = () => {
+    const [firstName, setFirstName] = useState(user?.firstName || '');
+    const [lastName, setLastName] = useState(user?.lastName || '');
+    const [email, setEmail] = useState(user?.email || '');
+
+    const handleSaveSettings = () => {
+      Alert.alert('Settings Saved', 'Your settings have been updated successfully!');
+      setShowSettingsModal(false);
+    };
+
+    return (
+      <Modal
+        visible={showSettingsModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+          <View style={{ 
+            backgroundColor: '#ffffff',
+            paddingTop: Platform.OS === 'ios' ? 60 : 40,
+            paddingHorizontal: 20,
+            paddingBottom: 20,
+            borderBottomWidth: 1,
+            borderBottomColor: '#e5e7eb'
+          }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <TouchableOpacity
+                onPress={() => setShowSettingsModal(false)}
+                style={{ padding: 8 }}
+              >
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+              
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827' }}>
+                Account Settings
+              </Text>
+              
+              <TouchableOpacity
+                onPress={handleSaveSettings}
+                style={{
+                  backgroundColor: '#d946ef',
+                  borderRadius: 8,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                }}
+              >
+                <Text style={{ color: '#ffffff', fontWeight: '600' }}>
+                  Save
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <ScrollView style={{ flex: 1, padding: 20 }}>
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 }}>
+                Personal Information
+              </Text>
+              
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                  First Name
+                </Text>
+                <TextInput
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  style={{
+                    borderWidth: 2,
+                    borderColor: '#e5e7eb',
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    fontSize: 16,
+                    backgroundColor: '#ffffff'
+                  }}
+                />
+              </View>
+
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                  Last Name
+                </Text>
+                <TextInput
+                  value={lastName}
+                  onChangeText={setLastName}
+                  style={{
+                    borderWidth: 2,
+                    borderColor: '#e5e7eb',
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    fontSize: 16,
+                    backgroundColor: '#ffffff'
+                  }}
+                />
+              </View>
+
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                  Email Address
+                </Text>
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  style={{
+                    borderWidth: 2,
+                    borderColor: '#e5e7eb',
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    fontSize: 16,
+                    backgroundColor: '#ffffff'
+                  }}
+                />
+              </View>
+            </View>
+
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 }}>
+                Notification Preferences
+              </Text>
+              
+              <View style={{ 
+                backgroundColor: '#ffffff', 
+                borderRadius: 12, 
+                padding: 16,
+                marginBottom: 12,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+                elevation: 4,
+              }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
+                      Email Notifications
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#6B7280' }}>
+                      Receive updates via email
+                    </Text>
+                  </View>
+                  <Switch
+                    value={emailNotifications}
+                    onValueChange={setEmailNotifications}
+                    trackColor={{ false: '#e5e7eb', true: '#d946ef' }}
+                    thumbColor={emailNotifications ? '#ffffff' : '#f3f4f6'}
+                  />
+                </View>
+              </View>
+
+              <View style={{ 
+                backgroundColor: '#ffffff', 
+                borderRadius: 12, 
+                padding: 16,
+                marginBottom: 12,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+                elevation: 4,
+              }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
+                      Push Notifications
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#6B7280' }}>
+                      Receive mobile notifications
+                    </Text>
+                  </View>
+                  <Switch
+                    value={pushNotifications}
+                    onValueChange={setPushNotifications}
+                    trackColor={{ false: '#e5e7eb', true: '#d946ef' }}
+                    thumbColor={pushNotifications ? '#ffffff' : '#f3f4f6'}
+                  />
+                </View>
+              </View>
+            </View>
+
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 }}>
+                Dashboard Preferences
+              </Text>
+              
+              <View style={{ 
+                backgroundColor: '#ffffff', 
+                borderRadius: 12, 
+                padding: 16,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+                elevation: 4,
+              }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
+                      Show Quick Actions
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#6B7280' }}>
+                      Display quick action cards on dashboard
+                    </Text>
+                  </View>
+                  <Switch
+                    value={showQuickActions}
+                    onValueChange={setShowQuickActions}
+                    trackColor={{ false: '#e5e7eb', true: '#d946ef' }}
+                    thumbColor={showQuickActions ? '#ffffff' : '#f3f4f6'}
+                  />
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+    );
+  };
 
   return (
     <>
       {/* Show loading screen while auth is being determined */}
       {isLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
-          <Text>Loading...</Text>
+        <View style={{ 
+          flex: 1, 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          backgroundColor: '#f8fafc' 
+        }}>
+          <Text style={{ fontSize: 18, color: '#6B7280' }}>Loading...</Text>
         </View>
       ) : /* Show loading screen if not authenticated (while redirect is happening) */
       (!isAuthenticated || !user) ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
-          <Text>Loading...</Text>
+        <View style={{ 
+          flex: 1, 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          backgroundColor: '#f8fafc' 
+        }}>
+          <Text style={{ fontSize: 18, color: '#6B7280' }}>Loading...</Text>
         </View>
       ) : (
         <>
           <Stack.Screen options={{ headerShown: false }} />
-          <StatusBar style="dark" />
-          <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+          <StatusBar style="light" />
+          <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
             <Header />
         
-        <ScrollView style={{ flex: 1 }}>
-          {/* Welcome Section */}
-          <View 
-            style={{ 
-              backgroundColor: '#d946ef',
-              paddingVertical: 40,
-              paddingHorizontal: 16
-            }}
-          >
-            <Text 
-              style={{ 
-                fontSize: 28,
-                fontWeight: 'bold',
-                color: '#ffffff',
-                marginBottom: 8
-              }}
-            >
-              Welcome back, {user.firstName}!
-            </Text>
-            <Text 
-              style={{ 
-                fontSize: 16,
-                color: '#f5d0fe',
-                marginBottom: 16
-              }}
-            >
-              Member since {new Date(user.createdAt).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long' 
-              })}
-            </Text>
-            <View
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                borderRadius: 8,
-                paddingVertical: 8,
-                paddingHorizontal: 12,
-                alignSelf: 'flex-start'
-              }}
-            >
-              <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '500' }}>
-                {user.payments && user.payments[0]?.status === 'active' ? '✓ Active Member' : 
-                 user.payments && user.payments[0]?.status === 'pending' ? '⏳ Membership Pending' : 
-                 '⚠️ Membership Expired'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Stats Section */}
-          <View style={{ paddingHorizontal: 16, paddingVertical: 24 }}>
-            <Text 
-              style={{ 
-                fontSize: 20,
-                fontWeight: 'bold',
-                color: '#111827',
-                marginBottom: 16
-              }}
-            >
-              Your Impact
-            </Text>
-            <View style={{ flexDirection: 'row', marginBottom: 32 }}>
-              <StatCard label="Events Attended" value="12" trend="+3 this month" />
-              <StatCard label="Donations Made" value="$450" trend="$50 this month" />
-              <StatCard label="Volunteer Hours" value="28" trend="+6 this month" />
-            </View>
-          </View>
-
-          {/* Quick Actions */}
-          <View style={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-            <Text 
-              style={{ 
-                fontSize: 20,
-                fontWeight: 'bold',
-                color: '#111827',
-                marginBottom: 16
-              }}
-            >
-              Quick Actions
-            </Text>
-
-            <QuickActionCard
-              icon="📰"
-              title="Latest News & Updates"
-              description="Stay informed with the latest party news, policy updates, and campaign progress"
-              onPress={() => router.push('/newsroom')}
-            />
-
-            <QuickActionCard
-              icon="💰"
-              title="Make a Donation"
-              description="Support our ongoing campaigns and initiatives with a contribution"
-              onPress={() => router.push('/donate')}
-            />
-
-            <QuickActionCard
-              icon="🗳️"
-              title="Upcoming Votes"
-              description="View and participate in upcoming party votes and policy decisions"
-              onPress={() => router.push('/votes')}
-            />
-
-            <QuickActionCard
-              icon="📅"
-              title="Local Events"
-              description="Find and register for political events, rallies, and meetings in your area"
-              onPress={() => router.push('/events')}
-            />
-
-            <QuickActionCard
-              icon="🤝"
-              title="Volunteer Opportunities"
-              description="Sign up to help with campaigns, phone banking, and community outreach"
-              onPress={() => router.push('/volunteer')}
-            />
-
-            <QuickActionCard
-              icon="⚙️"
-              title="Account Settings"
-              description="Update your profile, preferences, and notification settings"
-              onPress={() => router.push('/settings')}
-            />
-          </View>
-
-          {/* Recent Activity */}
-          <View style={{ backgroundColor: '#ffffff', paddingHorizontal: 16, paddingVertical: 24 }}>
-            <Text 
-              style={{ 
-                fontSize: 20,
-                fontWeight: 'bold',
-                color: '#111827',
-                marginBottom: 16
-              }}
-            >
-              Recent Activity
-            </Text>
-
-            <View style={{ marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+              {/* Hero Section */}
+              <View 
+                style={{ 
+                  backgroundColor: '#1e293b',
+                  paddingVertical: 60,
+                  paddingHorizontal: 20,
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Animated background elements */}
                 <View 
-                  style={{ 
-                    width: 8, 
-                    height: 8, 
-                    backgroundColor: '#10B981', 
-                    borderRadius: 4, 
-                    marginRight: 12 
-                  }} 
+                  style={{
+                    position: 'absolute',
+                    top: -50,
+                    right: -50,
+                    width: 200,
+                    height: 200,
+                    backgroundColor: 'rgba(217, 70, 239, 0.1)',
+                    borderRadius: 100,
+                  }}
                 />
-                <Text style={{ fontSize: 16, color: '#111827', flex: 1 }}>
-                  Attended Climate Action Rally
-                </Text>
-                <Text style={{ fontSize: 14, color: '#6B7280' }}>
-                  2 days ago
-                </Text>
-              </View>
-            </View>
-
-            <View style={{ marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                 <View 
-                  style={{ 
-                    width: 8, 
-                    height: 8, 
-                    backgroundColor: '#d946ef', 
-                    borderRadius: 4, 
-                    marginRight: 12 
-                  }} 
+                  style={{
+                    position: 'absolute',
+                    bottom: -30,
+                    left: -30,
+                    width: 150,
+                    height: 150,
+                    backgroundColor: 'rgba(217, 70, 239, 0.08)',
+                    borderRadius: 75,
+                  }}
                 />
-                <Text style={{ fontSize: 16, color: '#111827', flex: 1 }}>
-                  Donated $50 to Healthcare Initiative
-                </Text>
-                <Text style={{ fontSize: 14, color: '#6B7280' }}>
-                  1 week ago
-                </Text>
-              </View>
-            </View>
 
-            <View style={{ marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                <View 
-                  style={{ 
-                    width: 8, 
-                    height: 8, 
-                    backgroundColor: '#F59E0B', 
-                    borderRadius: 4, 
-                    marginRight: 12 
-                  }} 
-                />
-                <Text style={{ fontSize: 16, color: '#111827', flex: 1 }}>
-                  Voted on Education Policy Proposal
-                </Text>
-                <Text style={{ fontSize: 14, color: '#6B7280' }}>
-                  2 weeks ago
-                </Text>
+                <Animated.View style={[fadeInStyle, { alignItems: 'center', maxWidth: 800, alignSelf: 'center' }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                    <Ionicons name="person-circle" size={28} color="#ffffff" style={{ marginRight: 12 }} />
+                    <Text 
+                      style={{ 
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#f0f9ff',
+                        letterSpacing: 1,
+                        textTransform: 'uppercase'
+                      }}
+                    >
+                      Member Dashboard
+                    </Text>
+                  </View>
+                  
+                  <Text 
+                    style={{ 
+                      fontSize: Platform.OS === 'web' ? 36 : 28,
+                      fontWeight: 'bold',
+                      color: '#ffffff',
+                      textAlign: 'center',
+                      marginBottom: 16,
+                      lineHeight: Platform.OS === 'web' ? 44 : 36,
+                    }}
+                  >
+                    Welcome back, {user.firstName}!
+                  </Text>
+                  
+                  <Text 
+                    style={{ 
+                      fontSize: 18,
+                      color: '#e0f2fe',
+                      textAlign: 'center',
+                      marginBottom: 20,
+                      lineHeight: 26
+                    }}
+                  >
+                    Member since {new Date(user.createdAt).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long' 
+                    })}
+                  </Text>
+                  
+                  <Animated.View
+                    style={[
+                      scaleInStyle,
+                      {
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        borderRadius: 12,
+                        paddingVertical: 12,
+                        paddingHorizontal: 20,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                      }
+                    ]}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ 
+                        backgroundColor: user.payments && user.payments[0]?.status === 'active' ? '#10B981' : '#F59E0B',
+                        borderRadius: 6,
+                        width: 12,
+                        height: 12,
+                        marginRight: 12
+                      }} />
+                      <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600' }}>
+                        {user.payments && user.payments[0]?.status === 'active' ? 'Active Member' : 
+                         user.payments && user.payments[0]?.status === 'pending' ? 'Membership Pending' : 
+                         'Membership Expired'}
+                      </Text>
+                    </View>
+                  </Animated.View>
+                </Animated.View>
               </View>
-            </View>
+
+              {/* Stats Section */}
+              <View style={{ 
+                paddingHorizontal: 20, 
+                paddingVertical: 40, 
+                backgroundColor: '#ffffff',
+                marginTop: -20,
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: -4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 8,
+              }}>
+                <View style={{ maxWidth: 1200, alignSelf: 'center', width: '100%' }}>
+                  <Animated.View style={fadeInStyle}>
+                    <View style={{ alignItems: 'center', marginBottom: 32 }}>
+                      <MaterialIcons name="analytics" size={32} color="#d946ef" style={{ marginBottom: 12 }} />
+                      <Text 
+                        style={{ 
+                          fontSize: 24,
+                          fontWeight: 'bold',
+                          color: '#111827',
+                          marginBottom: 8
+                        }}
+                      >
+                        Your Impact
+                      </Text>
+                      <Text 
+                        style={{ 
+                          fontSize: 16, 
+                          color: '#6B7280', 
+                          textAlign: 'center',
+                          maxWidth: 400
+                        }}
+                      >
+                        Track your engagement and contributions to our movement
+                      </Text>
+                    </View>
+                  </Animated.View>
+                  
+                  <View style={{ 
+                    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+                    gap: 12
+                  }}>
+                    <StatCard 
+                      label="Events Attended" 
+                      value={loadingStats ? "..." : userStats?.eventsAttended.toString() || "0"} 
+                      trend={loadingStats ? "" : userStats?.thisMonth.eventsAttended ? `+${userStats.thisMonth.eventsAttended} this month` : "No events this month"} 
+                      icon="calendar" 
+                      color="#8b5cf6" 
+                    />
+                    <StatCard 
+                      label="Donations Made" 
+                      value={loadingStats ? "..." : userStats?.totalDonated ? `$${userStats.totalDonated}` : "$0"} 
+                      trend={loadingStats ? "" : userStats?.thisMonth.donationAmount ? `$${userStats.thisMonth.donationAmount} this month` : "No donations this month"} 
+                      icon="heart" 
+                      color="#10b981" 
+                    />
+                    <StatCard 
+                      label="Volunteer Hours" 
+                      value={loadingStats ? "..." : userStats?.totalVolunteerHours.toString() || "0"} 
+                      trend={loadingStats ? "" : userStats?.thisMonth.volunteerHours ? `+${userStats.thisMonth.volunteerHours} this month` : "No hours this month"} 
+                      icon="time" 
+                      color="#f59e0b" 
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {/* Quick Actions */}
+              {showQuickActions && (
+                <View style={{ paddingHorizontal: 20, paddingBottom: 40 }}>
+                  <View style={{ maxWidth: 1200, alignSelf: 'center', width: '100%' }}>
+                    <Animated.View style={fadeInStyle}>
+                      <View style={{ alignItems: 'center', marginBottom: 32 }}>
+                        <Ionicons name="rocket" size={32} color="#d946ef" style={{ marginBottom: 12 }} />
+                        <Text 
+                          style={{ 
+                            fontSize: 24,
+                            fontWeight: 'bold',
+                            color: '#111827',
+                            marginBottom: 8
+                          }}
+                        >
+                          Quick Actions
+                        </Text>
+                        <Text 
+                          style={{ 
+                            fontSize: 16, 
+                            color: '#6B7280', 
+                            textAlign: 'center',
+                            maxWidth: 400
+                          }}
+                        >
+                          Everything you need to stay engaged and make an impact
+                        </Text>
+                      </View>
+                    </Animated.View>
+
+                    <View style={{ 
+                      maxWidth: 800, 
+                      alignSelf: 'center',
+                      width: '100%'
+                    }}>
+                      <QuickActionCard
+                        icon="newspaper"
+                        iconLibrary="Ionicons"
+                        title="Latest News & Updates"
+                        description="Stay informed with the latest party news, policy updates, and campaign progress"
+                        onPress={() => router.push('/newsroom')}
+                        color="#8b5cf6"
+                        delay={100}
+                      />
+
+                      <QuickActionCard
+                        icon="heart"
+                        iconLibrary="Ionicons"
+                        title="Make a Donation"
+                        description="Support our ongoing campaigns and initiatives with a contribution"
+                        onPress={() => router.push('/donate')}
+                        color="#10b981"
+                        delay={200}
+                      />
+
+                      <QuickActionCard
+                        icon="ballot"
+                        iconLibrary="MaterialIcons"
+                        title="Upcoming Votes"
+                        description="View and participate in upcoming party votes and policy decisions"
+                        onPress={() => router.push('/votes')}
+                        color="#f59e0b"
+                        delay={300}
+                      />
+
+                      <QuickActionCard
+                        icon="calendar"
+                        iconLibrary="Ionicons"
+                        title="Local Events"
+                        description="Find and register for political events, rallies, and meetings in your area"
+                        onPress={() => router.push('/events')}
+                        color="#ef4444"
+                        delay={400}
+                      />
+
+                      <QuickActionCard
+                        icon="time"
+                        iconLibrary="Ionicons"
+                        title="Log Volunteer Hours"
+                        description="Record your volunteer contributions and track your community impact"
+                        onPress={() => {
+                          // For now, show a coming soon alert - you can implement a modal later
+                          Alert.alert(
+                            'Log Volunteer Hours',
+                            'This feature will allow you to log your volunteer hours. Coming soon!',
+                            [{ text: 'OK' }]
+                          );
+                        }}
+                        color="#0ea5e9"
+                        delay={450}
+                      />
+
+                      <QuickActionCard
+                        icon="people"
+                        iconLibrary="Ionicons"
+                        title="Volunteer Opportunities"
+                        description="Sign up to help with campaigns, phone banking, and community outreach"
+                        onPress={() => router.push('/volunteer')}
+                        color="#10b981"
+                        delay={500}
+                      />
+
+                      <QuickActionCard
+                        icon="settings"
+                        iconLibrary="Ionicons"
+                        title="Account Settings"
+                        description="Update your profile, preferences, and notification settings"
+                        onPress={() => setShowSettingsModal(true)}
+                        color="#6b7280"
+                        delay={550}
+                      />
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Recent Activity */}
+              <View 
+                style={{ 
+                  backgroundColor: '#f1f5f9',
+                  paddingHorizontal: 20, 
+                  paddingVertical: 40 
+                }}
+              >
+                <View style={{ maxWidth: 1200, alignSelf: 'center', width: '100%' }}>
+                  <Animated.View style={fadeInStyle}>
+                    <View style={{ alignItems: 'center', marginBottom: 32 }}>
+                      <MaterialIcons name="timeline" size={32} color="#d946ef" style={{ marginBottom: 12 }} />
+                      <Text 
+                        style={{ 
+                          fontSize: 24,
+                          fontWeight: 'bold',
+                          color: '#111827',
+                          marginBottom: 8
+                        }}
+                      >
+                        Recent Activity
+                      </Text>
+                      <Text 
+                        style={{ 
+                          fontSize: 16, 
+                          color: '#6B7280', 
+                          textAlign: 'center',
+                          maxWidth: 400
+                        }}
+                      >
+                        Your latest contributions and engagement with our movement
+                      </Text>
+                    </View>
+                  </Animated.View>
+
+                  <View style={{ maxWidth: 600, alignSelf: 'center', width: '100%' }}>
+                    {loadingActivity ? (
+                      <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                        <Text style={{ fontSize: 16, color: '#6B7280' }}>Loading activity...</Text>
+                      </View>
+                    ) : userActivity.length === 0 ? (
+                      <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                        <View 
+                          style={{
+                            backgroundColor: '#f1f5f9',
+                            borderRadius: 20,
+                            padding: 20,
+                            marginBottom: 16,
+                          }}
+                        >
+                          <Ionicons name="time" size={48} color="#6B7280" />
+                        </View>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#111827', textAlign: 'center', marginBottom: 8 }}>
+                          No Recent Activity
+                        </Text>
+                        <Text style={{ fontSize: 14, color: '#6B7280', textAlign: 'center' }}>
+                          Start participating in events, volunteering, or making donations to see your activity here
+                        </Text>
+                      </View>
+                    ) : (
+                      userActivity.map((activity, index) => (
+                        <Animated.View 
+                          key={index}
+                          style={[
+                            {
+                              backgroundColor: '#ffffff',
+                              borderRadius: 12,
+                              padding: 20,
+                              marginBottom: 12,
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.05,
+                              shadowRadius: 8,
+                              elevation: 4,
+                              borderLeftWidth: 4,
+                              borderLeftColor: activity.color,
+                              ...(Platform.OS === 'web' && {
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                              })
+                            }
+                          ]}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View 
+                              style={{
+                                backgroundColor: activity.color + '20',
+                                borderRadius: 10,
+                                padding: 10,
+                                marginRight: 16,
+                              }}
+                            >
+                              <Ionicons name={activity.icon as any} size={20} color={activity.color} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ 
+                                fontSize: 16, 
+                                fontWeight: '600', 
+                                color: '#111827', 
+                                marginBottom: 4 
+                              }}>
+                                {activity.title}
+                              </Text>
+                              <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 4 }}>
+                                {activity.description}
+                              </Text>
+                              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>
+                                {new Date(activity.date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric', 
+                                  year: 'numeric' 
+                                })}
+                              </Text>
+                            </View>
+                            <View 
+                              style={{ 
+                                width: 8, 
+                                height: 8, 
+                                backgroundColor: activity.color, 
+                                borderRadius: 4 
+                              }} 
+                            />
+                          </View>
+                        </Animated.View>
+                      ))
+                    )}
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
           </View>
-        </ScrollView>
-      </View>
+          
+          <SettingsModal />
         </>
       )}
     </>

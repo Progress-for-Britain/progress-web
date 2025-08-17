@@ -516,6 +516,277 @@ const updatePrivacySettings = async (req, res) => {
   }
 };
 
+// Get user statistics for account dashboard
+const getUserStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get event participation stats
+    const eventStats = await prisma.eventParticipant.aggregate({
+      where: {
+        userId,
+        status: 'ATTENDED'
+      },
+      _count: {
+        id: true
+      }
+    });
+
+    // Get total volunteer hours
+    const volunteerStats = await prisma.volunteerHours.aggregate({
+      where: {
+        userId,
+        approved: true
+      },
+      _sum: {
+        hours: true
+      }
+    });
+
+    // Get donation stats
+    const donationStats = await prisma.payment.aggregate({
+      where: {
+        userId
+      },
+      _sum: {
+        totalDonated: true
+      }
+    });
+
+    // Get recent activity counts for this month
+    const currentMonth = new Date();
+    currentMonth.setDate(1);
+    currentMonth.setHours(0, 0, 0, 0);
+
+    const thisMonthEvents = await prisma.eventParticipant.count({
+      where: {
+        userId,
+        status: 'ATTENDED',
+        checkedInAt: {
+          gte: currentMonth
+        }
+      }
+    });
+
+    const thisMonthVolunteerHours = await prisma.volunteerHours.aggregate({
+      where: {
+        userId,
+        approved: true,
+        date: {
+          gte: currentMonth
+        }
+      },
+      _sum: {
+        hours: true
+      }
+    });
+
+    const thisMonthDonations = await prisma.payment.aggregate({
+      where: {
+        userId,
+        createdAt: {
+          gte: currentMonth
+        }
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        eventsAttended: eventStats._count.id || 0,
+        totalVolunteerHours: volunteerStats._sum.hours || 0,
+        totalDonated: donationStats._sum.totalDonated || 0,
+        thisMonth: {
+          eventsAttended: thisMonthEvents || 0,
+          volunteerHours: thisMonthVolunteerHours._sum.hours || 0,
+          donationAmount: thisMonthDonations._sum.amount || 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user statistics',
+      error: error.message
+    });
+  }
+};
+
+// Get user activity timeline for account dashboard
+const getUserActivity = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { limit = 10 } = req.query;
+
+    // Get recent event participations
+    const recentEvents = await prisma.eventParticipant.findMany({
+      where: {
+        userId,
+        status: 'ATTENDED'
+      },
+      include: {
+        event: {
+          select: {
+            title: true,
+            eventType: true
+          }
+        }
+      },
+      orderBy: {
+        checkedInAt: 'desc'
+      },
+      take: parseInt(limit)
+    });
+
+    // Get recent donations
+    const recentDonations = await prisma.payment.findMany({
+      where: {
+        userId
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: parseInt(limit)
+    });
+
+    // Get recent volunteer hours
+    const recentVolunteerWork = await prisma.volunteerHours.findMany({
+      where: {
+        userId,
+        approved: true
+      },
+      include: {
+        event: {
+          select: {
+            title: true
+          }
+        }
+      },
+      orderBy: {
+        date: 'desc'
+      },
+      take: parseInt(limit)
+    });
+
+    // Combine and sort all activities
+    const activities = [];
+
+    recentEvents.forEach(participation => {
+      activities.push({
+        type: 'event',
+        title: `Attended ${participation.event.title}`,
+        description: `Participated in ${participation.event.eventType.toLowerCase()} event`,
+        date: participation.checkedInAt,
+        icon: 'calendar',
+        color: '#10B981'
+      });
+    });
+
+    recentDonations.forEach(donation => {
+      activities.push({
+        type: 'donation',
+        title: `Donated $${donation.amount}`,
+        description: donation.purpose || 'General donation',
+        date: donation.createdAt,
+        icon: 'heart',
+        color: '#d946ef'
+      });
+    });
+
+    recentVolunteerWork.forEach(volunteer => {
+      activities.push({
+        type: 'volunteer',
+        title: `Volunteered ${volunteer.hours} hours`,
+        description: volunteer.event ? `For ${volunteer.event.title}` : volunteer.description || 'General volunteer work',
+        date: volunteer.date,
+        icon: 'people',
+        color: '#0ea5e9'
+      });
+    });
+
+    // Sort by date (most recent first)
+    activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json({
+      success: true,
+      data: activities.slice(0, parseInt(limit))
+    });
+  } catch (error) {
+    console.error('Error fetching user activity:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user activity',
+      error: error.message
+    });
+  }
+};
+
+// Get user's upcoming events
+const getUserUpcomingEvents = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { limit = 5 } = req.query;
+
+    const upcomingEvents = await prisma.eventParticipant.findMany({
+      where: {
+        userId,
+        status: {
+          in: ['REGISTERED', 'CONFIRMED']
+        },
+        event: {
+          status: 'UPCOMING',
+          startDate: {
+            gte: new Date()
+          }
+        }
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            eventType: true,
+            location: true,
+            address: true,
+            isVirtual: true,
+            virtualLink: true,
+            startDate: true,
+            endDate: true,
+            imageUrl: true
+          }
+        }
+      },
+      orderBy: {
+        event: {
+          startDate: 'asc'
+        }
+      },
+      take: parseInt(limit)
+    });
+
+    res.json({
+      success: true,
+      data: upcomingEvents.map(participation => ({
+        participationStatus: participation.status,
+        registeredAt: participation.registeredAt,
+        ...participation.event
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching upcoming events:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch upcoming events',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -526,5 +797,8 @@ module.exports = {
   getNotificationPreferences,
   updateNotificationPreferences,
   getPrivacySettings,
-  updatePrivacySettings
+  updatePrivacySettings,
+  getUserStats,
+  getUserActivity,
+  getUserUpcomingEvents
 };

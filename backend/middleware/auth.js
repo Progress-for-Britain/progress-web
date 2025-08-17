@@ -70,10 +70,24 @@ const requireWriterOrAdmin = (req, res, next) => {
   next();
 };
 
+// Middleware for checking specific roles
+const requireRole = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied. Required role: ${allowedRoles.join(' or ')}`
+      });
+    }
+    next();
+  };
+};
+
 module.exports = {
   authenticateToken,
   requireAdmin,
   requireOwnerOrAdmin,
   requireUserOrAdmin,
-  requireWriterOrAdmin
+  requireWriterOrAdmin,
+  requireRole
 };

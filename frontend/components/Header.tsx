@@ -326,6 +326,7 @@ export default function Header() {
                   <>
                     <NavButton href="/account" icon="person">Account</NavButton>
                     <NavButton href="/newsroom" icon="newspaper">Newsroom</NavButton>
+                    <NavButton href="/events" icon="calendar">Events</NavButton>
                     <NavButton href="/settings" icon="settings">Settings</NavButton>
                     <NavButton onPress={handleLogoutRequest} icon="log-out" variant="secondary">
                       Logout

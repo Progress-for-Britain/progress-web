@@ -54,6 +54,13 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen 
+        name="events" 
+        options={{ 
+          title: "Events - Progress UK",
+          headerTitle: "Events"
+        }} 
+      />
+      <Stack.Screen 
         name="settings" 
         options={{ 
           title: "Settings - Progress UK",

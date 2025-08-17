@@ -10,7 +10,10 @@ const {
   getNotificationPreferences,
   updateNotificationPreferences,
   getPrivacySettings,
-  updatePrivacySettings
+  updatePrivacySettings,
+  getUserStats,
+  getUserActivity,
+  getUserUpcomingEvents
 } = require('../controllers/userController');
 const {
   authenticateToken,
@@ -35,5 +38,10 @@ router.put('/:id/notifications', authenticateToken, requireOwnerOrAdmin, updateN
 // Privacy settings routes
 router.get('/:id/privacy', authenticateToken, requireOwnerOrAdmin, getPrivacySettings);
 router.put('/:id/privacy', authenticateToken, requireOwnerOrAdmin, updatePrivacySettings);
+
+// Account dashboard routes
+router.get('/me/stats', authenticateToken, getUserStats);
+router.get('/me/activity', authenticateToken, getUserActivity);
+router.get('/me/upcoming-events', authenticateToken, getUserUpcomingEvents);
 
 module.exports = router;

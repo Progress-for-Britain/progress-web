@@ -172,6 +172,128 @@ export interface ReactionSummary {
   }[];
 }
 
+// Events interfaces
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  eventType: 'RALLY' | 'MEETING' | 'FUNDRAISER' | 'CAMPAIGN' | 'VOLUNTEER' | 'TRAINING' | 'CONFERENCE' | 'SOCIAL';
+  status: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
+  location: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  capacity: number | null;
+  isVirtual: boolean;
+  virtualLink: string | null;
+  startDate: string;
+  endDate: string;
+  imageUrl: string | null;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+  createdById: string;
+  createdBy: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+  };
+  participants?: EventParticipant[];
+  _count?: {
+    participants: number;
+  };
+  participationStatus?: 'REGISTERED' | 'CONFIRMED' | 'ATTENDED' | 'NO_SHOW' | 'CANCELLED';
+  registeredAt?: string;
+}
+
+export interface EventParticipant {
+  id: string;
+  status: 'REGISTERED' | 'CONFIRMED' | 'ATTENDED' | 'NO_SHOW' | 'CANCELLED';
+  notes: string | null;
+  registeredAt: string;
+  checkedInAt: string | null;
+  userId: string;
+  eventId: string;
+  user: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  };
+}
+
+export interface VolunteerHours {
+  id: string;
+  hours: number;
+  description: string | null;
+  date: string;
+  approved: boolean;
+  approvedBy: string | null;
+  notes: string | null;
+  userId: string;
+  eventId: string | null;
+  event: {
+    title: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEventRequest {
+  title: string;
+  description: string;
+  eventType: 'RALLY' | 'MEETING' | 'FUNDRAISER' | 'CAMPAIGN' | 'VOLUNTEER' | 'TRAINING' | 'CONFERENCE' | 'SOCIAL';
+  status?: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
+  location?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  capacity?: number;
+  isVirtual?: boolean;
+  virtualLink?: string;
+  startDate: string;
+  endDate: string;
+  imageUrl?: string;
+  tags?: string[];
+}
+
+export interface LogVolunteerHoursRequest {
+  hours: number;
+  description?: string;
+  date: string;
+  eventId?: string;
+}
+
+export interface UserStats {
+  eventsAttended: number;
+  totalVolunteerHours: number;
+  totalDonated: number;
+  thisMonth: {
+    eventsAttended: number;
+    volunteerHours: number;
+    donationAmount: number;
+  };
+}
+
+export interface UserActivity {
+  type: 'event' | 'donation' | 'volunteer';
+  title: string;
+  description: string;
+  date: string;
+  icon: string;
+  color: string;
+}
+
+export interface EventsResponse {
+  events: Event[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
+}
+
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -402,7 +524,143 @@ class ApiClient {
     }>(`/api/news/${postId}/reactions`);
     return response.data.data;
   }
+
+  // User dashboard endpoints
+  async getUserStats(): Promise<UserStats> {
+    const response = await this.client.get<{success: boolean; data: UserStats}>('/api/users/me/stats');
+    return response.data.data;
+  }
+
+  async getUserActivity(limit?: number): Promise<UserActivity[]> {
+    const queryParams = new URLSearchParams();
+    if (limit) queryParams.append('limit', limit.toString());
+
+    const response = await this.client.get<{success: boolean; data: UserActivity[]}>(
+      `/api/users/me/activity?${queryParams.toString()}`
+    );
+    return response.data.data;
+  }
+
+  async getUserUpcomingEvents(limit?: number): Promise<Event[]> {
+    const queryParams = new URLSearchParams();
+    if (limit) queryParams.append('limit', limit.toString());
+
+    const response = await this.client.get<{success: boolean; data: Event[]}>(
+      `/api/users/me/upcoming-events?${queryParams.toString()}`
+    );
+    return response.data.data;
+  }
+
+  // Events endpoints
+  async getAllEvents(params?: {
+    page?: number;
+    limit?: number;
+    eventType?: string;
+    status?: string;
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<EventsResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.eventType) queryParams.append('eventType', params.eventType);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+
+    const response = await this.client.get<{success: boolean; data: EventsResponse}>(
+      `/api/events?${queryParams.toString()}`
+    );
+    return response.data.data;
+  }
+
+  async getEventById(id: string): Promise<Event> {
+    const response = await this.client.get<{success: boolean; data: Event}>(`/api/events/${id}`);
+    return response.data.data;
+  }
+
+  async createEvent(eventData: CreateEventRequest): Promise<Event> {
+    const response = await this.client.post<{success: boolean; data: Event; message: string}>(
+      '/api/events', 
+      eventData
+    );
+    return response.data.data;
+  }
+
+  async updateEvent(eventId: string, eventData: Partial<CreateEventRequest>): Promise<Event> {
+    const response = await this.client.put<{success: boolean; data: Event; message: string}>(
+      `/api/events/${eventId}`, 
+      eventData
+    );
+    return response.data.data;
+  }
+
+  async deleteEvent(eventId: string): Promise<{ success: boolean; message: string }> {
+    const response = await this.client.delete<{ success: boolean; message: string }>(
+      `/api/events/${eventId}`
+    );
+    return response.data;
+  }
+
+  async registerForEvent(eventId: string): Promise<{
+    success: boolean;
+    message: string;
+    data: EventParticipant;
+  }> {
+    const response = await this.client.post<{
+      success: boolean;
+      message: string;
+      data: EventParticipant;
+    }>(`/api/events/${eventId}/register`);
+    return response.data;
+  }
+
+  async cancelEventRegistration(eventId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    const response = await this.client.delete<{
+      success: boolean;
+      message: string;
+    }>(`/api/events/${eventId}/register`);
+    return response.data;
+  }
+
+  async getEvent(eventId: string): Promise<Event> {
+    const response = await this.client.get<{success: boolean; data: Event; message: string}>(
+      `/api/events/${eventId}`
+    );
+    return response.data.data;
+  }
+
+  async logVolunteerHours(hoursData: LogVolunteerHoursRequest): Promise<VolunteerHours> {
+    const response = await this.client.post<{success: boolean; data: VolunteerHours; message: string}>(
+      '/api/events/volunteer-hours', 
+      hoursData
+    );
+    return response.data.data;
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);
 export default api;
+
+// Export convenience functions
+export const getEvents = (params?: {
+  page?: number;
+  limit?: number;
+  eventType?: string;
+  status?: string;
+  search?: string;
+}) => api.getAllEvents(params);
+
+export const getEvent = (eventId: string) => api.getEvent(eventId);
+export const createEvent = (eventData: CreateEventRequest) => api.createEvent(eventData);
+export const registerForEvent = (eventId: string) => api.registerForEvent(eventId);
+export const unregisterFromEvent = (eventId: string) => api.cancelEventRegistration(eventId);
+export const logVolunteerHours = (hoursData: LogVolunteerHoursRequest) => api.logVolunteerHours(hoursData);
+
+// Export type alias for compatibility
+export type EventType = Event['eventType'];
