@@ -63,7 +63,7 @@ export default function Header() {
     try {
       await logout();
       setIsMobileMenuOpen(false); // Close mobile menu on logout
-      router.replace('/');
+      // Don't manually navigate - let the auth state change handle the redirect
     } catch (error) {
       console.error('Logout failed:', error);
     }

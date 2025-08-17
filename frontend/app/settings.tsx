@@ -41,27 +41,9 @@ export default function Settings() {
   // Redirect if not authenticated (but wait for loading to complete)
   React.useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.replace('/login');
+      router.replace('/');
     }
   }, [isAuthenticated, authLoading]);
-
-  // Show loading screen while auth is being determined
-  if (authLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
-  // Show loading screen if not authenticated (while redirect is happening)
-  if (!isAuthenticated || !user) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
 
   // Load notification preferences and privacy settings
   useEffect(() => {
@@ -139,7 +121,7 @@ export default function Settings() {
           onPress: async () => {
             try {
               await logout();
-              router.replace('/');
+              // Don't manually navigate - let the auth state change handle the redirect
             } catch (error) {
               console.error('Logout failed:', error);
             }
@@ -254,10 +236,22 @@ export default function Settings() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="dark" />
-      <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-        <Header />
+      {/* Show loading screen while auth is being determined */}
+      {authLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+          <Text>Loading...</Text>
+        </View>
+      ) : /* Show loading screen if not authenticated (while redirect is happening) */
+      (!isAuthenticated || !user) ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+          <Text>Loading...</Text>
+        </View>
+      ) : (
+        <>
+          <Stack.Screen options={{ headerShown: false }} />
+          <StatusBar style="dark" />
+          <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+            <Header />
         
         <ScrollView style={{ flex: 1 }}>
           {/* Header */}
@@ -503,6 +497,8 @@ export default function Settings() {
           </View>
         </ScrollView>
       </View>
+        </>
+      )}
     </>
   );
 }
