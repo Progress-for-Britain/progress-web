@@ -14,27 +14,9 @@ export default function Newsroom() {
   // Redirect if not authenticated (but wait for loading to complete)
   React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.replace('/login');
+      router.replace('/');
     }
   }, [isAuthenticated, isLoading]);
-
-  // Show loading screen while auth is being determined
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
-  // Show loading screen if not authenticated (while redirect is happening)
-  if (!isAuthenticated) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
 
   const categories = [
     { id: 'all', label: 'All News' },
@@ -228,10 +210,22 @@ export default function Newsroom() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="dark" />
-      <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-        <Header />
+      {/* Show loading screen while auth is being determined */}
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+          <Text>Loading...</Text>
+        </View>
+      ) : /* Show loading screen if not authenticated (while redirect is happening) */
+      (!isAuthenticated) ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+          <Text>Loading...</Text>
+        </View>
+      ) : (
+        <>
+          <Stack.Screen options={{ headerShown: false }} />
+          <StatusBar style="dark" />
+          <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+            <Header />
         
         <ScrollView style={{ flex: 1 }}>
           {/* Header Section */}
@@ -342,6 +336,8 @@ export default function Newsroom() {
           </View>
         </ScrollView>
       </View>
+        </>
+      )}
     </>
   );
 }
