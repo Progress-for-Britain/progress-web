@@ -19,9 +19,21 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'frontend/package-lock.json'
 
+      - name: 🔍 Debug environment
+        run: |
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Platform: $(uname -a)"
+
       - name: 📥 Install dependencies for Expo app
         working-directory: ./frontend
-        run: npm i
+        run: |
+          npm cache clean --force
+          npm ci
+
+      - name: 🔧 Rebuild native modules
+        working-directory: ./frontend
+        run: npm rebuild
   
       - name: 🏗️ Build Expo web app
         working-directory: ./frontend
