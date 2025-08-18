@@ -10,6 +10,7 @@ interface AuthContextType {
   register: (userData: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  getToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -117,6 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const getToken = async (): Promise<string | null> => {
+    try {
+      return await AsyncStorage.getItem(TOKEN_KEY);
+    } catch (error) {
+      console.error('Failed to get token:', error);
+      return null;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -125,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register,
     logout,
     refreshUser,
+    getToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

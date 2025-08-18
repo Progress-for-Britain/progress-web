@@ -13,6 +13,7 @@ import Animated, {
   Extrapolate
 } from "react-native-reanimated";
 import { useAuth } from '../util/auth-context';
+import { api } from '../util/api';
 import Header from '../components/Header';
 
 export default function Join() {
@@ -25,8 +26,21 @@ export default function Join() {
     interests: [] as string[],
     volunteer: false,
     newsletter: true,
+    // Volunteer-specific fields
+    socialMediaHandle: '',
+    isBritishCitizen: undefined as boolean | undefined,
+    livesInUK: undefined as boolean | undefined,
+    briefBio: '',
+    briefCV: '',
+    otherAffiliations: '',
+    interestedIn: [] as string[],
+    canContribute: [] as string[],
+    signedNDA: false,
+    gdprConsent: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -34,6 +48,8 @@ export default function Join() {
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(50);
   const rotateAnim = useSharedValue(0);
+  const successAnim = useSharedValue(0);
+  const checkmarkScale = useSharedValue(0);
 
   useEffect(() => {
     // Animate elements on mount
@@ -47,6 +63,13 @@ export default function Join() {
     );
   }, []);
 
+  useEffect(() => {
+    if (isSuccess) {
+      successAnim.value = withSpring(1, { damping: 15 });
+      checkmarkScale.value = withSpring(1, { damping: 10 });
+    }
+  }, [isSuccess]);
+
   const fadeInStyle = useAnimatedStyle(() => ({
     opacity: fadeAnim.value,
     transform: [{ translateY: slideAnim.value }],
@@ -54,6 +77,15 @@ export default function Join() {
 
   const rotateStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotateAnim.value}deg` }],
+  }));
+
+  const successStyle = useAnimatedStyle(() => ({
+    opacity: successAnim.value,
+    transform: [{ translateY: withTiming(isSuccess ? 0 : -50, { duration: 500 }) }],
+  }));
+
+  const checkmarkStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkmarkScale.value }],
   }));
 
   const interests = [
@@ -71,24 +103,85 @@ export default function Join() {
     'Economic Development'
   ];
 
+  const volunteerInterests = [
+    'Policy Research',
+    'Campaign Management',
+    'Event Organization',
+    'Community Outreach',
+    'Digital Marketing',
+    'Data Analysis',
+    'Fundraising',
+    'Content Creation',
+    'Local Organizing',
+    'Media Relations'
+  ];
+
+  const contributionAreas = [
+    'Strategic Planning',
+    'Writing & Communications',
+    'Design & Creative',
+    'Technology & Development',
+    'Event Management',
+    'Research & Analysis',
+    'Social Media',
+    'Public Speaking',
+    'Administrative Support',
+    'Leadership & Management'
+  ];
+
   const handleJoin = async () => {
-    const { firstName, lastName, email } = formData;
+    const { firstName, lastName, email, volunteer } = formData;
     
     if (!firstName || !lastName || !email) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
+    // Validate volunteer-specific fields if volunteer is selected
+    if (volunteer) {
+      const { 
+        socialMediaHandle, 
+        isBritishCitizen, 
+        livesInUK, 
+        briefBio, 
+        briefCV, 
+        signedNDA, 
+        gdprConsent 
+      } = formData;
+      
+      const missingFields = [];
+      
+      if (!socialMediaHandle) missingFields.push('Social media handle');
+      if (isBritishCitizen === undefined) missingFields.push('British citizenship status');
+      if (livesInUK === undefined) missingFields.push('UK residence status');
+      if (!briefBio) missingFields.push('Brief bio');
+      if (!briefCV) missingFields.push('Brief CV');
+      if (!signedNDA) missingFields.push('NDA agreement');
+      if (!gdprConsent) missingFields.push('GDPR consent');
+      
+      if (missingFields.length > 0) {
+        Alert.alert('Error', `Please complete the following volunteer fields: ${missingFields.join(', ')}`);
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
-      // In a real app, this would call the API
-      Alert.alert(
-        'Welcome to Progress UK!', 
-        'Your membership application has been submitted. You\'ll receive a confirmation email shortly with your membership details and next steps.',
-        [{ text: 'Brilliant!', onPress: () => router.push('/') }]
-      );
+      const response = await api.submitApplication(formData);
+
+      if (response.success) {
+        setSuccessMessage(response.message || 'Your membership application has been submitted successfully. An admin will review your application and you\'ll receive an access code via email if approved.');
+        setIsSuccess(true);
+        // Scroll to top to show success message
+        if (Platform.OS === 'web') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        Alert.alert('Error', response.message || 'Failed to submit application. Please try again.');
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to submit application. Please try again.');
+      console.error('Error submitting application:', error);
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to submit application. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -107,6 +200,28 @@ export default function Join() {
     }));
   };
 
+  const toggleVolunteerInterest = (interest: string) => {
+    setFormData(prev => ({
+      ...prev,
+      interestedIn: prev.interestedIn.includes(interest)
+        ? prev.interestedIn.filter(i => i !== interest)
+        : [...prev.interestedIn, interest]
+    }));
+  };
+
+  const toggleContribution = (contribution: string) => {
+    setFormData(prev => ({
+      ...prev,
+      canContribute: prev.canContribute.includes(contribution)
+        ? prev.canContribute.filter(c => c !== contribution)
+        : [...prev.canContribute, contribution]
+    }));
+  };
+
+  const handleContinue = () => {
+    router.push('/');
+  };
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -114,10 +229,110 @@ export default function Join() {
       <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
         <Header />
         
+        {/* Success State */}
+        {isSuccess && (
+          <Animated.View style={[successStyle, {
+            backgroundColor: '#ffffff',
+            marginHorizontal: 20,
+            marginTop: 20,
+            borderRadius: 20,
+            padding: 32,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.1,
+            shadowRadius: 20,
+            elevation: 10,
+            borderLeftWidth: 4,
+            borderLeftColor: '#10b981',
+          }]}>
+            <View style={{ alignItems: 'center', marginBottom: 24 }}>
+              <Animated.View style={[checkmarkStyle, {
+                backgroundColor: '#10b981',
+                borderRadius: 40,
+                width: 80,
+                height: 80,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 20,
+              }]}>
+                <Ionicons name="checkmark" size={40} color="#ffffff" />
+              </Animated.View>
+              
+              <Text style={{
+                fontSize: 28,
+                fontWeight: 'bold',
+                color: '#111827',
+                textAlign: 'center',
+                marginBottom: 12,
+              }}>
+                Application Submitted!
+              </Text>
+              
+              <Text style={{
+                fontSize: 16,
+                color: '#6B7280',
+                textAlign: 'center',
+                lineHeight: 24,
+                marginBottom: 24,
+                maxWidth: 400,
+              }}>
+                {successMessage}
+              </Text>
+              
+              <View style={{
+                backgroundColor: '#f0fdf4',
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 24,
+                width: '100%',
+                maxWidth: 400,
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <Ionicons name="information-circle" size={20} color="#10b981" style={{ marginRight: 8 }} />
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#065f46' }}>
+                    What happens next?
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 14, color: '#047857', lineHeight: 20 }}>
+                  • An admin will review your application{'\n'}
+                  • You'll receive an email notification{'\n'}
+                  • If approved, you'll get your access code via email
+                </Text>
+              </View>
+              
+              <TouchableOpacity
+                onPress={handleContinue}
+                style={{
+                  backgroundColor: '#d946ef',
+                  borderRadius: 12,
+                  paddingVertical: 14,
+                  paddingHorizontal: 32,
+                  shadowColor: '#d946ef',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8,
+                  ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                }}
+              >
+                <Text style={{
+                  color: '#ffffff',
+                  fontSize: 16,
+                  fontWeight: '600',
+                  textAlign: 'center',
+                }}>
+                  Continue to Home
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        )}
+        
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
+        {!isSuccess && (
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           {/* Hero Section with Background Image */}
           <ImageBackground
@@ -537,6 +752,377 @@ export default function Join() {
                   </TouchableOpacity>
                 </View>
 
+                {/* Volunteer-Specific Fields */}
+                {formData.volunteer && (
+                  <View style={{ marginBottom: 32, padding: 20, backgroundColor: '#f0f9ff', borderRadius: 16, borderLeftWidth: 4, borderLeftColor: '#0ea5e9' }}>
+                    <Text style={{ fontSize: 18, fontWeight: '600', color: '#111827', marginBottom: 16 }}>
+                      Volunteer Application Details
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 20 }}>
+                      Please complete the following fields for your volunteer application
+                    </Text>
+
+                    {/* Social Media Handle */}
+                    <View style={{ marginBottom: 16 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                        Social Media Handle *
+                      </Text>
+                      <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 8 }}>
+                        Please provide at least one public social media handle (e.g. X, Instagram, LinkedIn)
+                      </Text>
+                      <TextInput
+                        value={formData.socialMediaHandle}
+                        onChangeText={(value) => updateField('socialMediaHandle', value)}
+                        placeholder="e.g. @yourhandle, linkedin.com/in/yourname"
+                        style={{
+                          borderWidth: 2,
+                          borderColor: '#e5e7eb',
+                          borderRadius: 12,
+                          paddingHorizontal: 16,
+                          paddingVertical: 14,
+                          fontSize: 16,
+                          backgroundColor: '#ffffff',
+                          color: '#111827',
+                        }}
+                      />
+                    </View>
+
+                    {/* British Citizen */}
+                    <View style={{ marginBottom: 16 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                        Are you a British Citizen? *
+                      </Text>
+                      <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <TouchableOpacity
+                          onPress={() => updateField('isBritishCitizen', true)}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: formData.isBritishCitizen === true ? '#d946ef' : '#ffffff',
+                            borderWidth: 2,
+                            borderColor: formData.isBritishCitizen === true ? '#d946ef' : '#e5e7eb',
+                            borderRadius: 8,
+                            paddingHorizontal: 16,
+                            paddingVertical: 12,
+                            ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                          }}
+                        >
+                          <Text style={{ 
+                            fontSize: 14, 
+                            fontWeight: '500',
+                            color: formData.isBritishCitizen === true ? '#ffffff' : '#374151'
+                          }}>
+                            Yes
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => updateField('isBritishCitizen', false)}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: formData.isBritishCitizen === false ? '#d946ef' : '#ffffff',
+                            borderWidth: 2,
+                            borderColor: formData.isBritishCitizen === false ? '#d946ef' : '#e5e7eb',
+                            borderRadius: 8,
+                            paddingHorizontal: 16,
+                            paddingVertical: 12,
+                            ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                          }}
+                        >
+                          <Text style={{ 
+                            fontSize: 14, 
+                            fontWeight: '500',
+                            color: formData.isBritishCitizen === false ? '#ffffff' : '#374151'
+                          }}>
+                            No
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Lives in UK */}
+                    <View style={{ marginBottom: 16 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                        Do you live in the United Kingdom? *
+                      </Text>
+                      <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <TouchableOpacity
+                          onPress={() => updateField('livesInUK', true)}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: formData.livesInUK === true ? '#d946ef' : '#ffffff',
+                            borderWidth: 2,
+                            borderColor: formData.livesInUK === true ? '#d946ef' : '#e5e7eb',
+                            borderRadius: 8,
+                            paddingHorizontal: 16,
+                            paddingVertical: 12,
+                            ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                          }}
+                        >
+                          <Text style={{ 
+                            fontSize: 14, 
+                            fontWeight: '500',
+                            color: formData.livesInUK === true ? '#ffffff' : '#374151'
+                          }}>
+                            Yes
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => updateField('livesInUK', false)}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: formData.livesInUK === false ? '#d946ef' : '#ffffff',
+                            borderWidth: 2,
+                            borderColor: formData.livesInUK === false ? '#d946ef' : '#e5e7eb',
+                            borderRadius: 8,
+                            paddingHorizontal: 16,
+                            paddingVertical: 12,
+                            ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                          }}
+                        >
+                          <Text style={{ 
+                            fontSize: 14, 
+                            fontWeight: '500',
+                            color: formData.livesInUK === false ? '#ffffff' : '#374151'
+                          }}>
+                            No
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Brief Bio */}
+                    <View style={{ marginBottom: 16 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                        Brief Bio *
+                      </Text>
+                      <TextInput
+                        value={formData.briefBio}
+                        onChangeText={(value) => updateField('briefBio', value)}
+                        placeholder="Tell us about yourself, your background, and interests..."
+                        multiline
+                        numberOfLines={4}
+                        style={{
+                          borderWidth: 2,
+                          borderColor: '#e5e7eb',
+                          borderRadius: 12,
+                          paddingHorizontal: 16,
+                          paddingVertical: 14,
+                          fontSize: 16,
+                          backgroundColor: '#ffffff',
+                          color: '#111827',
+                          minHeight: 100,
+                          textAlignVertical: 'top',
+                        }}
+                      />
+                    </View>
+
+                    {/* Brief CV */}
+                    <View style={{ marginBottom: 16 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                        Brief CV *
+                      </Text>
+                      <TextInput
+                        value={formData.briefCV}
+                        onChangeText={(value) => updateField('briefCV', value)}
+                        placeholder="Summarize your relevant experience, education, and skills..."
+                        multiline
+                        numberOfLines={4}
+                        style={{
+                          borderWidth: 2,
+                          borderColor: '#e5e7eb',
+                          borderRadius: 12,
+                          paddingHorizontal: 16,
+                          paddingVertical: 14,
+                          fontSize: 16,
+                          backgroundColor: '#ffffff',
+                          color: '#111827',
+                          minHeight: 100,
+                          textAlignVertical: 'top',
+                        }}
+                      />
+                    </View>
+
+                    {/* Other Affiliations */}
+                    <View style={{ marginBottom: 16 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                        Other Affiliations
+                      </Text>
+                      <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 8 }}>
+                        List any other political parties, organizations, or groups you're affiliated with
+                      </Text>
+                      <TextInput
+                        value={formData.otherAffiliations}
+                        onChangeText={(value) => updateField('otherAffiliations', value)}
+                        placeholder="e.g. Trade unions, advocacy groups, political parties..."
+                        multiline
+                        numberOfLines={3}
+                        style={{
+                          borderWidth: 2,
+                          borderColor: '#e5e7eb',
+                          borderRadius: 12,
+                          paddingHorizontal: 16,
+                          paddingVertical: 14,
+                          fontSize: 16,
+                          backgroundColor: '#ffffff',
+                          color: '#111827',
+                          minHeight: 80,
+                          textAlignVertical: 'top',
+                        }}
+                      />
+                    </View>
+
+                    {/* I am interested in... */}
+                    <View style={{ marginBottom: 16 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                        I am interested in...
+                      </Text>
+                      <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 12 }}>
+                        Select the volunteer activities that interest you
+                      </Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        {volunteerInterests.map((interest) => (
+                          <TouchableOpacity
+                            key={interest}
+                            onPress={() => toggleVolunteerInterest(interest)}
+                            style={{
+                              backgroundColor: formData.interestedIn.includes(interest) ? '#0ea5e9' : '#ffffff',
+                              borderWidth: 2,
+                              borderColor: formData.interestedIn.includes(interest) ? '#0ea5e9' : '#e5e7eb',
+                              borderRadius: 8,
+                              paddingHorizontal: 12,
+                              paddingVertical: 8,
+                              ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                            }}
+                          >
+                            <Text 
+                              style={{ 
+                                fontSize: 12,
+                                fontWeight: '500',
+                                color: formData.interestedIn.includes(interest) ? '#ffffff' : '#374151'
+                              }}
+                            >
+                              {interest}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+
+                    {/* I can contribute... */}
+                    <View style={{ marginBottom: 20 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+                        I can contribute...
+                      </Text>
+                      <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 12 }}>
+                        Select the skills and areas where you can contribute
+                      </Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        {contributionAreas.map((area) => (
+                          <TouchableOpacity
+                            key={area}
+                            onPress={() => toggleContribution(area)}
+                            style={{
+                              backgroundColor: formData.canContribute.includes(area) ? '#059669' : '#ffffff',
+                              borderWidth: 2,
+                              borderColor: formData.canContribute.includes(area) ? '#059669' : '#e5e7eb',
+                              borderRadius: 8,
+                              paddingHorizontal: 12,
+                              paddingVertical: 8,
+                              ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                            }}
+                          >
+                            <Text 
+                              style={{ 
+                                fontSize: 12,
+                                fontWeight: '500',
+                                color: formData.canContribute.includes(area) ? '#ffffff' : '#374151'
+                              }}
+                            >
+                              {area}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+
+                    {/* Checkboxes */}
+                    <View style={{ gap: 12, marginBottom: 16 }}>
+                      <TouchableOpacity
+                        onPress={() => updateField('signedNDA', !formData.signedNDA)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          backgroundColor: '#ffffff',
+                          borderRadius: 8,
+                          padding: 12,
+                          borderWidth: 2,
+                          borderColor: formData.signedNDA ? '#059669' : '#e5e7eb',
+                          ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                        }}
+                      >
+                        <View
+                          style={{
+                            width: 20,
+                            height: 20,
+                            borderWidth: 2,
+                            borderColor: formData.signedNDA ? '#059669' : '#d1d5db',
+                            borderRadius: 4,
+                            backgroundColor: formData.signedNDA ? '#059669' : '#ffffff',
+                            marginRight: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          {formData.signedNDA && (
+                            <Ionicons name="checkmark" size={14} color="#ffffff" />
+                          )}
+                        </View>
+                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#111827', flex: 1 }}>
+                          I have signed the Progress NDA *
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => updateField('gdprConsent', !formData.gdprConsent)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          backgroundColor: '#ffffff',
+                          borderRadius: 8,
+                          padding: 12,
+                          borderWidth: 2,
+                          borderColor: formData.gdprConsent ? '#059669' : '#e5e7eb',
+                          ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                        }}
+                      >
+                        <View
+                          style={{
+                            width: 20,
+                            height: 20,
+                            borderWidth: 2,
+                            borderColor: formData.gdprConsent ? '#059669' : '#d1d5db',
+                            borderRadius: 4,
+                            backgroundColor: formData.gdprConsent ? '#059669' : '#ffffff',
+                            marginRight: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          {formData.gdprConsent && (
+                            <Ionicons name="checkmark" size={14} color="#ffffff" />
+                          )}
+                        </View>
+                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#111827', flex: 1 }}>
+                          I consent to GDPR & Data Privacy requirements *
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+
                 {/* Submit Button */}
                 <TouchableOpacity
                   onPress={handleJoin}
@@ -796,6 +1382,7 @@ export default function Join() {
             </View>
           </View>
         </ScrollView>
+        )}
         </KeyboardAvoidingView>
       </View>
     </>

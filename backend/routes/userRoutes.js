@@ -13,7 +13,12 @@ const {
   updatePrivacySettings,
   getUserStats,
   getUserActivity,
-  getUserUpcomingEvents
+  getUserUpcomingEvents,
+  assignUserToEvent,
+  unassignUserFromEvent,
+  updateUserRole,
+  getUserEventAssignments,
+  getUserManagementStats
 } = require('../controllers/userController');
 const {
   authenticateToken,
@@ -43,5 +48,12 @@ router.put('/:id/privacy', authenticateToken, requireOwnerOrAdmin, updatePrivacy
 router.get('/me/stats', authenticateToken, getUserStats);
 router.get('/me/activity', authenticateToken, getUserActivity);
 router.get('/me/upcoming-events', authenticateToken, getUserUpcomingEvents);
+
+// Admin user management routes
+router.get('/management/stats', authenticateToken, requireAdmin, getUserManagementStats);
+router.get('/:id/events', authenticateToken, requireAdmin, getUserEventAssignments);
+router.put('/:id/role', authenticateToken, requireAdmin, updateUserRole);
+router.post('/assign-event', authenticateToken, requireAdmin, assignUserToEvent);
+router.post('/unassign-event', authenticateToken, requireAdmin, unassignUserFromEvent);
 
 module.exports = router;

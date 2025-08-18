@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3000;
 const userRoutes = require('./routes/userRoutes');
 const newsRoutes = require('./routes/newsRoutes');
 const eventRoutes = require('./routes/eventRoutes');
+const pendingUserRoutes = require('./routes/pendingUserRoutes');
 
 // Import test user seeding utility
 const { seedAllTestUsers } = require('./utils/seedTestUser');
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/api/users', userRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/pending-users', pendingUserRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

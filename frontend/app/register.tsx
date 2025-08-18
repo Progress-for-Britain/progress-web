@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoid
 import { Stack, useRouter, Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../util/auth-context';
+import { api } from '../util/api';
 import Header from '../components/Header';
 
 export default function Register() {
@@ -12,13 +13,49 @@ export default function Register() {
     confirmPassword: '',
     firstName: '',
     lastName: '',
+    accessCode: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isValidatingCode, setIsValidatingCode] = useState(false);
+  const [codeValidated, setCodeValidated] = useState(false);
+  const [suggestedRole, setSuggestedRole] = useState('');
   const { register } = useAuth();
   const router = useRouter();
 
+  const validateAccessCode = async () => {
+    const { accessCode, email } = formData;
+    
+    if (!accessCode || !email) {
+      Alert.alert('Error', 'Please enter both access code and email address');
+      return;
+    }
+
+    setIsValidatingCode(true);
+    try {
+      const response = await api.validateAccessCode({ code: accessCode, email });
+      
+      if (response.success) {
+        setCodeValidated(true);
+        setSuggestedRole(response.data.role);
+        // Pre-fill form with approved data
+        setFormData(prev => ({
+          ...prev,
+          firstName: response.data.firstName,
+          lastName: response.data.lastName
+        }));
+        Alert.alert('Success', 'Access code validated! You can now complete your registration.');
+      } else {
+        Alert.alert('Invalid Code', response.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to validate access code. Please try again.');
+    } finally {
+      setIsValidatingCode(false);
+    }
+  };
+
   const handleRegister = async () => {
-    const { email, password, confirmPassword, firstName, lastName } = formData;
+    const { email, password, confirmPassword, firstName, lastName, accessCode } = formData;
     
     if (!email || !password || !firstName || !lastName) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -37,7 +74,13 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      await register({ email, password, firstName, lastName });
+      await register({ 
+        email, 
+        password, 
+        firstName, 
+        lastName,
+        ...(accessCode && { accessCode })
+      });
       router.replace('/account');
     } catch (error) {
       Alert.alert('Registration Failed', error instanceof Error ? error.message : 'An error occurred');
@@ -97,6 +140,79 @@ export default function Register() {
               >
                 Create your account and be part of the change
               </Text>
+
+              {/* Access Code Section */}
+              <View style={{ 
+                backgroundColor: '#f8fafc', 
+                padding: 16, 
+                borderRadius: 8, 
+                marginBottom: 24,
+                borderWidth: 1,
+                borderColor: '#e5e7eb'
+              }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                  Access Code (Optional)
+                </Text>
+                <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 12 }}>
+                  If you have an access code from your approved membership application, enter it here.
+                </Text>
+                
+                <View style={{ marginBottom: 12 }}>
+                  <TextInput
+                    value={formData.accessCode}
+                    onChangeText={(value) => updateField('accessCode', value.toUpperCase())}
+                    placeholder="Enter access code"
+                    autoCapitalize="characters"
+                    style={{
+                      borderWidth: 1,
+                      borderColor: codeValidated ? '#10b981' : '#D1D5DB',
+                      borderRadius: 8,
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      fontSize: 16,
+                      backgroundColor: '#ffffff'
+                    }}
+                  />
+                </View>
+                
+                {formData.accessCode && !codeValidated && (
+                  <TouchableOpacity
+                    onPress={validateAccessCode}
+                    disabled={isValidatingCode || !formData.email}
+                    style={{
+                      backgroundColor: (!formData.email || isValidatingCode) ? '#9ca3af' : '#d946ef',
+                      paddingVertical: 10,
+                      paddingHorizontal: 16,
+                      borderRadius: 6,
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 14 }}>
+                      {isValidatingCode ? 'Validating...' : 'Validate Code'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                
+                {codeValidated && (
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center',
+                    backgroundColor: '#dcfce7',
+                    padding: 12,
+                    borderRadius: 6
+                  }}>
+                    <Text style={{ color: '#166534', fontSize: 14, fontWeight: '600' }}>
+                      ✓ Access code validated! Role: {suggestedRole}
+                    </Text>
+                  </View>
+                )}
+                
+                {!codeValidated && formData.accessCode && (
+                  <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
+                    You need to enter your email address first to validate the access code.
+                  </Text>
+                )}
+              </View>
 
               <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
                 <View style={{ flex: 1 }}>

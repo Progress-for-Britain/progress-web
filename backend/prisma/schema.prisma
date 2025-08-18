@@ -253,3 +253,54 @@ model VolunteerHours {
   
   @@map("volunteer_hours")
 }
+
+enum PendingUserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PendingUser {
+  id           String            @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String            @unique
+  phone        String?
+  constituency String?
+  interests    String[]          // Array of policy interests
+  volunteer    Boolean           @default(false) // Whether they want to volunteer
+  newsletter   Boolean           @default(true)  // Whether they want newsletter
+  status       PendingUserStatus @default(PENDING)
+  accessCode   String?           // Generated access code for approved users
+  reviewedBy   String?           // ID of admin who reviewed
+  reviewNotes  String?           // Admin notes about the review
+  approvedAt   DateTime?         // When the user was approved/rejected
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  
+  // Volunteer-specific fields (only filled if volunteer = true)
+  socialMediaHandle String?       // Public social media handle
+  isBritishCitizen  Boolean?      // Are you a British Citizen?
+  livesInUK         Boolean?      // Do you live in the United Kingdom?
+  briefBio          String?       @db.Text // Brief Bio
+  briefCV           String?       @db.Text // Brief CV
+  otherAffiliations String?       @db.Text // Other Affiliations
+  interestedIn      String[]      // What they're interested in (volunteer-specific)
+  canContribute     String[]      // What they can contribute
+  signedNDA         Boolean       @default(false) // I have signed the Progress NDA
+  gdprConsent       Boolean       @default(false) // GDPR & Data Privacy consent
+  
+  @@map("pending_users")
+}
+
+model AccessCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  email     String   
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  expiresAt DateTime // Access codes expire after a certain time
+  createdAt DateTime @default(now())
+  
+  @@map("access_codes")
+}

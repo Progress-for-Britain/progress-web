@@ -336,28 +336,31 @@ export default function Header() {
 
             {/* Desktop Navigation */}
             {!isMobile && (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {!isAuthenticated ? (
                   // Unauthenticated navigation
                   <>
-                    <NavButton href="/" icon="home">Home</NavButton>
-                    <NavButton href="/donate" icon="heart" variant="secondary">Donate</NavButton>
-                    <NavButton href="/join" icon="people" variant="primary">Join Us</NavButton>
-                    <NavButton href="/login" icon="log-in">Login</NavButton>
+                  <NavButton href="/" icon="home">Home</NavButton>
+                  <NavButton href="/donate" icon="heart" variant="secondary">Donate</NavButton>
+                  <NavButton href="/join" icon="people" variant="primary">Join Us</NavButton>
+                  <NavButton href="/login" icon="log-in">Login</NavButton>
                   </>
                 ) : (
                   // Authenticated navigation
                   <>
-                    <NavButton href="/account" icon="person">Account</NavButton>
-                    <NavButton href="/newsroom" icon="newspaper">Newsroom</NavButton>
-                    <NavButton href="/events" icon="calendar">Events</NavButton>
-                    <NavButton href="/settings" icon="settings">Settings</NavButton>
-                    <NavButton onPress={handleLogoutRequest} icon="log-out" variant="secondary">
-                      Logout
-                    </NavButton>
+                  <NavButton href="/account" icon="person">Account</NavButton>
+                  <NavButton href="/newsroom" icon="newspaper">Newsroom</NavButton>
+                  <NavButton href="/events" icon="calendar">Events</NavButton>
+                  {user?.role === 'ADMIN' && (
+                    <NavButton href="/user-management" icon="people">User Management</NavButton>
+                  )}
+                  <NavButton href="/settings" icon="settings">Settings</NavButton>
+                  <NavButton onPress={handleLogoutRequest} icon="log-out" variant="secondary">
+                    Logout
+                  </NavButton>
                   </>
                 )}
-              </View>
+                </View>
             )}
 
             {/* Mobile Menu Button with Animation */}

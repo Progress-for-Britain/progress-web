@@ -77,6 +77,7 @@ export interface RegisterRequest {
   lastName?: string;
   address?: string;
   role?: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
+  accessCode?: string;
 }
 
 export interface UpdateUserRequest {
@@ -85,6 +86,86 @@ export interface UpdateUserRequest {
   lastName?: string;
   address?: string;
   role?: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
+}
+
+// Pending User interfaces
+export interface PendingUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  constituency?: string;
+  interests: string[];
+  volunteer: boolean;
+  newsletter: boolean;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  accessCode?: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  
+  // Volunteer-specific fields
+  socialMediaHandle?: string;
+  isBritishCitizen?: boolean;
+  livesInUK?: boolean;
+  briefBio?: string;
+  briefCV?: string;
+  otherAffiliations?: string;
+  interestedIn?: string[];
+  canContribute?: string[];
+  signedNDA?: boolean;
+  gdprConsent?: boolean;
+}
+
+export interface SubmitApplicationRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  constituency?: string;
+  interests?: string[];
+  volunteer?: boolean;
+  newsletter?: boolean;
+  
+  // Volunteer-specific fields (only required if volunteer = true)
+  socialMediaHandle?: string;
+  isBritishCitizen?: boolean;
+  livesInUK?: boolean;
+  briefBio?: string;
+  briefCV?: string;
+  otherAffiliations?: string;
+  interestedIn?: string[];
+  canContribute?: string[];
+  signedNDA?: boolean;
+  gdprConsent?: boolean;
+}
+
+export interface ValidateAccessCodeRequest {
+  code: string;
+  email: string;
+}
+
+export interface ValidateAccessCodeResponse {
+  success: boolean;
+  message: string;
+  data: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    volunteer: boolean;
+    role: string;
+  };
+}
+
+export interface ApproveApplicationRequest {
+  reviewNotes?: string;
+}
+
+export interface RejectApplicationRequest {
+  reviewNotes?: string;
 }
 
 // News/Posts interfaces
@@ -640,6 +721,266 @@ class ApiClient {
       '/api/events/volunteer-hours', 
       hoursData
     );
+    return response.data.data;
+  }
+
+  // Pending User endpoints
+  async submitApplication(applicationData: SubmitApplicationRequest): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      status: string;
+    };
+  }> {
+    const response = await this.client.post<{
+      success: boolean;
+      message: string;
+      data: {
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        status: string;
+      };
+    }>('/api/pending-users/apply', applicationData);
+    return response.data;
+  }
+
+  async validateAccessCode(codeData: ValidateAccessCodeRequest): Promise<ValidateAccessCodeResponse> {
+    const response = await this.client.post<ValidateAccessCodeResponse>(
+      '/api/pending-users/validate-access-code', 
+      codeData
+    );
+    return response.data;
+  }
+
+  async getAllPendingApplications(params?: {
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    applications: PendingUser[];
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+      hasMore: boolean;
+    };
+  }> {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+    const response = await this.client.get<{
+      success: boolean;
+      data: {
+        applications: PendingUser[];
+        pagination: {
+          total: number;
+          limit: number;
+          offset: number;
+          hasMore: boolean;
+        };
+      };
+    }>(`/api/pending-users?${queryParams.toString()}`);
+    return response.data.data;
+  }
+
+  async getPendingApplicationById(id: string): Promise<PendingUser> {
+    const response = await this.client.get<{success: boolean; data: PendingUser}>(
+      `/api/pending-users/${id}`
+    );
+    return response.data.data;
+  }
+
+  async approveApplication(id: string, reviewData: ApproveApplicationRequest): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      id: string;
+      status: string;
+      accessCode: string;
+      approvedAt: string;
+    };
+  }> {
+    const response = await this.client.post<{
+      success: boolean;
+      message: string;
+      data: {
+        id: string;
+        status: string;
+        accessCode: string;
+        approvedAt: string;
+      };
+    }>(`/api/pending-users/${id}/approve`, reviewData);
+    return response.data;
+  }
+
+  async rejectApplication(id: string, reviewData: RejectApplicationRequest): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      id: string;
+      status: string;
+      approvedAt: string;
+    };
+  }> {
+    const response = await this.client.post<{
+      success: boolean;
+      message: string;
+      data: {
+        id: string;
+        status: string;
+        approvedAt: string;
+      };
+    }>(`/api/pending-users/${id}/reject`, reviewData);
+    return response.data;
+  }
+
+  async updatePendingUserVolunteerDetails(id: string, volunteerData: {
+    socialMediaHandle?: string;
+    isBritishCitizen?: boolean;
+    livesInUK?: boolean;
+    briefBio?: string;
+    briefCV?: string;
+    otherAffiliations?: string;
+    interestedIn?: string[];
+    canContribute?: string[];
+    signedNDA?: boolean;
+    gdprConsent?: boolean;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: PendingUser;
+  }> {
+    const response = await this.client.put<{
+      success: boolean;
+      message: string;
+      data: PendingUser;
+    }>(`/api/pending-users/${id}/volunteer-details`, volunteerData);
+    return response.data;
+  }
+
+  async getApplicationStats(): Promise<{
+    pending: number;
+    approved: number;
+    rejected: number;
+    volunteerApplications: number;
+    recentApplications: number;
+  }> {
+    const response = await this.client.get<{
+      success: boolean;
+      data: {
+        pending: number;
+        approved: number;
+        rejected: number;
+        volunteerApplications: number;
+        recentApplications: number;
+      };
+    }>('/api/pending-users/stats');
+    return response.data.data;
+  }
+
+  // User Management endpoints (admin only)
+  async assignUserToEvent(userId: string, eventId: string, status?: string): Promise<{
+    success: boolean;
+    message: string;
+    data: EventParticipant;
+  }> {
+    const response = await this.client.post<{
+      success: boolean;
+      message: string;
+      data: EventParticipant;
+    }>('/api/users/assign-event', { userId, eventId, status });
+    return response.data;
+  }
+
+  async unassignUserFromEvent(userId: string, eventId: string): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      user: any;
+      event: any;
+    };
+  }> {
+    const response = await this.client.post<{
+      success: boolean;
+      message: string;
+      data: {
+        user: any;
+        event: any;
+      };
+    }>('/api/users/unassign-event', { userId, eventId });
+    return response.data;
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<{
+    success: boolean;
+    message: string;
+    data: User;
+  }> {
+    const response = await this.client.put<{
+      success: boolean;
+      message: string;
+      data: User;
+    }>(`/api/users/${userId}/role`, { role });
+    return response.data;
+  }
+
+  async getUserEventAssignments(userId: string): Promise<{
+    id: string;
+    status: string;
+    registeredAt: string;
+    event: {
+      id: string;
+      title: string;
+      eventType: string;
+      status: string;
+      location: string;
+      startDate: string;
+      endDate: string;
+    };
+  }[]> {
+    const response = await this.client.get<{
+      success: boolean;
+      data: {
+        id: string;
+        status: string;
+        registeredAt: string;
+        event: {
+          id: string;
+          title: string;
+          eventType: string;
+          status: string;
+          location: string;
+          startDate: string;
+          endDate: string;
+        };
+      }[];
+    }>(`/api/users/${userId}/events`);
+    return response.data.data;
+  }
+
+  async getUserManagementStats(): Promise<{
+    usersByRole: { [role: string]: number };
+    recentRegistrations: number;
+    activeUsers: number;
+    monthlyVolunteerHours: number;
+  }> {
+    const response = await this.client.get<{
+      success: boolean;
+      data: {
+        usersByRole: { [role: string]: number };
+        recentRegistrations: number;
+        activeUsers: number;
+        monthlyVolunteerHours: number;
+      };
+    }>('/api/users/management/stats');
     return response.data.data;
   }
 }

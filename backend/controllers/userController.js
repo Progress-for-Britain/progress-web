@@ -20,13 +20,11 @@ const getAllUsers = async (req, res) => {
             id: true,
             customerId: true,
             subscriptionId: true,
-            billingCycle: true,
             status: true,
             amount: true,
             currency: true,
             startDate: true,
             endDate: true,
-            nextBillingDate: true
           }
         },
         notificationPreferences: true,
@@ -107,7 +105,7 @@ const getUserById = async (req, res) => {
 // Create new user (registration)
 const createUser = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, address, role } = req.body;
+    const { email, password, firstName, lastName, address, role, accessCode } = req.body;
 
     // Validate required fields
     if (!email || !password) {
@@ -129,35 +127,97 @@ const createUser = async (req, res) => {
       });
     }
 
+    let userRole = 'MEMBER'; // Default role
+
+    // If access code is provided, validate it and determine role
+    if (accessCode) {
+      const accessCodeRecord = await prisma.accessCode.findUnique({
+        where: { code: accessCode }
+      });
+
+      if (!accessCodeRecord) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid access code'
+        });
+      }
+
+      if (accessCodeRecord.used) {
+        return res.status(400).json({
+          success: false,
+          message: 'Access code has already been used'
+        });
+      }
+
+      if (new Date() > accessCodeRecord.expiresAt) {
+        return res.status(400).json({
+          success: false,
+          message: 'Access code has expired'
+        });
+      }
+
+      if (accessCodeRecord.email.toLowerCase() !== email.toLowerCase()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Access code is not valid for this email address'
+        });
+      }
+
+      // Get the pending user to determine role
+      const pendingUser = await prisma.pendingUser.findUnique({
+        where: { email: email.toLowerCase() }
+      });
+
+      if (pendingUser && pendingUser.status === 'APPROVED') {
+        userRole = pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER';
+      }
+    }
+
     // Hash password
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        address: address || null,
-        role: role || 'MEMBER'
-      },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        firstName: true,
-        lastName: true,
-        address: true,
-        createdAt: true
+    // Create user in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create user
+      const user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          firstName: firstName || null,
+          lastName: lastName || null,
+          address: address || null,
+          role: role || userRole
+        },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          firstName: true,
+          lastName: true,
+          address: true,
+          createdAt: true
+        }
+      });
+
+      // If access code was used, mark it as used
+      if (accessCode) {
+        await tx.accessCode.update({
+          where: { code: accessCode },
+          data: {
+            used: true,
+            usedAt: new Date()
+          }
+        });
       }
+
+      return user;
     });
 
     res.status(201).json({
       success: true,
       message: 'User created successfully',
-      data: user
+      data: result
     });
   } catch (error) {
     console.error('Error creating user:', error);
@@ -787,6 +847,377 @@ const getUserUpcomingEvents = async (req, res) => {
   }
 };
 
+// Admin user management functions
+
+// Assign user to event (admin only)
+const assignUserToEvent = async (req, res) => {
+  try {
+    const { userId, eventId } = req.body;
+    const { status = 'REGISTERED' } = req.body;
+
+    // Validate admin permissions
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Check if event exists
+    const event = await prisma.event.findUnique({
+      where: { id: eventId }
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Check if user is already assigned to event
+    const existingParticipant = await prisma.eventParticipant.findUnique({
+      where: {
+        userId_eventId: {
+          userId,
+          eventId
+        }
+      }
+    });
+
+    if (existingParticipant) {
+      return res.status(409).json({
+        success: false,
+        message: 'User is already assigned to this event'
+      });
+    }
+
+    // Assign user to event
+    const eventParticipant = await prisma.eventParticipant.create({
+      data: {
+        userId,
+        eventId,
+        status
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        event: {
+          select: {
+            id: true,
+            title: true,
+            eventType: true,
+            startDate: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'User assigned to event successfully',
+      data: eventParticipant
+    });
+  } catch (error) {
+    console.error('Error assigning user to event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to assign user to event',
+      error: error.message
+    });
+  }
+};
+
+// Unassign user from event (admin only)
+const unassignUserFromEvent = async (req, res) => {
+  try {
+    const { userId, eventId } = req.body;
+
+    // Validate admin permissions
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    // Check if assignment exists
+    const eventParticipant = await prisma.eventParticipant.findUnique({
+      where: {
+        userId_eventId: {
+          userId,
+          eventId
+        }
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        event: {
+          select: {
+            title: true
+          }
+        }
+      }
+    });
+
+    if (!eventParticipant) {
+      return res.status(404).json({
+        success: false,
+        message: 'User assignment to event not found'
+      });
+    }
+
+    // Remove assignment
+    await prisma.eventParticipant.delete({
+      where: {
+        userId_eventId: {
+          userId,
+          eventId
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'User unassigned from event successfully',
+      data: {
+        user: eventParticipant.user,
+        event: eventParticipant.event
+      }
+    });
+  } catch (error) {
+    console.error('Error unassigning user from event:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to unassign user from event',
+      error: error.message
+    });
+  }
+};
+
+// Update user role (admin only)
+const updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    // Validate admin permissions
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    // Validate role
+    const validRoles = ['ADMIN', 'WRITER', 'MEMBER', 'VOLUNTEER'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role. Must be one of: ' + validRoles.join(', ')
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id }
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update user role
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { role },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        updatedAt: true
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'User role updated successfully',
+      data: updatedUser
+    });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update user role',
+      error: error.message
+    });
+  }
+};
+
+// Get user's event assignments (admin only)
+const getUserEventAssignments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate admin permissions
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    const eventAssignments = await prisma.eventParticipant.findMany({
+      where: { userId: id },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            eventType: true,
+            status: true,
+            location: true,
+            startDate: true,
+            endDate: true
+          }
+        }
+      },
+      orderBy: {
+        event: {
+          startDate: 'desc'
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      data: eventAssignments
+    });
+  } catch (error) {
+    console.error('Error fetching user event assignments:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user event assignments',
+      error: error.message
+    });
+  }
+};
+
+// Get user management statistics (admin only)
+const getUserManagementStats = async (req, res) => {
+  try {
+    // Validate admin permissions
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    // Get total users by role
+    const userStats = await prisma.user.groupBy({
+      by: ['role'],
+      _count: {
+        id: true
+      }
+    });
+
+    // Get recent user registrations (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const recentRegistrations = await prisma.user.count({
+      where: {
+        createdAt: {
+          gte: thirtyDaysAgo
+        }
+      }
+    });
+
+    // Get active users (users who have participated in events in last 90 days)
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    const activeUsers = await prisma.user.count({
+      where: {
+        eventParticipants: {
+          some: {
+            registeredAt: {
+              gte: ninetyDaysAgo
+            }
+          }
+        }
+      }
+    });
+
+    // Get total volunteer hours this month
+    const currentMonth = new Date();
+    currentMonth.setDate(1);
+    currentMonth.setHours(0, 0, 0, 0);
+
+    const monthlyVolunteerHours = await prisma.volunteerHours.aggregate({
+      where: {
+        approved: true,
+        date: {
+          gte: currentMonth
+        }
+      },
+      _sum: {
+        hours: true
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        usersByRole: userStats.reduce((acc, stat) => {
+          acc[stat.role] = stat._count.id;
+          return acc;
+        }, {}),
+        recentRegistrations,
+        activeUsers,
+        monthlyVolunteerHours: monthlyVolunteerHours._sum.hours || 0
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user management stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user management statistics',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -800,5 +1231,10 @@ module.exports = {
   updatePrivacySettings,
   getUserStats,
   getUserActivity,
-  getUserUpcomingEvents
+  getUserUpcomingEvents,
+  assignUserToEvent,
+  unassignUserFromEvent,
+  updateUserRole,
+  getUserEventAssignments,
+  getUserManagementStats
 };
