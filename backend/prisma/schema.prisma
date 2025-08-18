@@ -66,6 +66,12 @@ enum ParticipantStatus {
   CANCELLED
 }
 
+enum PendingUserStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
 model User {
   id        String   @id @default(cuid())
   firstName String?
@@ -76,108 +82,108 @@ model User {
   address   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relationships
-  payments               Payment[]
+  payments                Payment[]
   notificationPreferences NotificationPreferences?
-  privacySettings        PrivacySettings?
-  posts                  Post[]
-  reactions              Reaction[]
-  eventParticipants      EventParticipant[]
-  volunteerHours         VolunteerHours[]
-  createdEvents          Event[] @relation("EventCreator")
-  
+  privacySettings         PrivacySettings?
+  posts                   Post[]
+  reactions               Reaction[]
+  eventParticipants       EventParticipant[]
+  volunteerHours          VolunteerHours[]
+  createdEvents           Event[]                  @relation("EventCreator")
+
   @@map("users")
 }
 
 model Payment {
-  id             String        @id @default(cuid())
-  customerId     String        // Stripe customer ID or other payment provider ID
-  subscriptionId String?       // Subscription ID from payment providere
-  status         SubStatus     @default(INACTIVE)
-  amount         Decimal       @db.Decimal(10, 2)
-  totalDonated   Decimal       @default(0) @db.Decimal(10, 2) // Total amount donated by user
-  currency       String        @default("GDP")
+  id             String    @id @default(cuid())
+  customerId     String // Stripe customer ID or other payment provider ID
+  subscriptionId String? // Subscription ID from payment providere
+  status         SubStatus @default(INACTIVE)
+  amount         Decimal   @db.Decimal(10, 2)
+  totalDonated   Decimal   @default(0) @db.Decimal(10, 2) // Total amount donated by user
+  currency       String    @default("GDP")
   startDate      DateTime
   endDate        DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
   // Foreign key to User
-  userId         String
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("payments")
 }
 
 model NotificationPreferences {
   id                 String   @id @default(cuid())
-  emailNewsletter    Boolean  @default(true)   // Receive our weekly newsletter with party updates and news
-  eventNotifications Boolean  @default(true)   // Get notified about upcoming events and rallies in your area
-  donationReminders  Boolean  @default(true)   // Occasional reminders about supporting our campaigns
-  pushNotifications  Boolean  @default(true)   // Receive urgent updates and breaking news notifications
-  smsUpdates         Boolean  @default(false)  // Get text messages for time-sensitive campaign updates
+  emailNewsletter    Boolean  @default(true) // Receive our weekly newsletter with party updates and news
+  eventNotifications Boolean  @default(true) // Get notified about upcoming events and rallies in your area
+  donationReminders  Boolean  @default(true) // Occasional reminders about supporting our campaigns
+  pushNotifications  Boolean  @default(true) // Receive urgent updates and breaking news notifications
+  smsUpdates         Boolean  @default(false) // Get text messages for time-sensitive campaign updates
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
-  
+
   // Foreign key to User
-  userId             String   @unique
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("notification_preferences")
 }
 
 model PrivacySettings {
-  id             String   @id @default(cuid())
-  publicProfile  Boolean  @default(false)  // Allow other members to see your profile and activity
-  shareActivity  Boolean  @default(false)  // Show your donations and volunteer hours to other members
-  allowMessages  Boolean  @default(true)   // Let other members send you direct messages
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
+  id            String   @id @default(cuid())
+  publicProfile Boolean  @default(false) // Allow other members to see your profile and activity
+  shareActivity Boolean  @default(false) // Show your donations and volunteer hours to other members
+  allowMessages Boolean  @default(true) // Let other members send you direct messages
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
   // Foreign key to User
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("privacy_settings")
 }
 
 model Post {
-  id          String      @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String
-  content     String      @db.Text
-  excerpt     String?     // Short summary for preview
+  content     String       @db.Text
+  excerpt     String? // Short summary for preview
   category    PostCategory @default(NEWS)
-  status      PostStatus  @default(DRAFT)
-  featured    Boolean     @default(false)
-  readTime    Int?        // Estimated read time in minutes
-  imageUrl    String?     // Optional featured image
-  tags        String[]    // Array of tags for better organization
-  publishedAt DateTime?   // When the post was published
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
+  status      PostStatus   @default(DRAFT)
+  featured    Boolean      @default(false)
+  readTime    Int? // Estimated read time in minutes
+  imageUrl    String? // Optional featured image
+  tags        String[] // Array of tags for better organization
+  publishedAt DateTime? // When the post was published
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
   // Foreign key to User (author)
-  authorId    String
-  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
   // Relationships
-  reactions   Reaction[]
-  
+  reactions Reaction[]
+
   @@map("posts")
 }
 
 model Reaction {
   id        String   @id @default(cuid())
-  emoji     String   // The emoji used for reaction (👍, ❤️, 🎉, etc.)
+  emoji     String // The emoji used for reaction (👍, ❤️, 🎉, etc.)
   createdAt DateTime @default(now())
-  
+
   // Foreign keys
-  userId    String
-  postId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
+  userId String
+  postId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   // Ensure one reaction per user per post
   @@unique([userId, postId])
   @@map("reactions")
@@ -189,46 +195,46 @@ model Event {
   description String      @db.Text
   eventType   EventType   @default(MEETING)
   status      EventStatus @default(UPCOMING)
-  location    String?     // Physical location or virtual link
-  address     String?     // Full address for physical events
-  latitude    Float?      // For mapping functionality
-  longitude   Float?      // For mapping functionality
-  capacity    Int?        // Maximum number of participants
+  location    String? // Physical location or virtual link
+  address     String? // Full address for physical events
+  latitude    Float? // For mapping functionality
+  longitude   Float? // For mapping functionality
+  capacity    Int? // Maximum number of participants
   isVirtual   Boolean     @default(false)
-  virtualLink String?     // Zoom/Meet link for virtual events
-  startDate   DateTime @default(now())
-  endDate     DateTime @default(dbgenerated("(now() + interval '1 hour')"))
-  imageUrl    String?     // Event banner/image
-  tags        String[]    // Event tags for categorization
+  virtualLink String? // Zoom/Meet link for virtual events
+  startDate   DateTime    @default(now())
+  endDate     DateTime    @default(dbgenerated("(now() + interval '1 hour')"))
+  imageUrl    String? // Event banner/image
+  tags        String[] // Event tags for categorization
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  
+
   // Foreign key to User (event creator)
   createdById String
-  createdBy   User        @relation("EventCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  
+  createdBy   User   @relation("EventCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
   // Relationships
-  participants EventParticipant[]
+  participants   EventParticipant[]
   volunteerHours VolunteerHours[]
-  
+
   @@map("events")
 }
 
 model EventParticipant {
-  id       String            @id @default(cuid())
-  status   ParticipantStatus @default(REGISTERED)
-  notes    String?           // Additional notes about participation
-  registeredAt DateTime      @default(now())
-  checkedInAt  DateTime?     // When participant checked in
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  
+  id           String            @id @default(cuid())
+  status       ParticipantStatus @default(REGISTERED)
+  notes        String? // Additional notes about participation
+  registeredAt DateTime          @default(now())
+  checkedInAt  DateTime? // When participant checked in
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
   // Foreign keys
-  userId   String
-  eventId  String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
+  userId  String
+  eventId String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
   // Ensure one participation record per user per event
   @@unique([userId, eventId])
   @@map("event_participants")
@@ -236,20 +242,37 @@ model EventParticipant {
 
 model VolunteerHours {
   id          String   @id @default(cuid())
-  hours       Float    // Number of hours volunteered
-  description String?  // Description of volunteer work
+  hours       Float // Number of hours volunteered
+  description String? // Description of volunteer work
   date        DateTime // Date of volunteer work
   approved    Boolean  @default(false) // Whether hours are approved by admin
-  approvedBy  String?  // ID of admin who approved
-  notes       String?  // Additional notes
+  approvedBy  String? // ID of admin who approved
+  notes       String? // Additional notes
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // Foreign keys
-  userId      String
-  eventId     String?  // Optional - if volunteer work was for a specific event
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event       Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  
+  userId  String
+  eventId String? // Optional - if volunteer work was for a specific event
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
   @@map("volunteer_hours")
+}
+
+model PendingUser {
+  id           String            @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String            @unique
+  phone        String?
+  constituency String?
+  interests    String[]
+  volunteer    Boolean           @default(false)
+  status       PendingUserStatus @default(PENDING)
+  accessCode   String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@map("pending_users")
 }

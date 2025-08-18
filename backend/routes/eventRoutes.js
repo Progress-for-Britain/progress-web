@@ -8,6 +8,8 @@ const {
   deleteEvent,
   registerForEvent,
   cancelEventRegistration,
+  addParticipant,
+  removeParticipant,
   logVolunteerHours
 } = require('../controllers/eventController');
 const {
@@ -26,6 +28,8 @@ router.put('/:id', authenticateToken, requireRole(['ADMIN', 'WRITER']), updateEv
 router.delete('/:id', authenticateToken, requireRole(['ADMIN', 'WRITER']), deleteEvent);
 router.post('/:id/register', authenticateToken, registerForEvent);
 router.delete('/:id/register', authenticateToken, cancelEventRegistration);
+router.post('/:id/participants', authenticateToken, requireAdmin, addParticipant);
+router.delete('/:id/participants/:userId', authenticateToken, requireAdmin, removeParticipant);
 router.post('/volunteer-hours', authenticateToken, logVolunteerHours);
 
 module.exports = router;

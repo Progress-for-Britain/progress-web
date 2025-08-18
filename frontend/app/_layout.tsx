@@ -67,7 +67,14 @@ function RootLayoutNav() {
           headerTitle: "Settings"
         }} 
       />
-    </Stack>
+      <Stack.Screen
+        name="user-management"
+        options={{
+          title: "User Management - Progress UK",
+          headerTitle: "User Management",
+        }}
+      />
+      </Stack>
   );
 }
 

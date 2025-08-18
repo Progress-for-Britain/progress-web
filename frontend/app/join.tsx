@@ -14,6 +14,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
+import { submitJoin } from '../util/api';
 
 export default function Join() {
   const [formData, setFormData] = useState({
@@ -81,10 +82,10 @@ export default function Join() {
 
     setIsLoading(true);
     try {
-      // In a real app, this would call the API
+      await submitJoin(formData);
       Alert.alert(
-        'Welcome to Progress UK!', 
-        'Your membership application has been submitted. You\'ll receive a confirmation email shortly with your membership details and next steps.',
+        'Welcome to Progress UK!',
+        'Your membership application has been submitted. You\'ll receive a confirmation email once approved with an access code for registration.',
         [{ text: 'Brilliant!', onPress: () => router.push('/') }]
       );
     } catch (error) {

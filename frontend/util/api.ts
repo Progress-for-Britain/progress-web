@@ -73,6 +73,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
+  accessCode: string;
   firstName?: string;
   lastName?: string;
   address?: string;
@@ -85,6 +86,31 @@ export interface UpdateUserRequest {
   lastName?: string;
   address?: string;
   role?: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
+}
+
+export interface PendingUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  constituency?: string;
+  interests: string[];
+  volunteer: boolean;
+  status: 'PENDING' | 'APPROVED' | 'DENIED';
+  accessCode?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePendingUserRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  constituency?: string;
+  interests?: string[];
+  volunteer?: boolean;
 }
 
 // News/Posts interfaces
@@ -394,6 +420,35 @@ class ApiClient {
     await this.client.delete<{success: boolean; message: string}>(`/api/users/${id}`);
   }
 
+  // Pending user endpoints
+  async submitJoin(data: CreatePendingUserRequest): Promise<PendingUser> {
+    const response = await this.client.post<{success: boolean; data: PendingUser}>(
+      '/api/pending-users',
+      data
+    );
+    return response.data.data;
+  }
+
+  async getPendingUsers(): Promise<PendingUser[]> {
+    const response = await this.client.get<{success: boolean; data: PendingUser[]}>(
+      '/api/pending-users'
+    );
+    return response.data.data;
+  }
+
+  async approvePendingUser(id: string): Promise<string> {
+    const response = await this.client.post<{success: boolean; data: {accessCode: string}}>(
+      `/api/pending-users/${id}/approve`
+    );
+    return response.data.data.accessCode;
+  }
+
+  async denyPendingUser(id: string): Promise<void> {
+    await this.client.post<{success: boolean; message: string}>(
+      `/api/pending-users/${id}/deny`
+    );
+  }
+
   // Notification preferences endpoints
   async getNotificationPreferences(userId: string): Promise<NotificationPreferences> {
     const response = await this.client.get<{success: boolean; data: NotificationPreferences}>(`/api/users/${userId}/notifications`);
@@ -628,6 +683,14 @@ class ApiClient {
     return response.data;
   }
 
+  async addUserToEvent(eventId: string, userId: string): Promise<void> {
+    await this.client.post(`/api/events/${eventId}/participants`, { userId });
+  }
+
+  async removeUserFromEvent(eventId: string, userId: string): Promise<void> {
+    await this.client.delete(`/api/events/${eventId}/participants/${userId}`);
+  }
+
   async getEvent(eventId: string): Promise<Event> {
     const response = await this.client.get<{success: boolean; data: Event; message: string}>(
       `/api/events/${eventId}`
@@ -661,6 +724,12 @@ export const createEvent = (eventData: CreateEventRequest) => api.createEvent(ev
 export const registerForEvent = (eventId: string) => api.registerForEvent(eventId);
 export const unregisterFromEvent = (eventId: string) => api.cancelEventRegistration(eventId);
 export const logVolunteerHours = (hoursData: LogVolunteerHoursRequest) => api.logVolunteerHours(hoursData);
+export const submitJoin = (data: CreatePendingUserRequest) => api.submitJoin(data);
+export const getPendingUsers = () => api.getPendingUsers();
+export const approvePending = (id: string) => api.approvePendingUser(id);
+export const denyPending = (id: string) => api.denyPendingUser(id);
+export const addUserToEvent = (eventId: string, userId: string) => api.addUserToEvent(eventId, userId);
+export const removeUserFromEvent = (eventId: string, userId: string) => api.removeUserFromEvent(eventId, userId);
 
 // Export type alias for compatibility
 export type EventType = Event['eventType'];

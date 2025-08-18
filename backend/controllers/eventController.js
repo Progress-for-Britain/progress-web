@@ -408,6 +408,65 @@ const cancelEventRegistration = async (req, res) => {
   }
 };
 
+// Admin: add participant to event
+const addParticipant = async (req, res) => {
+  try {
+    const { id } = req.params; // event id
+    const { userId } = req.body;
+
+    const event = await prisma.event.findUnique({
+      where: { id },
+      include: {
+        _count: { select: { participants: true } }
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+
+    if (event.capacity && event._count.participants >= event.capacity) {
+      return res.status(400).json({ success: false, message: 'Event is at full capacity' });
+    }
+
+    const existing = await prisma.eventParticipant.findFirst({ where: { userId, eventId: id } });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'User already registered for event' });
+    }
+
+    const participation = await prisma.eventParticipant.create({
+      data: { userId, eventId: id, status: 'REGISTERED' }
+    });
+
+    res.json({ success: true, data: participation });
+  } catch (error) {
+    console.error('Error adding participant:', error);
+    res.status(500).json({ success: false, message: 'Failed to add participant', error: error.message });
+  }
+};
+
+// Admin: remove participant from event
+const removeParticipant = async (req, res) => {
+  try {
+    const { id, userId } = req.params; // event id and user id
+
+    const participation = await prisma.eventParticipant.findFirst({
+      where: { userId, eventId: id }
+    });
+
+    if (!participation) {
+      return res.status(404).json({ success: false, message: 'Participant not found for event' });
+    }
+
+    await prisma.eventParticipant.delete({ where: { id: participation.id } });
+
+    res.json({ success: true, message: 'Participant removed' });
+  } catch (error) {
+    console.error('Error removing participant:', error);
+    res.status(500).json({ success: false, message: 'Failed to remove participant', error: error.message });
+  }
+};
+
 // Log volunteer hours
 const logVolunteerHours = async (req, res) => {
   try {
@@ -600,5 +659,7 @@ module.exports = {
   deleteEvent,
   registerForEvent,
   cancelEventRegistration,
+  addParticipant,
+  removeParticipant,
   logVolunteerHours
 };

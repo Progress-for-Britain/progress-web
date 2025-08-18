@@ -107,13 +107,13 @@ const getUserById = async (req, res) => {
 // Create new user (registration)
 const createUser = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, address, role } = req.body;
+    const { email, password, accessCode } = req.body;
 
     // Validate required fields
-    if (!email || !password) {
+    if (!email || !password || !accessCode) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required'
+        message: 'Email, password and access code are required'
       });
     }
 
@@ -129,6 +129,18 @@ const createUser = async (req, res) => {
       });
     }
 
+    // Verify pending user and access code
+    const pending = await prisma.pendingUser.findFirst({
+      where: { email, accessCode, status: 'APPROVED' }
+    });
+
+    if (!pending) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid access code'
+      });
+    }
+
     // Hash password
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -138,10 +150,10 @@ const createUser = async (req, res) => {
       data: {
         email,
         password: hashedPassword,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        address: address || null,
-        role: role || 'MEMBER'
+        firstName: pending.firstName,
+        lastName: pending.lastName,
+        address: pending.constituency,
+        role: pending.volunteer ? 'VOLUNTEER' : 'MEMBER'
       },
       select: {
         id: true,
@@ -154,10 +166,24 @@ const createUser = async (req, res) => {
       }
     });
 
+    // Remove pending user record
+    await prisma.pendingUser.delete({ where: { id: pending.id } });
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
     res.status(201).json({
       success: true,
       message: 'User created successfully',
-      data: user
+      data: { user, token }
     });
   } catch (error) {
     console.error('Error creating user:', error);

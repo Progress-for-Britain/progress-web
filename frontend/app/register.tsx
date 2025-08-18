@@ -12,15 +12,16 @@ export default function Register() {
     confirmPassword: '',
     firstName: '',
     lastName: '',
+    accessCode: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const router = useRouter();
 
   const handleRegister = async () => {
-    const { email, password, confirmPassword, firstName, lastName } = formData;
-    
-    if (!email || !password || !firstName || !lastName) {
+    const { email, password, confirmPassword, firstName, lastName, accessCode } = formData;
+
+    if (!email || !password || !firstName || !lastName || !accessCode) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -37,7 +38,7 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      await register({ email, password, firstName, lastName });
+      await register({ email, password, firstName, lastName, accessCode });
       router.replace('/account');
     } catch (error) {
       Alert.alert('Registration Failed', error instanceof Error ? error.message : 'An error occurred');
@@ -191,6 +192,26 @@ export default function Register() {
                   onChangeText={(value) => updateField('confirmPassword', value)}
                   placeholder="Confirm your password"
                   secureTextEntry
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#D1D5DB',
+                    borderRadius: 8,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    fontSize: 16,
+                    backgroundColor: '#ffffff'
+                  }}
+                />
+              </View>
+
+              <View style={{ marginBottom: 24 }}>
+                <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151', marginBottom: 8 }}>
+                  Access Code
+                </Text>
+                <TextInput
+                  value={formData.accessCode}
+                  onChangeText={(value) => updateField('accessCode', value)}
+                  placeholder="Enter your access code"
                   style={{
                     borderWidth: 1,
                     borderColor: '#D1D5DB',
