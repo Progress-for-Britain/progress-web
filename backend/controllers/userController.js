@@ -214,10 +214,24 @@ const createUser = async (req, res) => {
       return user;
     });
 
+    // Generate JWT token for auto-login
+    const token = jwt.sign(
+      { 
+        userId: result.id, 
+        email: result.email, 
+        role: result.role 
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
     res.status(201).json({
       success: true,
       message: 'User created successfully',
-      data: result
+      data: {
+        user: result,
+        token
+      }
     });
   } catch (error) {
     console.error('Error creating user:', error);

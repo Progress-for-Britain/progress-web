@@ -57,6 +57,16 @@ export default function Register() {
   const handleRegister = async () => {
     const { email, password, confirmPassword, firstName, lastName, accessCode } = formData;
     
+    if (!accessCode) {
+      Alert.alert('Error', 'Access code is required to create an account');
+      return;
+    }
+
+    if (!codeValidated) {
+      Alert.alert('Error', 'Please validate your access code before proceeding');
+      return;
+    }
+    
     if (!email || !password || !firstName || !lastName) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -79,7 +89,7 @@ export default function Register() {
         password, 
         firstName, 
         lastName,
-        ...(accessCode && { accessCode })
+        accessCode
       });
       router.replace('/account');
     } catch (error) {
@@ -128,7 +138,7 @@ export default function Register() {
                   marginBottom: 8
                 }}
               >
-                Join Progress
+                Complete Registration
               </Text>
               <Text 
                 style={{ 
@@ -138,81 +148,8 @@ export default function Register() {
                   marginBottom: 32
                 }}
               >
-                Create your account and be part of the change
+                Use your access code to create your account
               </Text>
-
-              {/* Access Code Section */}
-              <View style={{ 
-                backgroundColor: '#f8fafc', 
-                padding: 16, 
-                borderRadius: 8, 
-                marginBottom: 24,
-                borderWidth: 1,
-                borderColor: '#e5e7eb'
-              }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
-                  Access Code (Optional)
-                </Text>
-                <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 12 }}>
-                  If you have an access code from your approved membership application, enter it here.
-                </Text>
-                
-                <View style={{ marginBottom: 12 }}>
-                  <TextInput
-                    value={formData.accessCode}
-                    onChangeText={(value) => updateField('accessCode', value.toUpperCase())}
-                    placeholder="Enter access code"
-                    autoCapitalize="characters"
-                    style={{
-                      borderWidth: 1,
-                      borderColor: codeValidated ? '#10b981' : '#D1D5DB',
-                      borderRadius: 8,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      fontSize: 16,
-                      backgroundColor: '#ffffff'
-                    }}
-                  />
-                </View>
-                
-                {formData.accessCode && !codeValidated && (
-                  <TouchableOpacity
-                    onPress={validateAccessCode}
-                    disabled={isValidatingCode || !formData.email}
-                    style={{
-                      backgroundColor: (!formData.email || isValidatingCode) ? '#9ca3af' : '#d946ef',
-                      paddingVertical: 10,
-                      paddingHorizontal: 16,
-                      borderRadius: 6,
-                      alignItems: 'center'
-                    }}
-                  >
-                    <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 14 }}>
-                      {isValidatingCode ? 'Validating...' : 'Validate Code'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                
-                {codeValidated && (
-                  <View style={{ 
-                    flexDirection: 'row', 
-                    alignItems: 'center',
-                    backgroundColor: '#dcfce7',
-                    padding: 12,
-                    borderRadius: 6
-                  }}>
-                    <Text style={{ color: '#166534', fontSize: 14, fontWeight: '600' }}>
-                      ✓ Access code validated! Role: {suggestedRole}
-                    </Text>
-                  </View>
-                )}
-                
-                {!codeValidated && formData.accessCode && (
-                  <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
-                    You need to enter your email address first to validate the access code.
-                  </Text>
-                )}
-              </View>
 
               <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
                 <View style={{ flex: 1 }}>
@@ -318,16 +255,108 @@ export default function Register() {
                   }}
                 />
               </View>
+              {/* Access Code Section */}
+              <View style={{ 
+                backgroundColor: '#fef3c7', 
+                padding: 16, 
+                borderRadius: 8, 
+                marginBottom: 24,
+                borderWidth: 1,
+                borderColor: '#f59e0b'
+              }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                  Access Code (Required)
+                </Text>
+                <Text style={{ fontSize: 14, color: '#7c2d12', marginBottom: 12 }}>
+                  You need an access code that was sent to your email after your membership application was approved. Please check your email and enter the code below.
+                </Text>
+                
+                <View style={{ marginBottom: 12 }}>
+                  <TextInput
+                    value={formData.accessCode}
+                    onChangeText={(value) => updateField('accessCode', value.toUpperCase())}
+                    placeholder="Enter your access code (required)"
+                    autoCapitalize="characters"
+                    style={{
+                      borderWidth: 2,
+                      borderColor: codeValidated ? '#10b981' : (formData.accessCode ? '#f59e0b' : '#dc2626'),
+                      borderRadius: 8,
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      fontSize: 16,
+                      backgroundColor: '#ffffff'
+                    }}
+                  />
+                </View>
+                
+                {formData.accessCode && !codeValidated && (
+                  <TouchableOpacity
+                    onPress={validateAccessCode}
+                    disabled={isValidatingCode || !formData.email}
+                    style={{
+                      backgroundColor: (!formData.email || isValidatingCode) ? '#9ca3af' : '#f59e0b',
+                      paddingVertical: 10,
+                      paddingHorizontal: 16,
+                      borderRadius: 6,
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 14 }}>
+                      {isValidatingCode ? 'Validating...' : 'Validate Code'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                
+                {!formData.accessCode && (
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center',
+                    backgroundColor: '#fecaca',
+                    padding: 12,
+                    borderRadius: 6
+                  }}>
+                    <Text style={{ color: '#991b1b', fontSize: 14, fontWeight: '600' }}>
+                      ⚠ Access code is required to create an account
+                    </Text>
+                  </View>
+                )}
+                
+                {codeValidated && (
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center',
+                    backgroundColor: '#dcfce7',
+                    padding: 12,
+                    borderRadius: 6
+                  }}>
+                    <Text style={{ color: '#166534', fontSize: 14, fontWeight: '600' }}>
+                      ✓ Access code validated! Role: {suggestedRole}
+                    </Text>
+                  </View>
+                )}
+                
+                {!codeValidated && formData.accessCode && (
+                  <Text style={{ fontSize: 12, color: '#7c2d12', marginTop: 8 }}>
+                    You need to enter your email address first to validate the access code.
+                  </Text>
+                )}
+                
+                {!formData.accessCode && (
+                  <Text style={{ fontSize: 12, color: '#991b1b', marginTop: 8 }}>
+                    Don't have an access code? You need to submit a membership application first at our join page.
+                  </Text>
+                )}
+              </View>
 
               <TouchableOpacity
                 onPress={handleRegister}
-                disabled={isLoading}
+                disabled={isLoading || !codeValidated || !formData.accessCode}
                 style={{
-                  backgroundColor: isLoading ? '#9CA3AF' : '#d946ef',
+                  backgroundColor: (isLoading || !codeValidated || !formData.accessCode) ? '#9CA3AF' : '#d946ef',
                   borderRadius: 8,
                   paddingVertical: 16,
                   marginBottom: 16,
-                  ...(Platform.OS === 'web' && { cursor: isLoading ? 'not-allowed' : 'pointer' } as any)
+                  ...(Platform.OS === 'web' && { cursor: (isLoading || !codeValidated || !formData.accessCode) ? 'not-allowed' : 'pointer' } as any)
                 }}
               >
                 <Text 
@@ -338,9 +367,18 @@ export default function Register() {
                     textAlign: 'center'
                   }}
                 >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                  {isLoading ? 'Creating Account...' : !formData.accessCode ? 'Access Code Required' : !codeValidated ? 'Validate Access Code First' : 'Create Account'}
                 </Text>
               </TouchableOpacity>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                <Text style={{ color: '#6B7280', fontSize: 14 }}>
+                  Don't have an access code?{' '}
+                </Text>
+                <Link href="/join" style={{ color: '#d946ef', fontSize: 14, fontWeight: '500' }}>
+                  Apply for membership
+                </Link>
+              </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ color: '#6B7280', fontSize: 16 }}>
