@@ -40,6 +40,13 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen 
+        name="nda" 
+        options={{ 
+          title: "NDA - Progress UK",
+          headerTitle: "Confidentiality Agreement"
+        }} 
+      />
+      <Stack.Screen 
         name="account" 
         options={{ 
           title: "Account - Progress UK",

@@ -41,6 +41,12 @@ export default function Join() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [hasSignedNDA, setHasSignedNDA] = useState(false);
+  const [ndaSignerName, setNdaSignerName] = useState('');
+  const [showNDASuccess, setShowNDASuccess] = useState(false);
+  const [hasSavedData, setHasSavedData] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [showApiError, setShowApiError] = useState(false);
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -61,7 +67,18 @@ export default function Join() {
       withTiming(360, { duration: 20000 }),
       -1
     );
+
+    // Check for NDA signature status
+    checkNDASignature();
+    
+    // Restore any saved form data
+    restoreFormData();
   }, []);
+
+  // Auto-save form data whenever it changes
+  useEffect(() => {
+    saveFormData();
+  }, [formData]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -69,6 +86,98 @@ export default function Join() {
       checkmarkScale.value = withSpring(1, { damping: 10 });
     }
   }, [isSuccess]);
+
+  // Check NDA signature status
+  const checkNDASignature = () => {
+    if (Platform.OS === 'web') {
+      try {
+        const ndaData = localStorage.getItem('NDASignature');
+        if (ndaData) {
+          const parsed = JSON.parse(ndaData);
+          if (parsed.agreed && parsed.name) {
+            const wasAlreadySigned = hasSignedNDA;
+            setHasSignedNDA(true);
+            setNdaSignerName(parsed.name);
+            setFormData(prev => ({ ...prev, signedNDA: true }));
+            
+            // Show success notification if this is a new signature
+            if (!wasAlreadySigned) {
+              setShowNDASuccess(true);
+              
+              // Scroll to top to show the notification
+              if (Platform.OS === 'web') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+              
+              // Auto-hide after 5 seconds
+              setTimeout(() => {
+                setShowNDASuccess(false);
+              }, 5000);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking NDA signature:', error);
+      }
+    }
+  };
+
+  // Clear cached form data and NDA signature
+  const clearCachedData = () => {
+    if (Platform.OS === 'web') {
+      try {
+        localStorage.removeItem('progressFormData');
+        localStorage.removeItem('NDASignature');
+        setHasSavedData(false);
+        console.log('Cached application data cleared');
+      } catch (error) {
+        console.error('Error clearing cached data:', error);
+      }
+    }
+  };
+
+  // Save form data to localStorage
+  const saveFormData = () => {
+    if (Platform.OS === 'web') {
+      try {
+        localStorage.setItem('progressFormData', JSON.stringify(formData));
+      } catch (error) {
+        console.error('Error saving form data:', error);
+      }
+    }
+  };
+
+  // Restore form data from localStorage
+  const restoreFormData = () => {
+    if (Platform.OS === 'web') {
+      try {
+        const savedData = localStorage.getItem('progressFormData');
+        if (savedData) {
+          const parsed = JSON.parse(savedData);
+          setFormData(parsed);
+          setHasSavedData(true);
+        } else {
+          setHasSavedData(false);
+        }
+      } catch (error) {
+        console.error('Error restoring form data:', error);
+        setHasSavedData(false);
+      }
+    }
+  };
+
+  // Listen for focus events to check NDA status when returning from NDA page
+  useEffect(() => {
+    const handleFocus = () => {
+      checkNDASignature();
+      restoreFormData(); // Restore form data when page regains focus
+    };
+
+    if (Platform.OS === 'web') {
+      window.addEventListener('focus', handleFocus);
+      return () => window.removeEventListener('focus', handleFocus);
+    }
+  }, []);
 
   const fadeInStyle = useAnimatedStyle(() => ({
     opacity: fadeAnim.value,
@@ -129,11 +238,58 @@ export default function Join() {
     'Leadership & Management'
   ];
 
+  // Function to check if form is valid for submission
+  const isFormValid = () => {
+    const { firstName, lastName, email, volunteer } = formData;
+    
+    // Basic required fields
+    if (!firstName || !lastName || !email) {
+      return false;
+    }
+
+    // If volunteering, check volunteer-specific requirements
+    if (volunteer) {
+      const { 
+        socialMediaHandle, 
+        isBritishCitizen, 
+        livesInUK, 
+        briefBio, 
+        briefCV, 
+        signedNDA, 
+        gdprConsent 
+      } = formData;
+      
+      if (!socialMediaHandle || 
+          isBritishCitizen === undefined || 
+          livesInUK === undefined || 
+          !briefBio || 
+          !briefCV || 
+          !signedNDA || 
+          !hasSignedNDA || 
+          !gdprConsent) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleJoin = async () => {
     const { firstName, lastName, email, volunteer } = formData;
     
     if (!firstName || !lastName || !email) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      setApiError('Please fill in all required fields: First Name, Last Name, and Email Address.');
+      setShowApiError(true);
+      
+      // Scroll to top to show error
+      if (Platform.OS === 'web') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Auto-hide error after 6 seconds
+      setTimeout(() => {
+        setShowApiError(false);
+      }, 6000);
       return;
     }
 
@@ -156,20 +312,51 @@ export default function Join() {
       if (livesInUK === undefined) missingFields.push('UK residence status');
       if (!briefBio) missingFields.push('Brief bio');
       if (!briefCV) missingFields.push('Brief CV');
-      if (!signedNDA) missingFields.push('NDA agreement');
+      if (!signedNDA || !hasSignedNDA) {
+        setApiError('You must sign the Progress NDA before submitting your volunteer application. Please use the "View and sign NDA" link below.');
+        setShowApiError(true);
+        
+        // Scroll to top to show error
+        if (Platform.OS === 'web') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Auto-hide error after 8 seconds
+        setTimeout(() => {
+          setShowApiError(false);
+        }, 8000);
+        return;
+      }
       if (!gdprConsent) missingFields.push('GDPR consent');
       
       if (missingFields.length > 0) {
-        Alert.alert('Error', `Please complete the following volunteer fields: ${missingFields.join(', ')}`);
+        setApiError(`Please complete the following volunteer fields: ${missingFields.join(', ')}`);
+        setShowApiError(true);
+        
+        // Scroll to top to show error
+        if (Platform.OS === 'web') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Auto-hide error after 8 seconds
+        setTimeout(() => {
+          setShowApiError(false);
+        }, 8000);
         return;
       }
     }
 
     setIsLoading(true);
+    setApiError(null); // Clear any previous errors
+    setShowApiError(false);
+    
     try {
       const response = await api.submitApplication(formData);
 
       if (response.success) {
+        // Clear cached form data and NDA signature since application was successful
+        clearCachedData();
+        
         setSuccessMessage(response.message || 'Your membership application has been submitted successfully. An admin will review your application and you\'ll receive an access code via email if approved.');
         setIsSuccess(true);
         // Scroll to top to show success message
@@ -177,11 +364,35 @@ export default function Join() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       } else {
-        Alert.alert('Error', response.message || 'Failed to submit application. Please try again.');
+        // Handle API errors with inline display
+        setApiError(response.message || 'Failed to submit application. Please try again.');
+        setShowApiError(true);
+        
+        // Scroll to top to show error
+        if (Platform.OS === 'web') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Auto-hide error after 10 seconds
+        setTimeout(() => {
+          setShowApiError(false);
+        }, 10000);
       }
     } catch (error) {
       console.error('Error submitting application:', error);
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to submit application. Please try again.');
+      // Handle network/unexpected errors
+      setApiError(error instanceof Error ? error.message : 'Network error. Please check your connection and try again.');
+      setShowApiError(true);
+      
+      // Scroll to top to show error
+      if (Platform.OS === 'web') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Auto-hide error after 10 seconds
+      setTimeout(() => {
+        setShowApiError(false);
+      }, 10000);
     } finally {
       setIsLoading(false);
     }
@@ -489,6 +700,132 @@ export default function Join() {
                   borderColor: '#f1f5f9',
                 }}
               >
+                {/* NDA Success Notification */}
+                {showNDASuccess && (
+                  <Animated.View 
+                    style={{
+                      backgroundColor: '#D1FAE5',
+                      borderColor: '#10B981',
+                      borderWidth: 2,
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: 24,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      shadowColor: '#10B981',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }}
+                  >
+                    <View style={{
+                      backgroundColor: '#10B981',
+                      borderRadius: 20,
+                      padding: 8,
+                      marginRight: 12
+                    }}>
+                      <Ionicons name="checkmark" size={20} color="#ffffff" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ 
+                        fontSize: 16, 
+                        fontWeight: '600', 
+                        color: '#065F46',
+                        marginBottom: 4 
+                      }}>
+                        ✅ NDA Successfully Signed!
+                      </Text>
+                      <Text style={{ 
+                        fontSize: 14, 
+                        color: '#047857',
+                        lineHeight: 20 
+                      }}>
+                        Thank you {ndaSignerName}! Your confidentiality agreement is now on file. You can complete your volunteer application below.
+                      </Text>
+                    </View>
+                    <TouchableOpacity 
+                      onPress={() => setShowNDASuccess(false)}
+                      style={{ padding: 8 }}
+                    >
+                      <Ionicons name="close" size={20} color="#065F46" />
+                    </TouchableOpacity>
+                  </Animated.View>
+                )}
+
+                {/* API Error Notification */}
+                {showApiError && apiError && (
+                  <Animated.View 
+                    style={{
+                      backgroundColor: '#FEE2E2',
+                      borderColor: '#DC2626',
+                      borderWidth: 2,
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: 24,
+                      flexDirection: 'row',
+                      alignItems: 'flex-start',
+                      shadowColor: '#DC2626',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }}
+                  >
+                    <View style={{
+                      backgroundColor: '#DC2626',
+                      borderRadius: 20,
+                      padding: 8,
+                      marginRight: 12,
+                      marginTop: 2
+                    }}>
+                      <Ionicons name="alert-circle" size={20} color="#ffffff" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ 
+                        fontSize: 16, 
+                        fontWeight: '600', 
+                        color: '#991B1B',
+                        marginBottom: 4 
+                      }}>
+                        Application Error
+                      </Text>
+                      <Text style={{ 
+                        fontSize: 14, 
+                        color: '#B91C1C',
+                        lineHeight: 20 
+                      }}>
+                        {apiError}
+                      </Text>
+                      {apiError.includes('email is already pending') && (
+                        <View style={{ 
+                          backgroundColor: '#FEF3C7', 
+                          borderRadius: 8, 
+                          padding: 12, 
+                          marginTop: 8,
+                          borderLeftWidth: 4,
+                          borderLeftColor: '#F59E0B'
+                        }}>
+                          <Text style={{ fontSize: 13, color: '#92400E', fontWeight: '500', marginBottom: 4 }}>
+                            💡 What can you do?
+                          </Text>
+                          <Text style={{ fontSize: 13, color: '#92400E', lineHeight: 18 }}>
+                            • Check your email for any previous application confirmations{'\n'}
+                            • Contact our support team if you need to update your application{'\n'}
+                            • Use a different email address if this was submitted in error
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <TouchableOpacity 
+                      onPress={() => setShowApiError(false)}
+                      style={{ padding: 8, marginTop: -4 }}
+                    >
+                      <Ionicons name="close" size={20} color="#991B1B" />
+                    </TouchableOpacity>
+                  </Animated.View>
+                )}
+
                 <View style={{ alignItems: 'center', marginBottom: 32 }}>
                   <View 
                     style={{
@@ -516,11 +853,22 @@ export default function Join() {
                       fontSize: 16,
                       color: '#6B7280',
                       textAlign: 'center',
-                      lineHeight: 24
+                      lineHeight: 24,
+                      marginBottom: 8
                     }}
                   >
                     Become part of Britain's progressive movement
                   </Text>
+                  
+                  {/* Draft saved indicator */}
+                  {hasSavedData && (
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 }}>
+                      <Ionicons name="cloud-done" size={16} color="#10B981" style={{ marginRight: 6 }} />
+                      <Text style={{ fontSize: 12, color: '#10B981', fontWeight: '500' }}>
+                        Draft automatically saved
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
                 {/* Personal Information */}
@@ -1051,16 +1399,27 @@ export default function Join() {
                     {/* Checkboxes */}
                     <View style={{ gap: 12, marginBottom: 16 }}>
                       <TouchableOpacity
-                        onPress={() => updateField('signedNDA', !formData.signedNDA)}
+                        onPress={() => {
+                          if (!hasSignedNDA) {
+                            Alert.alert(
+                              'Sign NDA Required',
+                              'Please sign the NDA first using the link below before checking this box.',
+                              [{ text: 'OK' }]
+                            );
+                          } else {
+                            updateField('signedNDA', !formData.signedNDA);
+                          }
+                        }}
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
-                          backgroundColor: '#ffffff',
+                          backgroundColor: hasSignedNDA ? '#ffffff' : '#f9fafb',
                           borderRadius: 8,
                           padding: 12,
                           borderWidth: 2,
-                          borderColor: formData.signedNDA ? '#059669' : '#e5e7eb',
-                          ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                          borderColor: hasSignedNDA && formData.signedNDA ? '#059669' : hasSignedNDA ? '#e5e7eb' : '#fbbf24',
+                          opacity: hasSignedNDA ? 1 : 0.7,
+                          ...(Platform.OS === 'web' && { cursor: hasSignedNDA ? 'pointer' : 'not-allowed' } as any)
                         }}
                       >
                         <View
@@ -1068,21 +1427,44 @@ export default function Join() {
                             width: 20,
                             height: 20,
                             borderWidth: 2,
-                            borderColor: formData.signedNDA ? '#059669' : '#d1d5db',
+                            borderColor: hasSignedNDA && formData.signedNDA ? '#059669' : hasSignedNDA ? '#d1d5db' : '#fbbf24',
                             borderRadius: 4,
-                            backgroundColor: formData.signedNDA ? '#059669' : '#ffffff',
+                            backgroundColor: hasSignedNDA && formData.signedNDA ? '#059669' : '#ffffff',
                             marginRight: 12,
                             alignItems: 'center',
                             justifyContent: 'center'
                           }}
                         >
-                          {formData.signedNDA && (
+                          {hasSignedNDA && formData.signedNDA && (
                             <Ionicons name="checkmark" size={14} color="#ffffff" />
                           )}
                         </View>
-                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#111827', flex: 1 }}>
-                          I have signed the Progress NDA *
-                        </Text>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ 
+                            fontSize: 14, 
+                            fontWeight: '500', 
+                            color: hasSignedNDA ? '#111827' : '#92400e' 
+                          }}>
+                            I have signed the Progress NDA *
+                          </Text>
+                          {hasSignedNDA ? (
+                            <Text style={{ fontSize: 12, color: '#059669', marginTop: 2 }}>
+                              ✓ Signed by {ndaSignerName}
+                            </Text>
+                          ) : (
+                            <TouchableOpacity
+                              onPress={() => {
+                                saveFormData(); // Save form data before navigating
+                                router.push('/nda');
+                              }}
+                              style={{ marginTop: 4 }}
+                            >
+                              <Text style={{ fontSize: 12, color: '#d946ef', textDecorationLine: 'underline' }}>
+                                View and sign NDA →
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -1126,31 +1508,101 @@ export default function Join() {
                 {/* Submit Button */}
                 <TouchableOpacity
                   onPress={handleJoin}
-                  disabled={isLoading}
+                  disabled={isLoading || !isFormValid()}
                   style={{
-                    backgroundColor: isLoading ? '#9CA3AF' : '#d946ef',
+                    backgroundColor: isLoading ? '#9CA3AF' : 
+                                   !isFormValid() ? '#D1D5DB' : '#d946ef',
                     borderRadius: 16,
                     paddingVertical: 18,
                     marginBottom: 20,
-                    shadowColor: '#d946ef',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 8,
-                    ...(Platform.OS === 'web' && { cursor: isLoading ? 'not-allowed' : 'pointer' } as any)
+                    shadowColor: isFormValid() ? '#d946ef' : '#000',
+                    shadowOffset: { width: 0, height: isFormValid() ? 4 : 2 },
+                    shadowOpacity: isFormValid() ? 0.3 : 0.1,
+                    shadowRadius: isFormValid() ? 8 : 4,
+                    elevation: isFormValid() ? 8 : 2,
+                    opacity: isFormValid() ? 1 : 0.6,
+                    ...(Platform.OS === 'web' && { 
+                      cursor: (isLoading || !isFormValid()) ? 'not-allowed' : 'pointer' 
+                    } as any)
                   }}
                 >
-                  <Text 
-                    style={{ 
-                      color: '#ffffff',
-                      fontSize: 18,
-                      fontWeight: '700',
-                      textAlign: 'center'
-                    }}
-                  >
-                    {isLoading ? 'Joining Progress UK...' : 'Join Progress UK'}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                    {!isFormValid() && !isLoading && (
+                      <Ionicons 
+                        name="warning-outline" 
+                        size={20} 
+                        color="#6B7280" 
+                        style={{ marginRight: 8 }} 
+                      />
+                    )}
+                    <Text 
+                      style={{ 
+                        color: isFormValid() ? '#ffffff' : '#6B7280',
+                        fontSize: 18,
+                        fontWeight: '700',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {isLoading ? 'Joining Progress UK...' : 
+                       !isFormValid() ? 'Complete Required Fields' : 'Join Progress UK'}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
+
+                {/* Helper text when form is invalid */}
+                {!isFormValid() && !isLoading && (
+                  <View style={{ 
+                    backgroundColor: '#FEF3C7', 
+                    borderColor: '#F59E0B', 
+                    borderWidth: 1, 
+                    borderRadius: 8, 
+                    padding: 12, 
+                    marginBottom: 20,
+                    flexDirection: 'row',
+                    alignItems: 'flex-start'
+                  }}>
+                    <Ionicons name="information-circle" size={20} color="#F59E0B" style={{ marginRight: 8, marginTop: 1 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, color: '#92400E', fontWeight: '600', marginBottom: 4 }}>
+                        Please complete the following:
+                      </Text>
+                      {(() => {
+                        const missing = [];
+                        const { firstName, lastName, email, volunteer } = formData;
+                        
+                        if (!firstName) missing.push('First name');
+                        if (!lastName) missing.push('Last name');
+                        if (!email) missing.push('Email address');
+                        
+                        if (volunteer) {
+                          const { 
+                            socialMediaHandle, 
+                            isBritishCitizen, 
+                            livesInUK, 
+                            briefBio, 
+                            briefCV, 
+                            signedNDA, 
+                            gdprConsent 
+                          } = formData;
+                          
+                          if (!socialMediaHandle) missing.push('Social media handle');
+                          if (isBritishCitizen === undefined) missing.push('British citizenship status');
+                          if (livesInUK === undefined) missing.push('UK residence status');
+                          if (!briefBio) missing.push('Brief bio');
+                          if (!briefCV) missing.push('Brief CV');
+                          if (!signedNDA || !hasSignedNDA) missing.push('Sign the NDA (use link above)');
+                          if (!gdprConsent) missing.push('GDPR consent');
+                        }
+                        
+                        return missing.map((item, index) => (
+                          <Text key={index} style={{ fontSize: 13, color: '#92400E', marginBottom: 2 }}>
+                            • {item}
+                          </Text>
+                        ));
+                      })()}
+                    </View>
+                  </View>
+                )}
 
                 <Text style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 20 }}>
                   By joining, you agree to our terms of service and privacy policy. Membership is completely free and you can unsubscribe at any time. We'll never share your data with third parties.
