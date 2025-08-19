@@ -461,6 +461,10 @@ export default function Header() {
               <>
                 <NavButton href="/account" icon="person" isMobileMenu animationDelay={0}>Account</NavButton>
                 <NavButton href="/newsroom" icon="newspaper" isMobileMenu animationDelay={100}>Newsroom</NavButton>
+                <NavButton href="/events" icon="calendar">Events</NavButton>
+                {user?.role === 'ADMIN' && (
+                    <NavButton href="/user-management" icon="people">User Management</NavButton>
+                  )}
                 <NavButton href="/settings" icon="settings" isMobileMenu animationDelay={200}>Settings</NavButton>
                 <View style={{ height: 8 }} />
                 <NavButton onPress={handleLogoutRequest} icon="log-out" variant="secondary" isMobileMenu animationDelay={300}>
