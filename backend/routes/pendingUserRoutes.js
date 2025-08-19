@@ -9,7 +9,8 @@ const {
   rejectApplication,
   validateAccessCode,
   getApplicationStats,
-  updatePendingUserVolunteerDetails
+  updatePendingUserVolunteerDetails,
+  updateApplicationStatus
 } = require('../controllers/pendingUserController');
 
 // Public routes
@@ -39,5 +40,8 @@ router.post('/:id/reject', authenticateToken, requireAdmin, rejectApplication);
 
 // Update volunteer details for pending user
 router.put('/:id/volunteer-details', authenticateToken, requireAdmin, updatePendingUserVolunteerDetails);
+
+// Update application status
+router.put('/:id/status', authenticateToken, requireAdmin, updateApplicationStatus);
 
 module.exports = router;

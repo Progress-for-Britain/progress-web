@@ -99,7 +99,7 @@ export interface PendingUser {
   interests: string[];
   volunteer: boolean;
   newsletter: boolean;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED';
   accessCode?: string;
   reviewedBy?: string;
   reviewNotes?: string;
@@ -165,6 +165,11 @@ export interface ApproveApplicationRequest {
 }
 
 export interface RejectApplicationRequest {
+  reviewNotes?: string;
+}
+
+export interface UpdateApplicationStatusRequest {
+  status: 'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED';
   reviewNotes?: string;
 }
 
@@ -839,6 +844,35 @@ class ApiClient {
         approvedAt: string;
       };
     }>(`/api/pending-users/${id}/reject`, reviewData);
+    return response.data;
+  }
+
+  async updateApplicationStatus(id: string, statusData: UpdateApplicationStatusRequest): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      id: string;
+      status: string;
+      reviewedBy?: string;
+      reviewNotes?: string;
+      accessCode?: string;
+      approvedAt?: string;
+      updatedAt: string;
+    };
+  }> {
+    const response = await this.client.put<{
+      success: boolean;
+      message: string;
+      data: {
+        id: string;
+        status: string;
+        reviewedBy?: string;
+        reviewNotes?: string;
+        accessCode?: string;
+        approvedAt?: string;
+        updatedAt: string;
+      };
+    }>(`/api/pending-users/${id}/status`, statusData);
     return response.data;
   }
 

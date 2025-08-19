@@ -34,11 +34,16 @@ export default function UserManagement() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showEditVolunteerModal, setShowEditVolunteerModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
   const [newRole, setNewRole] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
+  const [newStatus, setNewStatus] = useState('');
+  const [statusNotes, setStatusNotes] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED'>('UNREVIEWED');
   const [selectedEvent, setSelectedEvent] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>({});
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED'>('ALL');
   
   // Volunteer edit form data
   const [volunteerEditData, setVolunteerEditData] = useState({
@@ -186,6 +191,36 @@ export default function UserManagement() {
     }
   };
 
+  const updateApplicationStatus = async () => {
+    if (!selectedPendingUser) return;
+
+    try {
+      const response = await api.updateApplicationStatus(selectedPendingUser.id, {
+        status: selectedStatus,
+        reviewNotes: statusNotes
+      });
+      
+      let successMessage = `Application status updated to ${selectedStatus.toLowerCase()}`;
+      if (selectedStatus === 'APPROVED' && response.data.accessCode) {
+        successMessage += `! Access code: ${response.data.accessCode}`;
+      }
+      
+      Alert.alert('Success', successMessage);
+      setShowStatusModal(false);
+      setStatusNotes('');
+      loadPendingUsers();
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update application status');
+    }
+  };
+
+  const getFilteredPendingUsers = () => {
+    if (statusFilter === 'ALL') {
+      return pendingUsers;
+    }
+    return pendingUsers.filter(user => user.status === statusFilter);
+  };
+
   const assignUserToEvent = async () => {
     if (!selectedUser || !selectedEvent) return;
 
@@ -223,7 +258,8 @@ export default function UserManagement() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PENDING': return '#f59e0b';
+      case 'UNREVIEWED': return '#f59e0b';
+      case 'CONTACTED': return '#3b82f6';
       case 'APPROVED': return '#059669';
       case 'REJECTED': return '#dc2626';
       default: return '#6b7280';
@@ -400,9 +436,9 @@ export default function UserManagement() {
               shadowRadius: 4,
               elevation: 3
             }}>
-              <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 4 }}>Pending Applications</Text>
+              <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 4 }}>New Applications</Text>
               <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#f59e0b' }}>
-                {pendingUsers.filter(u => u.status === 'PENDING').length}
+                {pendingUsers.filter(u => u.status === 'UNREVIEWED').length}
               </Text>
             </View>
             
@@ -437,7 +473,7 @@ export default function UserManagement() {
           }}>
             {[
               { key: 'users', label: 'Users', icon: 'people' },
-              { key: 'pending', label: 'Pending Applications', icon: 'hourglass' },
+              { key: 'pending', label: 'All Applications', icon: 'hourglass' },
               { key: 'assignments', label: 'Event Assignments', icon: 'calendar' }
             ].map((tab) => (
               <TouchableOpacity
@@ -531,9 +567,68 @@ export default function UserManagement() {
             {activeTab === 'pending' && (
               <View>
                 <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
-                  Pending Applications
+                  All Applications
                 </Text>
-                {pendingUsers.filter(u => u.status === 'PENDING').map((pendingUser) => (
+                
+                {/* Status Filter */}
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                    Filter by Status:
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      {(['ALL', 'UNREVIEWED', 'CONTACTED', 'APPROVED', 'REJECTED'] as const).map((status) => (
+                        <TouchableOpacity
+                          key={status}
+                          onPress={() => setStatusFilter(status)}
+                          style={{
+                            paddingHorizontal: 12,
+                            paddingVertical: 6,
+                            borderRadius: 20,
+                            backgroundColor: statusFilter === status ? '#3b82f6' : '#f3f4f6',
+                            borderWidth: 1,
+                            borderColor: statusFilter === status ? '#3b82f6' : '#d1d5db',
+                            minWidth: 80,
+                            alignItems: 'center'
+                          }}
+                        >
+                          <Text style={{
+                            fontSize: 12,
+                            fontWeight: '600',
+                            color: statusFilter === status ? '#ffffff' : '#374151'
+                          }}>
+                            {status}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </ScrollView>
+                  
+                  {/* Status counts */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                    <Text style={{ fontSize: 12, color: '#6b7280' }}>
+                      Showing {getFilteredPendingUsers().length} of {pendingUsers.length} applications
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#6b7280' }}>•</Text>
+                    <Text style={{ fontSize: 12, color: '#f59e0b' }}>
+                      {pendingUsers.filter(u => u.status === 'UNREVIEWED').length} Unreviewed
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#6b7280' }}>•</Text>
+                    <Text style={{ fontSize: 12, color: '#3b82f6' }}>
+                      {pendingUsers.filter(u => u.status === 'CONTACTED').length} Contacted
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#6b7280' }}>•</Text>
+                    <Text style={{ fontSize: 12, color: '#059669' }}>
+                      {pendingUsers.filter(u => u.status === 'APPROVED').length} Approved
+                    </Text>
+                    <Text style={{ fontSize: 12, color: '#6b7280' }}>•</Text>
+                    <Text style={{ fontSize: 12, color: '#dc2626' }}>
+                      {pendingUsers.filter(u => u.status === 'REJECTED').length} Rejected
+                    </Text>
+                  </View>
+                </View>
+
+                {getFilteredPendingUsers().map((pendingUser) => (
                   <TouchableOpacity
                     key={pendingUser.id}
                     onPress={() => handlePendingUserClick(pendingUser)}
@@ -942,6 +1037,24 @@ export default function UserManagement() {
                         textAlignVertical: 'top'
                       }}
                     />
+
+                    {/* Status Change Button */}
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedStatus(selectedPendingUser.status);
+                        setStatusNotes('');
+                        setShowStatusModal(true);
+                      }}
+                      style={{
+                        backgroundColor: '#3b82f6',
+                        paddingVertical: 12,
+                        borderRadius: 8,
+                        alignItems: 'center',
+                        marginBottom: 16
+                      }}
+                    >
+                      <Text style={{ color: '#ffffff', fontWeight: '600' }}>Change Status</Text>
+                    </TouchableOpacity>
 
                     <View style={{ flexDirection: 'row', gap: 12 }}>
                       <TouchableOpacity
@@ -1546,6 +1659,129 @@ export default function UserManagement() {
                 
                 <TouchableOpacity
                   onPress={() => setShowEditVolunteerModal(false)}
+                  style={{
+                    backgroundColor: '#6b7280',
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    flex: 1,
+                    alignItems: 'center'
+                  }}
+                >
+                  <Text style={{ color: '#ffffff', fontWeight: '600' }}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Status Update Modal */}
+        <Modal
+          visible={showStatusModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowStatusModal(false)}
+        >
+          <View style={{ 
+            flex: 1, 
+            backgroundColor: 'rgba(0,0,0,0.5)', 
+            justifyContent: 'center', 
+            alignItems: 'center' 
+          }}>
+            <View style={{ 
+              backgroundColor: '#ffffff', 
+              borderRadius: 16, 
+              padding: 24, 
+              width: '90%', 
+              maxWidth: 400
+            }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
+                Update Application Status
+              </Text>
+              
+              {selectedPendingUser && (
+                <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
+                  {selectedPendingUser.firstName} {selectedPendingUser.lastName} ({selectedPendingUser.email})
+                </Text>
+              )}
+
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                Current Status: {selectedPendingUser?.status}
+              </Text>
+
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                New Status:
+              </Text>
+              
+              <View style={{ marginBottom: 16 }}>
+                {(['UNREVIEWED', 'CONTACTED', 'APPROVED', 'REJECTED'] as const).map((status) => (
+                  <TouchableOpacity
+                    key={status}
+                    onPress={() => setSelectedStatus(status)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: 8,
+                      paddingHorizontal: 12,
+                      marginBottom: 4,
+                      borderRadius: 8,
+                      backgroundColor: selectedStatus === status ? '#e0f2fe' : 'transparent',
+                      borderWidth: 1,
+                      borderColor: selectedStatus === status ? '#0891b2' : '#e5e7eb'
+                    }}
+                  >
+                    <View style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: 6,
+                      backgroundColor: getStatusColor(status),
+                      marginRight: 8
+                    }} />
+                    <Text style={{ 
+                      fontSize: 14, 
+                      color: selectedStatus === status ? '#0891b2' : '#111827',
+                      fontWeight: selectedStatus === status ? '600' : '400'
+                    }}>
+                      {status}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                Notes (Optional):
+              </Text>
+              <TextInput
+                value={statusNotes}
+                onChangeText={setStatusNotes}
+                placeholder="Add notes about this status change..."
+                multiline
+                numberOfLines={3}
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#d1d5db',
+                  borderRadius: 8,
+                  padding: 12,
+                  marginBottom: 20,
+                  textAlignVertical: 'top'
+                }}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <TouchableOpacity
+                  onPress={updateApplicationStatus}
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                    flex: 1,
+                    alignItems: 'center'
+                  }}
+                >
+                  <Text style={{ color: '#ffffff', fontWeight: '600' }}>Update Status</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  onPress={() => setShowStatusModal(false)}
                   style={{
                     backgroundColor: '#6b7280',
                     paddingVertical: 12,

@@ -255,7 +255,8 @@ model VolunteerHours {
 }
 
 enum PendingUserStatus {
-  PENDING
+  UNREVIEWED
+  CONTACTED
   APPROVED
   REJECTED
 }
@@ -270,7 +271,7 @@ model PendingUser {
   interests    String[]          // Array of policy interests
   volunteer    Boolean           @default(false) // Whether they want to volunteer
   newsletter   Boolean           @default(true)  // Whether they want newsletter
-  status       PendingUserStatus @default(PENDING)
+  status       PendingUserStatus @default(UNREVIEWED)
   accessCode   String?           // Generated access code for approved users
   reviewedBy   String?           // ID of admin who reviewed
   reviewNotes  String?           // Admin notes about the review

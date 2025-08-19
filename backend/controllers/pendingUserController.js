@@ -81,7 +81,7 @@ const submitApplication = async (req, res) => {
       where: { email }
     });
 
-    if (existingPending && existingPending.status === 'PENDING') {
+    if (existingPending && existingPending.status === 'UNREVIEWED') {
       return res.status(409).json({
         success: false,
         message: 'A membership application with this email is already pending review'
@@ -100,7 +100,7 @@ const submitApplication = async (req, res) => {
         interests: interests || [],
         volunteer: volunteer || false,
         newsletter: newsletter !== false, // Default to true
-        status: 'PENDING',
+        status: 'UNREVIEWED',
         // Volunteer-specific fields
         socialMediaHandle: volunteer ? socialMediaHandle : null,
         isBritishCitizen: volunteer ? isBritishCitizen : null,
@@ -121,7 +121,7 @@ const submitApplication = async (req, res) => {
         interests: interests || [],
         volunteer: volunteer || false,
         newsletter: newsletter !== false,
-        status: 'PENDING',
+        status: 'UNREVIEWED',
         reviewedBy: null,
         reviewNotes: null,
         approvedAt: null,
@@ -258,10 +258,10 @@ const approveApplication = async (req, res) => {
       });
     }
 
-    if (pendingUser.status !== 'PENDING') {
+    if (pendingUser.status !== 'UNREVIEWED' && pendingUser.status !== 'CONTACTED') {
       return res.status(400).json({
         success: false,
-        message: 'Application has already been reviewed'
+        message: 'Application has already been reviewed or is not in a reviewable state'
       });
     }
 
@@ -335,10 +335,10 @@ const rejectApplication = async (req, res) => {
       });
     }
 
-    if (pendingUser.status !== 'PENDING') {
+    if (pendingUser.status !== 'UNREVIEWED' && pendingUser.status !== 'CONTACTED') {
       return res.status(400).json({
         success: false,
-        message: 'Application has already been reviewed'
+        message: 'Application has already been reviewed or is not in a reviewable state'
       });
     }
 
@@ -584,6 +584,129 @@ const updatePendingUserVolunteerDetails = async (req, res) => {
   }
 };
 
+// Update application status (admin only)
+const updateApplicationStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reviewNotes } = req.body;
+    const adminId = req.user.id;
+
+    // Validate status
+    const validStatuses = ['UNREVIEWED', 'CONTACTED', 'APPROVED', 'REJECTED'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status. Must be one of: ' + validStatuses.join(', ')
+      });
+    }
+
+    // Find pending application
+    const pendingUser = await prisma.pendingUser.findUnique({
+      where: { id }
+    });
+
+    if (!pendingUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pending application not found'
+      });
+    }
+
+    // Validate status transitions
+    const currentStatus = pendingUser.status;
+    const allowedTransitions = {
+      'UNREVIEWED': ['CONTACTED', 'APPROVED', 'REJECTED'],
+      'CONTACTED': ['APPROVED', 'REJECTED', 'UNREVIEWED'],
+      'APPROVED': [],
+      'REJECTED': ['UNREVIEWED', 'CONTACTED']
+    };
+
+    if (!allowedTransitions[currentStatus].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot transition from ${currentStatus} to ${status}`
+      });
+    }
+
+    // Update data object
+    const updateData = {
+      status,
+      reviewedBy: adminId,
+      reviewNotes: reviewNotes || null,
+      updatedAt: new Date()
+    };
+
+    // For approvals, generate access code
+    if (status === 'APPROVED') {
+      const accessCode = generateAccessCode();
+      updateData.accessCode = accessCode;
+      updateData.approvedAt = new Date();
+
+      // Start transaction to create access code record
+      const result = await prisma.$transaction(async (tx) => {
+        const updatedPendingUser = await tx.pendingUser.update({
+          where: { id },
+          data: updateData
+        });
+
+        // Create access code record
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30); // Expires in 30 days
+
+        await tx.accessCode.create({
+          data: {
+            code: accessCode,
+            email: pendingUser.email,
+            expiresAt
+          }
+        });
+
+        return updatedPendingUser;
+      });
+
+      return res.json({
+        success: true,
+        message: 'Application status updated to approved successfully',
+        data: {
+          id: result.id,
+          status: result.status,
+          accessCode: result.accessCode,
+          approvedAt: result.approvedAt
+        }
+      });
+    } else {
+      // For other status updates
+      if (status === 'REJECTED') {
+        updateData.approvedAt = new Date(); // Track when rejection happened
+      }
+
+      const updatedPendingUser = await prisma.pendingUser.update({
+        where: { id },
+        data: updateData
+      });
+
+      return res.json({
+        success: true,
+        message: `Application status updated to ${status.toLowerCase()} successfully`,
+        data: {
+          id: updatedPendingUser.id,
+          status: updatedPendingUser.status,
+          reviewedBy: updatedPendingUser.reviewedBy,
+          reviewNotes: updatedPendingUser.reviewNotes,
+          updatedAt: updatedPendingUser.updatedAt
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error updating application status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update application status',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   submitApplication,
   getAllPendingApplications,
@@ -593,5 +716,6 @@ module.exports = {
   validateAccessCode,
   markAccessCodeUsed,
   getApplicationStats,
-  updatePendingUserVolunteerDetails
+  updatePendingUserVolunteerDetails,
+  updateApplicationStatus
 };
