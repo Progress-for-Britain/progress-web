@@ -866,14 +866,7 @@ export default function Join() {
                       Volunteer Application Details
                     </Text>
                     <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 20, textAlign: 'left' }]}>
-                      Please complete the following fields for your volunteer application
-                    </Text>
-
-                    {/* Should I Join? PDF Link */}
-                    <View style={{ marginBottom: 16 }}>
-                      <Text style={styles.inputLabel}>
-                        Not sure if you should volunteer?
-                      </Text>
+                      Please complete the following fields for your volunteer application. Not sure if you should volunteer? {' '}
                       <TouchableOpacity
                         onPress={() => {
                           const pdfUrl = `${process.env.EXPO_PUBLIC_API_URL}/public/should-i-join-progress.pdf`;
@@ -885,11 +878,11 @@ export default function Join() {
                         }}
                         style={{ marginTop: 4 }}
                       >
-                        <Text style={[styles.checkboxLink, { fontSize: 14 }]}>
-                          Read: Should I Join as a Volunteer? (PDF) →
+                        <Text style={[commonStyles.text, { fontSize: 14, color: colors.accent, textDecorationLine: 'underline' }]}>
+                          Read this guide
                         </Text>
                       </TouchableOpacity>
-                    </View>
+                    </Text>
 
                     {/* Social Media Handle */}
                     <View style={{ marginBottom: 16 }}>
