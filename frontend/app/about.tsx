@@ -29,181 +29,144 @@ export default function About() {
         {/* About Page Content */}
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
-            <Text style={commonStyles.title}>About Progress</Text>
-            <View style={styles.highlightTextContainer}>
-              <LinearGradient
-                colors={gradients.primary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={commonStyles.highlightBackground}
-              >
-                <Text style={commonStyles.highlightText}>A political party beyond left and right.</Text>
-              </LinearGradient>
-            </View>
+            <Text style={commonStyles.title}>About Us</Text>
+            <Text style={[commonStyles.text, styles.heroSubtext]}>Some time ago…</Text>
           </View>
 
-          {/* Mission Section */}
+          {/* Foundation Section */}
+          <View style={styles.section}>
+            <Text style={[commonStyles.text, styles.foundationText]}>
+              …PROGRESS was formed by a group of people – engineers, founders of data and AI companies, megaproject managers, 
+              network builders, grassroots organisers, NHS professionals, astrophysicists, world-class educators, inventors, 
+              polling and focus grouping experts, and more – united by three common and uncontroversial beliefs:
+            </Text>
+          </View>
+
+          {/* Core Beliefs Section */}
+          <View style={styles.centeredSection}>
+            <Text style={[commonStyles.text, styles.centeredBelief]}>
+              That Britain, one of the finest and most successful states ever to rise from the earth, finds itself in terminal decline.
+            </Text>
+            <Text style={[commonStyles.text, styles.centeredBelief]}>
+              That this decline can be stopped, enabling Britain to exceed the level of success and stability it has known historically.
+            </Text>
+            <Text style={[commonStyles.text, styles.centeredBelief]}>
+              And that this decline must be stopped.
+            </Text>
+          </View>
+
+          {/* Formation Section */}
+          <View style={styles.section}>
+            <Text style={[commonStyles.text, styles.bodyText]}>
+              PROGRESS was formed from a desperate unwillingness to allow Britain's fate to be left to chance. It is our conviction 
+              that Britain's revival and flourishing is assured - if only we can summon the will.{'\n\n'}
+              
+              PROGRESS' platform is simple, and oriented around a vision of A Kingdom United.
+            </Text>
+          </View>
+
+          {/* Economic Vision Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <MaterialIcons 
-                name="flag" 
+                name="trending-up" 
                 size={24} 
+                color={colors.accent} 
+                style={styles.sectionIcon}
+              />
+              <Text style={[commonStyles.text, styles.sectionTitle]}>Economic Vision</Text>
+            </View>
+            <Text style={[commonStyles.text, styles.bodyText]}>
+              Economically, we believe in a Britain whose growth is propelled by cutting edge technology and high creativity. 
+              We believe in the poverty-reducing and prosperity-spreading power of markets. We believe in monumental reindustrialisation. 
+              We believe in a focus on skills and training for all, to create tracks to prosperity for all citizens, so that there 
+              shall be no one in Britain who cannot count on their own mounting skill capital with satisfaction, who cannot look 
+              forward to a future of home-ownership and to the success of their issue – their own personal visions of PROGRESS, 
+              for their time and for coming time.
+            </Text>
+          </View>
+
+          {/* Social Vision Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialIcons 
+                name="people" 
+                size={24} 
+                color={colors.accent} 
+                style={styles.sectionIcon}
+              />
+              <Text style={[commonStyles.text, styles.sectionTitle]}>Social Vision</Text>
+            </View>
+            <Text style={[commonStyles.text, styles.bodyText]}>
+              Socially, we believe that it should be the right of all people to walk down the street at night without fear of harm. 
+              We believe in the rule of law in the universal interest, robust policing, and a culture of open justice that holds 
+              matters of corruption and white-collar criminality to as pointed a standard as it does matters of violent and petty 
+              criminality. We believe in a nation defined not by cursory differences as abide between us, but by shared commitment 
+              to, and shared commitment to the protection of, the classically British values that made this country the freest, 
+              fairest, and most successful in the world, the envy and inspiration of many of the world's greatest states to have 
+              followed after it.
+            </Text>
+          </View>
+
+          {/* Governance Vision Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialIcons 
+                name="account-balance" 
+                size={24} 
+                color={colors.accent} 
+                style={styles.sectionIcon}
+              />
+              <Text style={[commonStyles.text, styles.sectionTitle]}>Governance Vision</Text>
+            </View>
+            <Text style={[commonStyles.text, styles.bodyText]}>
+              And we believe in a state that serves its citizens. In courts that serve the interests of the law-abiding, not the 
+              criminal. In a civil service that is lean, cost-effective and hyper-productive. In a crown jewel health service that 
+              provides for its people according to their need, and seeks to reduce the need in question as progressively as it 
+              treats those needs that already exist or have become inexorable. In a political class that has transcended petty 
+              considerations of the political left and the political right, and is merely concerned with the skilful usage of that 
+              raw material of governance in the service of increasing public prosperity, security, and means-to-venture for all 
+              people, whether their personal affinities make them sympathetic to PROGRESS or not.
+            </Text>
+          </View>
+
+          {/* Mission Statement Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <FontAwesome5 
+                name="flag" 
+                size={22} 
                 color={colors.accent} 
                 style={styles.sectionIcon}
               />
               <Text style={[commonStyles.text, styles.sectionTitle]}>Our Mission</Text>
             </View>
-            <Text style={[commonStyles.text, styles.sectionText]}>
-              Progress is more than a political party - we're a movement of ordinary people doing extraordinary things. 
-              We believe that Britain's future should be built by those who live and work here every day, not by 
-              career politicians disconnected from reality.{'\n\n'}
+            <Text style={[commonStyles.text, styles.bodyText]}>
+              We are a party devoted to bringing about the glory of our name: PROGRESS, for one and all. A party that believes 
+              in the heroism, rationality, and beauty of human beings; and in the greatness of Britain, and of the British people; 
+              and in the magnificence of our Common Law; and in the vitality of British culture, so vigorous in its originality 
+              and so pervasive in effect that it has sired, propelled, and justified many of the developments in the march of 
+              global development of which humanity can be most proud.{'\n\n'}
               
-              We're creating a new kind of politics - one that puts competence over ideology, solutions over soundbites, 
-              and the common good over party politics.
+              A party that believes in the credo of "Always Better Today Than Yesterday." A party that believes in its own 
+              almost-impossible mission – not merely elections won, and a movement born, but an entire national culture revitalised. 
+              It is a fundamentally unreasonable aim, but these are unreasonable times. The service of the people of Britain cannot 
+              wait any longer. And just as we believe that the answers to the questions facing the British people are within them, 
+              so do we believe that the service of those answers is within us.
             </Text>
           </View>
 
-          {/* Vision Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons 
-                name="telescope" 
-                size={24} 
-                color={colors.accent} 
-                style={styles.sectionIcon}
-              />
-              <Text style={[commonStyles.text, styles.sectionTitle]}>Our Vision</Text>
-            </View>
-            <Text style={[commonStyles.text, styles.sectionText]}>
-              We envision a Britain where:{'\n\n'}
-              • Decisions are made based on evidence, not political expediency{'\n'}
-              • Every citizen has the opportunity to contribute their skills and expertise{'\n'}
-              • Government serves the people, not special interests{'\n'}
-              • Innovation and pragmatism drive policy{'\n'}
-              • Political discourse is civil and constructive
-            </Text>
+          {/* Closing Statement */}
+          <View style={styles.closingSection}>
+            <LinearGradient
+              colors={gradients.primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.closingGradient}
+            >
+              <Text style={styles.closingText}>It Can Be Done.</Text>
+            </LinearGradient>
           </View>
-
-          {/* Values Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <FontAwesome5 
-                name="heart" 
-                size={22} 
-                color={colors.accent} 
-                style={styles.sectionIcon}
-              />
-              <Text style={[commonStyles.text, styles.sectionTitle]}>Our Values</Text>
-            </View>
-            
-            <View style={styles.valuesList}>
-              <View style={styles.valueItem}>
-                <View style={styles.valueIconContainer}>
-                  <MaterialIcons name="groups" size={20} color={colors.accent} />
-                </View>
-                <View style={styles.valueContent}>
-                  <Text style={[commonStyles.text, styles.valueTitle]}>Inclusivity</Text>
-                  <Text style={[commonStyles.text, styles.valueDescription]}>
-                    We welcome people from all backgrounds who share our commitment to building a better Britain.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.valueItem}>
-                <View style={styles.valueIconContainer}>
-                  <MaterialIcons name="science" size={20} color={colors.accent} />
-                </View>
-                <View style={styles.valueContent}>
-                  <Text style={[commonStyles.text, styles.valueTitle]}>Evidence-Based Policy</Text>
-                  <Text style={[commonStyles.text, styles.valueDescription]}>
-                    Our policies are grounded in research, data, and real-world experience.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.valueItem}>
-                <View style={styles.valueIconContainer}>
-                  <MaterialIcons name="account-balance" size={20} color={colors.accent} />
-                </View>
-                <View style={styles.valueContent}>
-                  <Text style={[commonStyles.text, styles.valueTitle]}>Transparency</Text>
-                  <Text style={[commonStyles.text, styles.valueDescription]}>
-                    We believe in open, honest communication and accountable governance.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.valueItem}>
-                <View style={styles.valueIconContainer}>
-                  <MaterialIcons name="psychology" size={20} color={colors.accent} />
-                </View>
-                <View style={styles.valueContent}>
-                  <Text style={[commonStyles.text, styles.valueTitle]}>Pragmatism</Text>
-                  <Text style={[commonStyles.text, styles.valueDescription]}>
-                    We focus on what works, not what fits traditional political categories.
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* How We're Different Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons 
-                name="bulb" 
-                size={24} 
-                color={colors.accent} 
-                style={styles.sectionIcon}
-              />
-              <Text style={[commonStyles.text, styles.sectionTitle]}>How We're Different</Text>
-            </View>
-            <Text style={[commonStyles.text, styles.sectionText]}>
-              Unlike traditional political parties, Progress operates as a partnership of the able. We don't 
-              follow rigid ideological lines or party whips. Instead, we:{'\n\n'}
-              
-              • Recruit based on competence and character, not political connections{'\n'}
-              • Encourage diverse perspectives and healthy debate{'\n'}
-              • Make decisions through evidence-based analysis{'\n'}
-              • Focus on long-term solutions rather than short-term political gains{'\n'}
-              • Maintain independence from special interest groups
-            </Text>
-          </View>
-
-          {/* Get Involved Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <FontAwesome5 
-                name="hands-helping" 
-                size={22} 
-                color={colors.accent} 
-                style={styles.sectionIcon}
-              />
-              <Text style={[commonStyles.text, styles.sectionTitle]}>Get Involved</Text>
-            </View>
-            <Text style={[commonStyles.text, styles.sectionText]}>
-              Progress is built by people like you. Whether you're a teacher, engineer, small business owner, 
-              student, or retiree - if you believe ordinary people can govern better than politicians do, 
-              we want to hear from you.{'\n\n'}
-              
-              Join us in building the future of British politics. Together, we can create a government that 
-              truly serves the people.
-            </Text>
-            
-            <View style={styles.ctaContainer}>
-              <LinearGradient
-                colors={gradients.primary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.ctaGradient}
-              >
-                <Text style={styles.ctaText}>Ready to make a difference?</Text>
-              </LinearGradient>
-            </View>
-          </View>
-
-          {/* Footer */}
-          <Footer />
           
           {/* Add extra space at the bottom for mobile scroll */}
           <View style={{ height: 100 }} />
@@ -216,11 +179,35 @@ export default function About() {
 const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.create({
   heroSection: {
     marginBottom: 40,
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
-  highlightTextContainer: {
-    alignSelf: 'flex-end',
-    marginTop: 10,
+  heroSubtext: {
+    fontSize: isMobile ? 16 : 18,
+    fontStyle: 'italic',
+    marginTop: 8,
+    opacity: 0.8,
+  },
+  foundationText: {
+    fontSize: isMobile ? 16 : 18,
+    lineHeight: isMobile ? 24 : 28,
+    textAlign: 'justify',
+  },
+  centeredSection: {
+    marginBottom: 40,
+    paddingHorizontal: isMobile ? 20 : 40,
+    alignItems: 'center',
+  },
+  centeredBelief: {
+    fontSize: isMobile ? 16 : 18,
+    lineHeight: isMobile ? 24 : 28,
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: '500',
+  },
+  bodyText: {
+    fontSize: isMobile ? 16 : 18,
+    lineHeight: isMobile ? 24 : 28,
+    textAlign: 'justify',
   },
   section: {
     marginBottom: 40,
@@ -238,61 +225,20 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     fontSize: isMobile ? 20 : 24,
     fontWeight: 'bold',
   },
-  sectionText: {
-    fontSize: isMobile ? 16 : 18,
-    lineHeight: isMobile ? 24 : 28,
-    textAlign: 'right',
-  },
-  valuesList: {
-    gap: 20,
-  },
-  valueItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  valueIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
+  closingSection: {
+    marginBottom: 40,
     alignItems: 'center',
-    marginRight: 16,
+    paddingHorizontal: isMobile ? 20 : 40,
   },
-  valueContent: {
-    flex: 1,
-  },
-  valueTitle: {
-    fontSize: isMobile ? 16 : 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    textAlign: 'left',
-  },
-  valueDescription: {
-    fontSize: isMobile ? 14 : 16,
-    lineHeight: isMobile ? 20 : 24,
-    opacity: 0.8,
-    textAlign: 'left',
-  },
-  ctaContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  ctaGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+  closingGradient: {
+    paddingVertical: 20,
+    paddingHorizontal: 40,
     borderRadius: 12,
     alignItems: 'center',
   },
-  ctaText: {
+  closingText: {
     color: '#FFFFFF',
-    fontSize: isMobile ? 16 : 18,
+    fontSize: isMobile ? 18 : 22,
     fontWeight: 'bold',
     textAlign: 'center',
   },

@@ -529,34 +529,15 @@ export default function Join() {
                   fontSize: isMobile ? 16 : 18,
                   marginBottom: 32,
                   lineHeight: isMobile ? 24 : 28,
-                  maxWidth: isMobile ? width - 32 : 600,
-                  textAlign: 'center'
+                  maxWidth: isMobile ? width - 32 : 800,
+                  textAlign: 'justify'
                 }]}>
-                  Join thousands of progressives building the innovation economy, creating prosperity zones, and making Britain work for everyone, everywhere.
+                  2029 will be the biggest opportunity for regime change in a century. The vote share required to win a majority has never been smaller - in 2024 it only took a 1.6% increase in votes to double Labour's seats.{'\n\n'}
+                  
+                  PROGRESS are building the most serious new party in the country, but we need you to help make this a reality. We've seen the inside of all the other parties - new and old - and believe us, they are not up to the task. The time for sitting on the sidelines has passed.{'\n\n'}
+                  
+                  We need to build out our ground campaign all across the country - now. We need to build the real alternative for 2029 now - and we need you to be a part of it.
                 </Text>
-
-                {/* Quick Stats */}
-                <View style={commonStyles.statsContainer}>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>50K+</Text>
-                    <Text style={styles.statLabel}>Active Members</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>650+</Text>
-                    <Text style={styles.statLabel}>Constituencies</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>100+</Text>
-                    <Text style={styles.statLabel}>Local Groups</Text>
-                  </View>
-                </View>
-
-                <View style={styles.benefitsRow}>
-                  <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-                  <Text style={[commonStyles.text, { marginLeft: 8 }]}>
-                    Free membership • No hidden fees • Unsubscribe anytime
-                  </Text>
-                </View>
               </View>
 
               {/* Form Container */}

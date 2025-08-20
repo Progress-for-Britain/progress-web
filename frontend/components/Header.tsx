@@ -322,6 +322,7 @@ export default function Header() {
                   <>
                   <NavButton href="/" icon="home">Home</NavButton>
                   <NavButton href="/about" icon="information-circle">About</NavButton>
+                  <NavButton href="/our-approach" icon="analytics">Our Approach</NavButton>
                   {/* <NavButton href="/donate" icon="heart" variant="secondary">Donate</NavButton> */}
                   <NavButton href="/join" icon="people">Join Us</NavButton>
                   <NavButton href="/login" icon="log-in">Login</NavButton>
@@ -451,6 +452,7 @@ export default function Header() {
               <>
                 <NavButton href="/" icon="home" isMobileMenu animationDelay={0}>Home</NavButton>
                 <NavButton href="/about" icon="information-circle" isMobileMenu animationDelay={100}>About</NavButton>
+                <NavButton href="/our-approach" icon="analytics" isMobileMenu animationDelay={150}>Our Approach</NavButton>
                 {/* <NavButton href="/donate" icon="heart" variant="secondary" isMobileMenu animationDelay={100}>Donate</NavButton> */}
                 <NavButton href="/join" icon="people" variant="primary" isMobileMenu animationDelay={200}>Join Us</NavButton>
                 <NavButton href="/login" icon="log-in" isMobileMenu animationDelay={300}>Login</NavButton>
