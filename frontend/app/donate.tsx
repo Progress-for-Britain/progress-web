@@ -4,14 +4,15 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
   withSpring,
   withRepeat
 } from "react-native-reanimated";
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
@@ -24,7 +25,7 @@ export default function Donate() {
   const gradients = getGradients(isDark);
   const commonStyles = getCommonStyles(isDark, isMobile, width);
   const styles = getStyles(colors, isMobile, width);
-  
+
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [frequency, setFrequency] = useState<'one-time' | 'monthly'>('one-time');
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +57,7 @@ export default function Donate() {
     try {
       // In a real app, this would integrate with a payment processor
       Alert.alert(
-        'Thank You!', 
+        'Thank You!',
         `Your ${frequency} donation of £${selectedAmount} is being processed. You will be redirected to our secure payment processor.`,
         [{ text: 'OK' }]
       );
@@ -69,7 +70,7 @@ export default function Donate() {
 
   const AmountButton = ({ amount }: { amount: number }) => {
     const buttonAnim = useSharedValue(1);
-    
+
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ scale: buttonAnim.value }],
     }));
@@ -111,7 +112,7 @@ export default function Donate() {
 
   const FrequencyButton = ({ freq, label, icon }: { freq: 'one-time' | 'monthly'; label: string; icon: string }) => {
     const buttonAnim = useSharedValue(1);
-    
+
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ scale: buttonAnim.value }],
     }));
@@ -137,11 +138,11 @@ export default function Donate() {
         ]}
       >
         <Animated.View style={[styles.frequencyButtonContent, animatedStyle]}>
-          <Ionicons 
-            name={icon as any} 
-            size={20} 
-            color={isSelected ? '#ffffff' : colors.textSecondary} 
-            style={{ marginRight: 8 }} 
+          <Ionicons
+            name={icon as any}
+            size={20}
+            color={isSelected ? '#ffffff' : colors.textSecondary}
+            style={{ marginRight: 8 }}
           />
           <Text style={[
             styles.frequencyButtonText,
@@ -161,7 +162,7 @@ export default function Donate() {
       <View style={commonStyles.appContainer}>
         {/* Header Component */}
         <Header />
-        
+
         {/* Background aurora effect */}
         <AuroraBackground />
 
@@ -181,19 +182,19 @@ export default function Donate() {
                     <Text style={commonStyles.highlightText}>Support Progress UK</Text>
                   </LinearGradient>
                 </View>
-                
-                <Text style={[commonStyles.title, { 
-                  fontSize: isMobile ? 32 : 48, 
+
+                <Text style={[commonStyles.title, {
+                  fontSize: isMobile ? 32 : 48,
                   marginBottom: 20,
                   textAlign: 'center'
                 }]}>
                   Invest in Britain's Future
                 </Text>
-                
-                <Text style={[commonStyles.text, { 
-                  fontSize: isMobile ? 16 : 18, 
-                  marginBottom: 32, 
-                  lineHeight: isMobile ? 24 : 28, 
+
+                <Text style={[commonStyles.text, {
+                  fontSize: isMobile ? 16 : 18,
+                  marginBottom: 32,
+                  lineHeight: isMobile ? 24 : 28,
                   maxWidth: isMobile ? width - 32 : 600,
                   textAlign: 'center'
                 }]}>
@@ -278,13 +279,13 @@ export default function Donate() {
                       </Text>
                     </View>
                     <Text style={styles.impactDescription}>
-                      {selectedAmount >= 500 ? 
+                      {selectedAmount >= 500 ?
                         "Powers a full innovation hub deployment in a prosperity zone for one month" :
                         selectedAmount >= 250 ?
-                        "Funds skills training programs for 50+ workers in emerging technologies" :
-                        selectedAmount >= 100 ?
-                        "Supports unicorn farm startup incubation and mentorship programs" :
-                        "Helps fund community engagement events and digital infrastructure"
+                          "Funds skills training programs for 50+ workers in emerging technologies" :
+                          selectedAmount >= 100 ?
+                            "Supports unicorn farm startup incubation and mentorship programs" :
+                            "Helps fund community engagement events and digital infrastructure"
                       }
                     </Text>
                   </View>
@@ -342,7 +343,7 @@ export default function Donate() {
                     Every pound you contribute directly powers Britain's innovation economy and progressive policies
                   </Text>
                 </View>
-                
+
                 <View style={commonStyles.cardGrid}>
                   <View style={[styles.causeItem, { borderLeftColor: colors.accent }]}>
                     <LinearGradient
@@ -364,7 +365,7 @@ export default function Donate() {
                       </View>
                     </LinearGradient>
                   </View>
-                  
+
                   <View style={[styles.causeItem, { borderLeftColor: colors.success }]}>
                     <LinearGradient
                       colors={[`${colors.success}20`, `${colors.success}10`]}
@@ -385,7 +386,7 @@ export default function Donate() {
                       </View>
                     </LinearGradient>
                   </View>
-                  
+
                   <View style={[styles.causeItem, { borderLeftColor: colors.warning }]}>
                     <LinearGradient
                       colors={[`${colors.warning}20`, `${colors.warning}10`]}
@@ -419,6 +420,10 @@ export default function Donate() {
               </View>
             </Animated.View>
           </View>
+          
+          {/* Footer */}
+          <Footer />
+
         </ScrollView>
       </View>
     </>
@@ -499,7 +504,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       paddingVertical: isMobile ? 14 : 16,
       paddingHorizontal: isMobile ? 16 : 24,
       flex: 1,
-      ...(Platform.OS === 'web' && { 
+      ...(Platform.OS === 'web' && {
         cursor: 'pointer',
         transition: 'all 0.2s ease',
       } as any)
@@ -537,7 +542,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       paddingVertical: isMobile ? 16 : 20,
       paddingHorizontal: 16,
       marginBottom: isMobile ? 8 : 12,
-      ...(Platform.OS === 'web' && { 
+      ...(Platform.OS === 'web' && {
         cursor: 'pointer',
         transition: 'all 0.2s ease',
       } as any)
@@ -607,7 +612,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       shadowOpacity: 0.3,
       shadowRadius: 8,
       elevation: 8,
-      ...(Platform.OS === 'web' && { 
+      ...(Platform.OS === 'web' && {
         cursor: 'pointer',
         transition: 'all 0.2s ease',
       } as any)
@@ -617,8 +622,8 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 2,
-      ...(Platform.OS === 'web' && { 
-        cursor: 'not-allowed' 
+      ...(Platform.OS === 'web' && {
+        cursor: 'not-allowed'
       } as any)
     },
     donateButtonGradient: {

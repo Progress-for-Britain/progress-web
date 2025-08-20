@@ -1,25 +1,34 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, Platform, ImageBackground } from "react-native";
+import { View, Text, TouchableOpacity, Platform, ScrollView } from "react-native";
 import { Link, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
   withSpring,
   withRepeat,
   withSequence,
-  interpolate,
-  Extrapolate
 } from "react-native-reanimated";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { AuroraBackground } from '../util/auroraComponents';
+import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
+import { useTheme } from '../util/theme-context';
+import { useResponsive } from '../util/useResponsive';
 
 export default function NotFound() {
+  const { isDark } = useTheme();
+  const { isMobile, width } = useResponsive();
+  const colors = getColors(isDark);
+  const gradients = getGradients(isDark);
+  const commonStyles = getCommonStyles(isDark, isMobile, width);
+
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(50);
   const rotateAnim = useSharedValue(0);
-  const bounceAnim = useSharedValue(0);
 
   useEffect(() => {
     // Animate elements on mount
@@ -29,16 +38,6 @@ export default function NotFound() {
     // Rotation animation for decorative elements
     rotateAnim.value = withRepeat(
       withTiming(360, { duration: 20000 }),
-      -1
-    );
-
-    // Bounce animation for the 404 number
-    bounceAnim.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 1000 }),
-        withTiming(0.95, { duration: 500 }),
-        withTiming(1, { duration: 500 })
-      ),
       -1
     );
   }, []);
@@ -52,25 +51,21 @@ export default function NotFound() {
     transform: [{ rotate: `${rotateAnim.value}deg` }],
   }));
 
-  const bounceStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: bounceAnim.value }],
-  }));
-
-  const ActionButton = ({ 
-    href, 
-    children, 
+  const ActionButton = ({
+    href,
+    children,
     variant = 'primary',
     icon,
     iconLibrary = 'Ionicons'
-  }: { 
-    href: string; 
-    children: React.ReactNode; 
+  }: {
+    href: string;
+    children: React.ReactNode;
     variant?: 'primary' | 'secondary' | 'accent';
     icon?: string;
     iconLibrary?: 'Ionicons' | 'MaterialIcons' | 'FontAwesome5';
   }) => {
     const buttonAnim = useSharedValue(1);
-    
+
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ scale: buttonAnim.value }],
     }));
@@ -87,34 +82,34 @@ export default function NotFound() {
       switch (variant) {
         case 'primary':
           return {
-            backgroundColor: '#d946ef',
+            backgroundColor: colors.accent,
             borderWidth: 0,
           };
         case 'secondary':
           return {
             backgroundColor: 'transparent',
             borderWidth: 2,
-            borderColor: '#d946ef',
+            borderColor: colors.accent,
           };
         case 'accent':
           return {
-            backgroundColor: '#0ea5e9',
+            backgroundColor: colors.primary,
             borderWidth: 0,
           };
         default:
           return {
-            backgroundColor: '#d946ef',
+            backgroundColor: colors.accent,
             borderWidth: 0,
           };
       }
     };
 
     const getTextColor = () => {
-      return variant === 'secondary' ? '#d946ef' : '#ffffff';
+      return variant === 'secondary' ? colors.accent : '#ffffff';
     };
 
-    const IconComponent = iconLibrary === 'MaterialIcons' ? MaterialIcons : 
-                         iconLibrary === 'FontAwesome5' ? FontAwesome5 : Ionicons;
+    const IconComponent = iconLibrary === 'MaterialIcons' ? MaterialIcons :
+      iconLibrary === 'FontAwesome5' ? FontAwesome5 : Ionicons;
 
     return (
       <Link href={href} asChild>
@@ -131,25 +126,28 @@ export default function NotFound() {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            minWidth: 200,
-            ...(Platform.OS === 'web' && { cursor: 'pointer' })
+            minWidth: isMobile ? width * 0.7 : 200,
+            ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
           }}
         >
           <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }, animatedStyle]}>
             {icon && (
-              <IconComponent 
-                name={icon as any} 
-                size={20} 
-                color={getTextColor()} 
-                style={{ marginRight: 8 }} 
+              <IconComponent
+                name={icon as any}
+                size={20}
+                color={getTextColor()}
+                style={{ marginRight: 8 }}
               />
             )}
-            <Text 
-              style={{ 
+            <Text
+              style={{
                 color: getTextColor(),
                 fontSize: 18,
                 fontWeight: '700',
-                textAlign: 'center'
+                textAlign: 'center',
+                ...(Platform.OS === 'web' && {
+                  fontFamily: "'Montserrat', sans-serif",
+                } as any),
               }}
             >
               {children}
@@ -161,275 +159,188 @@ export default function NotFound() {
   };
 
   return (
-    <>
+    <View style={commonStyles.appContainer}>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="light" />
-      <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-        <Header />
-        
-        {/* 404 Hero Section with Background Image */}
-        <ImageBackground
-          source={{ 
-            uri: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'
-          }}
-          style={{ 
-            flex: 1,
-            paddingVertical: 100,
-            paddingHorizontal: 20,
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-          resizeMode="cover"
-        >
-          {/* Dark overlay for better text readability */}
-          <View 
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(30, 41, 59, 0.8)', // Darker overlay for 404 page
-            }}
-          />
+      <StatusBar style={isDark ? "light" : "dark"} />
 
-          {/* Animated Background Elements */}
-          <Animated.View 
-            style={[
-              {
-                position: 'absolute',
-                top: 100,
-                right: 50,
-                width: 120,
-                height: 120,
-                backgroundColor: 'rgba(217, 70, 239, 0.2)',
-                borderRadius: 60,
-              },
-              rotateStyle
-            ]}
-          />
-          <Animated.View 
-            style={[
-              {
-                position: 'absolute',
-                bottom: 80,
-                left: 30,
-                width: 80,
-                height: 80,
-                backgroundColor: 'rgba(14, 165, 233, 0.15)',
-                borderRadius: 40,
-              },
-              rotateStyle
-            ]}
-          />
-          <Animated.View 
-            style={[
-              {
-                position: 'absolute',
-                top: 200,
-                left: 50,
-                width: 60,
-                height: 60,
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                borderRadius: 30,
-              },
-              rotateStyle
-            ]}
-          />
+      {/* Header */}
+      <Header />
 
-          <Animated.View style={fadeInStyle}>
-            <View style={{ alignItems: 'center', maxWidth: 800 }}>
-              {/* 404 Number with Animation */}
-              <Animated.View style={[bounceStyle, { marginBottom: 30 }]}>
-                <Text 
-                  style={{ 
-                    fontSize: Platform.OS === 'web' ? 120 : 80,
+      {/* Background aurora effect */}
+      <AuroraBackground />
+
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        {/* Main Content */}
+        <View style={commonStyles.content}>
+          {/* Hero Section */}
+          <View style={commonStyles.heroContainer}>
+            <Animated.View style={fadeInStyle}>
+              {/* 404 Number */}
+              <View style={{ marginBottom: 30, alignItems: 'center' }}>
+                <Text
+                  style={{
+                    fontSize: isMobile ? 80 : 120,
                     fontWeight: 'bold',
-                    color: '#d946ef',
+                    color: colors.accent,
                     textAlign: 'center',
-                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                    textShadowOffset: { width: 0, height: 4 },
-                    textShadowRadius: 8,
+                    ...(Platform.OS === 'web' && {
+                      fontFamily: "'Montserrat', sans-serif",
+                    } as any),
                   }}
                 >
                   404
                 </Text>
-              </Animated.View>
+              </View>
 
               {/* Error Icon */}
-              <View 
+              <View
                 style={{
-                  backgroundColor: 'rgba(217, 70, 239, 0.2)',
+                  backgroundColor: `${colors.accent}20`,
                   borderRadius: 25,
                   padding: 20,
                   marginBottom: 30,
+                  alignSelf: 'center',
                 }}
               >
-                <MaterialIcons name="error-outline" size={50} color="#d946ef" />
+                <MaterialIcons name="error-outline" size={50} color={colors.accent} />
               </View>
-              
-              <Text 
-                style={{ 
-                  fontSize: Platform.OS === 'web' ? 42 : 32,
-                  fontWeight: 'bold',
-                  color: '#ffffff',
-                  textAlign: 'center',
-                  marginBottom: 20,
-                  lineHeight: Platform.OS === 'web' ? 50 : 40,
-                  textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                  textShadowOffset: { width: 0, height: 2 },
-                  textShadowRadius: 4,
-                }}
-              >
+
+              <Text style={[commonStyles.title, {
+                fontSize: isMobile ? 32 : 42,
+                marginBottom: 20,
+                textAlign: 'center'
+              }]}>
                 Page Not Found
               </Text>
-              
-              <Text 
-                style={{ 
-                  fontSize: 20,
-                  color: '#e0f2fe',
-                  textAlign: 'center',
-                  marginBottom: 40,
-                  lineHeight: 30,
-                  maxWidth: 600,
-                  fontWeight: '400'
-                }}
-              >
+
+              <Text style={[commonStyles.text, {
+                fontSize: isMobile ? 16 : 20,
+                lineHeight: isMobile ? 24 : 30,
+                marginBottom: 40,
+                maxWidth: 600,
+                textAlign: 'center',
+                alignSelf: 'center'
+              }]}>
                 Looks like this page has taken a detour on the road to British prosperity! Don't worry, we'll get you back on track.
               </Text>
+            </Animated.View>
+          </View>
 
-              {/* Quick Stats to maintain brand consistency */}
-              <View 
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: 16,
-                  padding: 20,
-                  marginBottom: 40,
-                  borderLeftWidth: 5,
-                  borderLeftColor: '#d946ef',
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                  <Ionicons name="information-circle" size={24} color="#ffffff" style={{ marginRight: 10 }} />
-                  <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: '600' }}>
-                    Quick Navigation Tips
-                  </Text>
-                </View>
-                <Text style={{ color: '#cbd5e1', fontSize: 16, lineHeight: 24 }}>
-                  Use the navigation above or the buttons below to explore our policies, join our movement, or learn about upcoming events.
+          {/* Quick Navigation Card */}
+          <View style={[commonStyles.cardContainer, { marginBottom: 40 }]}>
+            <Animated.View style={fadeInStyle}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                <Ionicons name="information-circle" size={24} color={colors.accent} style={{ marginRight: 10 }} />
+                <Text style={[commonStyles.text, { 
+                  fontSize: 18, 
+                  fontWeight: '600',
+                  color: colors.text,
+                  textAlign: 'left'
+                }]}>
+                  Quick Navigation Tips
                 </Text>
               </View>
-              
-              <View style={{ 
-                flexDirection: Platform.OS === 'web' ? 'row' : 'column', 
-                alignItems: 'center',
+              <Text style={[commonStyles.text, { 
+                color: colors.textSecondary, 
+                lineHeight: 24,
+                textAlign: 'left'
+              }]}>
+                Use the navigation above or the buttons below to explore our policies, join our movement, or learn about upcoming events.
+              </Text>
+            </Animated.View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={{
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            marginBottom: 40
+          }}>
+            <ActionButton href="/" icon="home" iconLibrary="Ionicons">
+              Back to Home
+            </ActionButton>
+            <ActionButton href="/join" variant="secondary" icon="person-add" iconLibrary="Ionicons">
+              Join Movement
+            </ActionButton>
+          </View>
+
+          {/* Popular Sections */}
+          <View style={[commonStyles.cardContainer, { marginBottom: 40 }]}>
+            <Animated.View style={fadeInStyle}>
+              <Text style={[commonStyles.text, { 
+                color: colors.textSecondary, 
+                fontSize: 16, 
+                marginBottom: 20,
+                textAlign: 'center'
+              }]}>
+                Or explore these popular sections:
+              </Text>
+              <View style={{
+                flexDirection: 'row',
                 flexWrap: 'wrap',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                gap: 16
               }}>
-                <ActionButton href="/" icon="home" iconLibrary="Ionicons">
-                  Back to Home
-                </ActionButton>
-                <ActionButton href="/events" variant="accent" icon="calendar" iconLibrary="Ionicons">
-                  Upcoming Events
-                </ActionButton>
-                <ActionButton href="/join" variant="secondary" icon="person-add" iconLibrary="Ionicons">
-                  Join Movement
-                </ActionButton>
-              </View>
 
-              {/* Additional helpful links */}
-              <View style={{ marginTop: 40, alignItems: 'center' }}>
-                <Text style={{ color: '#94a3b8', fontSize: 16, marginBottom: 20 }}>
-                  Or explore these popular sections:
-                </Text>
-                <View style={{ 
-                  flexDirection: 'row', 
-                  flexWrap: 'wrap',
-                  justifyContent: 'center',
-                  gap: 20
-                }}>
-                  <Link href="/newsroom" asChild>
-                    <TouchableOpacity 
-                      style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        paddingHorizontal: 16,
-                        paddingVertical: 8,
-                        borderRadius: 20,
-                      }}
-                    >
-                      <FontAwesome5 name="newspaper" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
-                      <Text style={{ color: '#94a3b8', fontSize: 14 }}>Newsroom</Text>
-                    </TouchableOpacity>
-                  </Link>
-                  
-                  <Link href="/donate" asChild>
-                    <TouchableOpacity 
-                      style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        paddingHorizontal: 16,
-                        paddingVertical: 8,
-                        borderRadius: 20,
-                      }}
-                    >
-                      <Ionicons name="heart" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
-                      <Text style={{ color: '#94a3b8', fontSize: 14 }}>Donate</Text>
-                    </TouchableOpacity>
-                  </Link>
-                  
-                  <Link href="/account" asChild>
-                    <TouchableOpacity 
-                      style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        paddingHorizontal: 16,
-                        paddingVertical: 8,
-                        borderRadius: 20,
-                      }}
-                    >
-                      <Ionicons name="person" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
-                      <Text style={{ color: '#94a3b8', fontSize: 14 }}>Account</Text>
-                    </TouchableOpacity>
-                  </Link>
-                </View>
-              </View>
+                <Link href="/donate" asChild>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: `${colors.surface}80`,
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: `${colors.text}20`,
+                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                    }}
+                  >
+                    <Ionicons name="heart" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
+                    <Text style={{ 
+                      color: colors.textSecondary, 
+                      fontSize: 14,
+                      ...(Platform.OS === 'web' && {
+                        fontFamily: "'Montserrat', sans-serif",
+                      } as any),
+                    }}>Donate</Text>
+                  </TouchableOpacity>
+                </Link>
 
-              {/* Social Links (matching index page) */}
-              <View style={{ 
-                flexDirection: 'row', 
-                alignItems: 'center', 
-                marginTop: 50,
-                flexWrap: 'wrap',
-                justifyContent: 'center'
-              }}>
-                <Text style={{ color: '#94a3b8', fontSize: 16, marginRight: 20 }}>
-                  Stay connected:
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 15 }}>
-                  <TouchableOpacity style={{ padding: 10 }}>
-                    <FontAwesome5 name="twitter" size={24} color="#1da1f2" />
+                <Link href="/account" asChild>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: `${colors.surface}80`,
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: `${colors.text}20`,
+                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                    }}
+                  >
+                    <Ionicons name="person" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
+                    <Text style={{ 
+                      color: colors.textSecondary, 
+                      fontSize: 14,
+                      ...(Platform.OS === 'web' && {
+                        fontFamily: "'Montserrat', sans-serif",
+                      } as any),
+                    }}>Account</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ padding: 10 }}>
-                    <FontAwesome5 name="facebook" size={24} color="#4267b2" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ padding: 10 }}>
-                    <FontAwesome5 name="instagram" size={24} color="#e4405f" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ padding: 10 }}>
-                    <FontAwesome5 name="youtube" size={24} color="#ff0000" />
-                  </TouchableOpacity>
-                </View>
+                </Link>
               </View>
-            </View>
-          </Animated.View>
-        </ImageBackground>
-      </View>
-    </>
+            </Animated.View>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <Footer />
+      </ScrollView>
+    </View>
   );
 }

@@ -3,9 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Alert, K
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
   withTiming,
   withSpring,
   withRepeat
@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../util/auth-context';
 import { api } from '../util/api';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
@@ -26,7 +27,7 @@ export default function Join() {
   const gradients = getGradients(isDark);
   const commonStyles = getCommonStyles(isDark, isMobile, width);
   const styles = getStyles(colors, isMobile, width);
-  
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -79,7 +80,7 @@ export default function Join() {
 
     // Check for NDA signature status
     checkNDASignature();
-    
+
     // Restore any saved form data
     restoreFormData();
   }, []);
@@ -108,16 +109,16 @@ export default function Join() {
             setHasSignedNDA(true);
             setNdaSignerName(parsed.name);
             setFormData(prev => ({ ...prev, signedNDA: true }));
-            
+
             // Show success notification if this is a new signature
             if (!wasAlreadySigned) {
               setShowNDASuccess(true);
-              
+
               // Scroll to top to show the notification
               if (Platform.OS === 'web') {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
-              
+
               // Auto-hide after 5 seconds
               setTimeout(() => {
                 setShowNDASuccess(false);
@@ -250,7 +251,7 @@ export default function Join() {
   // Function to check if form is valid for submission
   const isFormValid = () => {
     const { firstName, lastName, email, volunteer } = formData;
-    
+
     // Basic required fields
     if (!firstName || !lastName || !email) {
       return false;
@@ -258,24 +259,24 @@ export default function Join() {
 
     // If volunteering, check volunteer-specific requirements
     if (volunteer) {
-      const { 
-        socialMediaHandle, 
-        isBritishCitizen, 
-        livesInUK, 
-        briefBio, 
-        briefCV, 
-        signedNDA, 
-        gdprConsent 
+      const {
+        socialMediaHandle,
+        isBritishCitizen,
+        livesInUK,
+        briefBio,
+        briefCV,
+        signedNDA,
+        gdprConsent
       } = formData;
-      
-      if (!socialMediaHandle || 
-          isBritishCitizen === undefined || 
-          livesInUK === undefined || 
-          !briefBio || 
-          !briefCV || 
-          !signedNDA || 
-          !hasSignedNDA || 
-          !gdprConsent) {
+
+      if (!socialMediaHandle ||
+        isBritishCitizen === undefined ||
+        livesInUK === undefined ||
+        !briefBio ||
+        !briefCV ||
+        !signedNDA ||
+        !hasSignedNDA ||
+        !gdprConsent) {
         return false;
       }
     }
@@ -285,16 +286,16 @@ export default function Join() {
 
   const handleJoin = async () => {
     const { firstName, lastName, email, volunteer } = formData;
-    
+
     if (!firstName || !lastName || !email) {
       setApiError('Please fill in all required fields: First Name, Last Name, and Email Address.');
       setShowApiError(true);
-      
+
       // Scroll to top to show error
       if (Platform.OS === 'web') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-      
+
       // Auto-hide error after 6 seconds
       setTimeout(() => {
         setShowApiError(false);
@@ -304,18 +305,18 @@ export default function Join() {
 
     // Validate volunteer-specific fields if volunteer is selected
     if (volunteer) {
-      const { 
-        socialMediaHandle, 
-        isBritishCitizen, 
-        livesInUK, 
-        briefBio, 
-        briefCV, 
-        signedNDA, 
-        gdprConsent 
+      const {
+        socialMediaHandle,
+        isBritishCitizen,
+        livesInUK,
+        briefBio,
+        briefCV,
+        signedNDA,
+        gdprConsent
       } = formData;
-      
+
       const missingFields = [];
-      
+
       if (!socialMediaHandle) missingFields.push('Social media handle');
       if (isBritishCitizen === undefined) missingFields.push('British citizenship status');
       if (livesInUK === undefined) missingFields.push('UK residence status');
@@ -324,12 +325,12 @@ export default function Join() {
       if (!signedNDA || !hasSignedNDA) {
         setApiError('You must sign the Progress NDA before submitting your volunteer application. Please use the "View and sign NDA" link below.');
         setShowApiError(true);
-        
+
         // Scroll to top to show error
         if (Platform.OS === 'web') {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-        
+
         // Auto-hide error after 8 seconds
         setTimeout(() => {
           setShowApiError(false);
@@ -337,16 +338,16 @@ export default function Join() {
         return;
       }
       if (!gdprConsent) missingFields.push('GDPR consent');
-      
+
       if (missingFields.length > 0) {
         setApiError(`Please complete the following volunteer fields: ${missingFields.join(', ')}`);
         setShowApiError(true);
-        
+
         // Scroll to top to show error
         if (Platform.OS === 'web') {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-        
+
         // Auto-hide error after 8 seconds
         setTimeout(() => {
           setShowApiError(false);
@@ -358,14 +359,14 @@ export default function Join() {
     setIsLoading(true);
     setApiError(null); // Clear any previous errors
     setShowApiError(false);
-    
+
     try {
       const response = await api.submitApplication(formData);
 
       if (response.success) {
         // Clear cached form data and NDA signature since application was successful
         clearCachedData();
-        
+
         setSuccessMessage(response.message || 'Your membership application has been submitted successfully. An admin will review your application and you\'ll receive an access code via email if approved.');
         setIsSuccess(true);
         // Scroll to top to show success message
@@ -376,12 +377,12 @@ export default function Join() {
         // Handle API errors with inline display
         setApiError(response.message || 'Failed to submit application. Please try again.');
         setShowApiError(true);
-        
+
         // Scroll to top to show error
         if (Platform.OS === 'web') {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-        
+
         // Auto-hide error after 10 seconds
         setTimeout(() => {
           setShowApiError(false);
@@ -392,12 +393,12 @@ export default function Join() {
       // Handle network/unexpected errors
       setApiError(error instanceof Error ? error.message : 'Network error. Please check your connection and try again.');
       setShowApiError(true);
-      
+
       // Scroll to top to show error
       if (Platform.OS === 'web') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-      
+
       // Auto-hide error after 10 seconds
       setTimeout(() => {
         setShowApiError(false);
@@ -446,13 +447,13 @@ export default function Join() {
     <View style={commonStyles.appContainer}>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
-      
+
       {/* Header */}
       <Header />
-      
+
       {/* Background aurora effect */}
       <AuroraBackground />
-      
+
       {/* Success State */}
       {isSuccess && (
         <Animated.View style={[successStyle, styles.successContainer]}>
@@ -460,15 +461,15 @@ export default function Join() {
             <Animated.View style={[checkmarkStyle, styles.checkmarkContainer]}>
               <Ionicons name="checkmark" size={40} color="#ffffff" />
             </Animated.View>
-            
+
             <Text style={[commonStyles.title, { marginBottom: 12 }]}>
               Application Submitted!
             </Text>
-            
+
             <Text style={[commonStyles.text, { marginBottom: 24, maxWidth: 400 }]}>
               {successMessage}
             </Text>
-            
+
             <View style={styles.infoContainer}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                 <Ionicons name="information-circle" size={20} color={colors.success} style={{ marginRight: 8 }} />
@@ -482,7 +483,7 @@ export default function Join() {
                 • If approved, you'll get your access code via email
               </Text>
             </View>
-            
+
             <TouchableOpacity
               onPress={handleContinue}
               style={styles.continueButton}
@@ -494,8 +495,8 @@ export default function Join() {
           </View>
         </Animated.View>
       )}
-      
-      <KeyboardAvoidingView 
+
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
@@ -515,19 +516,19 @@ export default function Join() {
                     <Text style={commonStyles.highlightText}>Join Progress UK</Text>
                   </LinearGradient>
                 </View>
-                
-                <Text style={[commonStyles.title, { 
-                  fontSize: isMobile ? 32 : 48, 
+
+                <Text style={[commonStyles.title, {
+                  fontSize: isMobile ? 32 : 48,
                   marginBottom: 20,
                   textAlign: 'center'
                 }]}>
                   Help Unleash Britain's Potential
                 </Text>
-                
-                <Text style={[commonStyles.text, { 
-                  fontSize: isMobile ? 16 : 18, 
-                  marginBottom: 32, 
-                  lineHeight: isMobile ? 24 : 28, 
+
+                <Text style={[commonStyles.text, {
+                  fontSize: isMobile ? 16 : 18,
+                  marginBottom: 32,
+                  lineHeight: isMobile ? 24 : 28,
                   maxWidth: isMobile ? width - 32 : 600,
                   textAlign: 'center'
                 }]}>
@@ -562,7 +563,7 @@ export default function Join() {
               <View style={commonStyles.cardContainer}>
                 {/* NDA Success Notification */}
                 {showNDASuccess && (
-                  <Animated.View 
+                  <Animated.View
                     style={{
                       backgroundColor: '#D1FAE5',
                       borderColor: '#10B981',
@@ -588,23 +589,23 @@ export default function Join() {
                       <Ionicons name="checkmark" size={20} color="#ffffff" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ 
-                        fontSize: 16, 
-                        fontWeight: '600', 
+                      <Text style={{
+                        fontSize: 16,
+                        fontWeight: '600',
                         color: '#065F46',
-                        marginBottom: 4 
+                        marginBottom: 4
                       }}>
                         ✅ NDA Successfully Signed!
                       </Text>
-                      <Text style={{ 
-                        fontSize: 14, 
+                      <Text style={{
+                        fontSize: 14,
                         color: '#047857',
-                        lineHeight: 20 
+                        lineHeight: 20
                       }}>
                         Thank you {ndaSignerName}! Your confidentiality agreement is now on file. You can complete your volunteer application below.
                       </Text>
                     </View>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => setShowNDASuccess(false)}
                       style={{ padding: 8 }}
                     >
@@ -615,7 +616,7 @@ export default function Join() {
 
                 {/* API Error Notification */}
                 {showApiError && apiError && (
-                  <Animated.View 
+                  <Animated.View
                     style={{
                       backgroundColor: '#FEE2E2',
                       borderColor: '#DC2626',
@@ -642,26 +643,26 @@ export default function Join() {
                       <Ionicons name="alert-circle" size={20} color="#ffffff" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ 
-                        fontSize: 16, 
-                        fontWeight: '600', 
+                      <Text style={{
+                        fontSize: 16,
+                        fontWeight: '600',
                         color: '#991B1B',
-                        marginBottom: 4 
+                        marginBottom: 4
                       }}>
                         Application Error
                       </Text>
-                      <Text style={{ 
-                        fontSize: 14, 
+                      <Text style={{
+                        fontSize: 14,
                         color: '#B91C1C',
-                        lineHeight: 20 
+                        lineHeight: 20
                       }}>
                         {apiError}
                       </Text>
                       {apiError.includes('email is already pending') && (
-                        <View style={{ 
-                          backgroundColor: '#FEF3C7', 
-                          borderRadius: 8, 
-                          padding: 12, 
+                        <View style={{
+                          backgroundColor: '#FEF3C7',
+                          borderRadius: 8,
+                          padding: 12,
                           marginTop: 8,
                           borderLeftWidth: 4,
                           borderLeftColor: '#F59E0B'
@@ -677,7 +678,7 @@ export default function Join() {
                         </View>
                       )}
                     </View>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => setShowApiError(false)}
                       style={{ padding: 8, marginTop: -4 }}
                     >
@@ -699,16 +700,16 @@ export default function Join() {
                   >
                     <FontAwesome5 name="user-plus" size={32} color={colors.text} />
                   </LinearGradient>
-                  <Text 
-                    style={[commonStyles.title, { 
+                  <Text
+                    style={[commonStyles.title, {
                       fontSize: 28,
                       marginBottom: 8
                     }]}
                   >
                     Join Progress UK
                   </Text>
-                  <Text 
-                    style={[commonStyles.text, { 
+                  <Text
+                    style={[commonStyles.text, {
                       fontSize: 16,
                       color: colors.textSecondary,
                       lineHeight: 24,
@@ -718,7 +719,7 @@ export default function Join() {
                   >
                     Become part of Britain's progressive movement
                   </Text>
-                  
+
                   {/* Draft saved indicator */}
                   {hasSavedData && (
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 }}>
@@ -818,7 +819,7 @@ export default function Join() {
                         formData.interests.includes(interest) && styles.interestTagSelected
                       ]}
                     >
-                      <Text 
+                      <Text
                         style={[
                           styles.interestTagText,
                           formData.interests.includes(interest) && styles.interestTagTextSelected
@@ -885,7 +886,7 @@ export default function Join() {
 
                 {/* Volunteer-Specific Fields */}
                 {formData.volunteer && (
-                  <View style={[commonStyles.specialSection, { 
+                  <View style={[commonStyles.specialSection, {
                     backgroundColor: `${colors.secondary}20`,
                     borderLeftColor: colors.secondary,
                     borderColor: `${colors.secondary}30`,
@@ -900,22 +901,22 @@ export default function Join() {
                     {/* Should I Join? PDF Link */}
                     <View style={{ marginBottom: 16 }}>
                       <Text style={styles.inputLabel}>
-                      Not sure if you should volunteer?
+                        Not sure if you should volunteer?
                       </Text>
                       <TouchableOpacity
-                      onPress={() => {
-                        const pdfUrl = `${process.env.EXPO_PUBLIC_API_URL}/public/should-i-join-progress.pdf`;
-                        if (Platform.OS === 'web') {
-                        window.open(pdfUrl, '_blank');
-                        } else {
-                          Linking.openURL(pdfUrl);
-                        }
-                      }}
-                      style={{ marginTop: 4 }}
+                        onPress={() => {
+                          const pdfUrl = `${process.env.EXPO_PUBLIC_API_URL}/public/should-i-join-progress.pdf`;
+                          if (Platform.OS === 'web') {
+                            window.open(pdfUrl, '_blank');
+                          } else {
+                            Linking.openURL(pdfUrl);
+                          }
+                        }}
+                        style={{ marginTop: 4 }}
                       >
-                      <Text style={[styles.checkboxLink, { fontSize: 14 }]}>
-                        Read: Should I Join as a Volunteer? (PDF) →
-                      </Text>
+                        <Text style={[styles.checkboxLink, { fontSize: 14 }]}>
+                          Read: Should I Join as a Volunteer? (PDF) →
+                        </Text>
                       </TouchableOpacity>
                     </View>
 
@@ -1079,7 +1080,7 @@ export default function Join() {
                               formData.interestedIn.includes(interest) && styles.volunteerInterestTagSelected
                             ]}
                           >
-                            <Text 
+                            <Text
                               style={[
                                 styles.volunteerInterestTagText,
                                 formData.interestedIn.includes(interest) && styles.volunteerInterestTagTextSelected
@@ -1110,7 +1111,7 @@ export default function Join() {
                               formData.canContribute.includes(area) && styles.contributionTagSelected
                             ]}
                           >
-                            <Text 
+                            <Text
                               style={[
                                 styles.contributionTagText,
                                 formData.canContribute.includes(area) && styles.contributionTagTextSelected
@@ -1219,21 +1220,21 @@ export default function Join() {
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                       {!isFormValid() && !isLoading && (
-                        <Ionicons 
-                          name="warning-outline" 
-                          size={20} 
-                          color={colors.textSecondary} 
-                          style={{ marginRight: 8 }} 
+                        <Ionicons
+                          name="warning-outline"
+                          size={20}
+                          color={colors.textSecondary}
+                          style={{ marginRight: 8 }}
                         />
                       )}
-                      <Text 
+                      <Text
                         style={[
                           styles.submitButtonText,
                           !isFormValid() && styles.submitButtonTextDisabled
                         ]}
                       >
-                        {isLoading ? 'Joining Progress UK...' : 
-                         !isFormValid() ? 'Complete Required Fields' : 'Join Progress UK'}
+                        {isLoading ? 'Joining Progress UK...' :
+                          !isFormValid() ? 'Complete Required Fields' : 'Join Progress UK'}
                       </Text>
                     </View>
                   </LinearGradient>
@@ -1250,22 +1251,22 @@ export default function Join() {
                       {(() => {
                         const missing = [];
                         const { firstName, lastName, email, volunteer } = formData;
-                        
+
                         if (!firstName) missing.push('First name');
                         if (!lastName) missing.push('Last name');
                         if (!email) missing.push('Email address');
-                        
+
                         if (volunteer) {
-                          const { 
-                            socialMediaHandle, 
-                            isBritishCitizen, 
-                            livesInUK, 
-                            briefBio, 
-                            briefCV, 
-                            signedNDA, 
-                            gdprConsent 
+                          const {
+                            socialMediaHandle,
+                            isBritishCitizen,
+                            livesInUK,
+                            briefBio,
+                            briefCV,
+                            signedNDA,
+                            gdprConsent
                           } = formData;
-                          
+
                           if (!socialMediaHandle) missing.push('Social media handle');
                           if (isBritishCitizen === undefined) missing.push('British citizenship status');
                           if (livesInUK === undefined) missing.push('UK residence status');
@@ -1274,7 +1275,7 @@ export default function Join() {
                           if (!signedNDA || !hasSignedNDA) missing.push('Sign the NDA (use link above)');
                           if (!gdprConsent) missing.push('GDPR consent');
                         }
-                        
+
                         return missing.map((item, index) => (
                           <Text key={index} style={styles.helperItem}>
                             • {item}
@@ -1305,17 +1306,17 @@ export default function Join() {
                       <Text style={commonStyles.highlightText}>Member Benefits</Text>
                     </LinearGradient>
                   </View>
-                  
+
                   <Text style={[commonStyles.title, { marginBottom: 16 }]}>
                     Why Join Progress UK?
                   </Text>
-                  
+
                   <Text style={[commonStyles.text, { fontSize: 18, marginBottom: 40, lineHeight: 28, maxWidth: 600, textAlign: 'center' }]}>
                     As a member, you'll have real influence in shaping Britain's progressive future
                   </Text>
                 </View>
               </Animated.View>
-              
+
               <View style={[commonStyles.cardGrid, { justifyContent: 'center', alignItems: 'stretch' }]}>
                 <Animated.View style={[styles.benefitCard, fadeInStyle]}>
                   <LinearGradient
@@ -1335,7 +1336,7 @@ export default function Join() {
                     </Text>
                   </LinearGradient>
                 </Animated.View>
-                
+
                 <Animated.View style={[styles.benefitCard, fadeInStyle]}>
                   <LinearGradient
                     colors={[`${colors.success}20`, `${colors.success}10`]}
@@ -1354,7 +1355,7 @@ export default function Join() {
                     </Text>
                   </LinearGradient>
                 </Animated.View>
-                
+
                 <Animated.View style={[styles.benefitCard, fadeInStyle]}>
                   <LinearGradient
                     colors={[`${colors.warning}20`, `${colors.warning}10`]}
@@ -1390,15 +1391,15 @@ export default function Join() {
                       <Text style={commonStyles.highlightText}>Join the Movement</Text>
                     </LinearGradient>
                   </View>
-                  
+
                   <Text style={[commonStyles.title, { marginBottom: 16 }]}>
                     Ready to Make a Difference?
                   </Text>
-                  
+
                   <Text style={[commonStyles.text, { fontSize: 18, marginBottom: 32, lineHeight: 28, maxWidth: 600, textAlign: 'center' }]}>
                     Together, we're building an innovation economy that works for everyone, everywhere. From unicorn farms to prosperity zones - the future of Britain starts with us.
                   </Text>
-                  
+
                   <View style={styles.ctaFeatures}>
                     <View style={styles.ctaFeature}>
                       <Ionicons name="checkmark-circle" size={20} color={colors.success} />
@@ -1416,7 +1417,11 @@ export default function Join() {
                 </View>
               </Animated.View>
             </View>
-        </ScrollView>
+            
+            {/* Footer */}
+            <Footer />
+
+          </ScrollView>
         )}
       </KeyboardAvoidingView>
     </View>
@@ -1583,7 +1588,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    ...(Platform.OS === 'web' && { 
+    ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
     } as any)
@@ -1612,7 +1617,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     padding: 16,
     borderWidth: 2,
     borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
-    ...(Platform.OS === 'web' && { 
+    ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
     } as any)
@@ -1666,7 +1671,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
-    ...(Platform.OS === 'web' && { 
+    ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
     } as any)
@@ -1676,8 +1681,8 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-    ...(Platform.OS === 'web' && { 
-      cursor: 'not-allowed' 
+    ...(Platform.OS === 'web' && {
+      cursor: 'not-allowed'
     } as any)
   },
   submitButtonGradient: {
@@ -1735,7 +1740,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    ...(Platform.OS === 'web' && { 
+    ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
     } as any)
@@ -1767,7 +1772,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    ...(Platform.OS === 'web' && { 
+    ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
     } as any)
@@ -1795,7 +1800,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    ...(Platform.OS === 'web' && { 
+    ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
     } as any)
@@ -1824,7 +1829,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     padding: 12,
     borderWidth: 2,
     borderColor: `${colors.text}30`,
-    ...(Platform.OS === 'web' && { 
+    ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
     } as any)

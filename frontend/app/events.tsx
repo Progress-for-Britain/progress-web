@@ -30,7 +30,6 @@ export default function Events() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [registering, setRegistering] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
 
   // Animation values
   const fadeAnim = useSharedValue(0);
@@ -181,39 +180,6 @@ export default function Events() {
     loadEvents(); // Reload events after update
   };
 
-  const handleDeleteEvent = (eventId: string, eventTitle: string) => {
-    Alert.alert(
-      'Delete Event',
-      `Are you sure you want to delete "${eventTitle}"? This action cannot be undone and will affect all registered participants.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => performDeleteEvent(eventId),
-        },
-      ]
-    );
-  };
-
-  const performDeleteEvent = async (eventId: string) => {
-    try {
-      setDeleting(eventId);
-      await api.deleteEvent(eventId);
-      Alert.alert('Success', 'Event deleted successfully!');
-      
-      // Remove the event from the list
-      setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId));
-    } catch (error: any) {
-      console.error('Error deleting event:', error);
-      Alert.alert('Error', error.message || 'Failed to delete event. Please try again.');
-    } finally {
-      setDeleting(null);
-    }
-  };
 
   const canCreateEvent = user?.role === 'ADMIN' || user?.role === 'WRITER';
 
