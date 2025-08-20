@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -8,15 +8,34 @@ import {
   Alert, 
   Platform, 
   KeyboardAvoidingView,
-  Animated,
-  Modal
+  Modal,
+  StyleSheet
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming,
+  withSpring,
+  withRepeat
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
+import { AuroraBackground } from '../util/auroraComponents';
+import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
+import { useTheme } from '../util/theme-context';
+import useResponsive from '../util/useResponsive';
 
 export default function NDA() {
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  const gradients = getGradients(isDark);
+  const commonStyles = getCommonStyles(isDark);
+  const { isMobile, width } = useResponsive();
+  const styles = getStyles(colors, isMobile, width);
+  
   const [name, setName] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,42 +44,60 @@ export default function NDA() {
   const [isSuccess, setIsSuccess] = useState(false);
   const router = useRouter();
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const successAnim = useRef(new Animated.Value(0)).current;
-  const checkmarkScale = useRef(new Animated.Value(0)).current;
+  // Get current date in DD/MM/YYYY format
+  const getCurrentDate = () => {
+    const today = new Date();
+    const day = today.getDate().toString().padStart(2, '0');
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const year = today.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const currentDate = getCurrentDate();
+
+  // Animation values
+  const fadeAnim = useSharedValue(0);
+  const slideAnim = useSharedValue(50);
+  const rotateAnim = useSharedValue(0);
+  const successAnim = useSharedValue(0);
+  const checkmarkScale = useSharedValue(0);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    // Animate elements on mount
+    fadeAnim.value = withTiming(1, { duration: 1000 });
+    slideAnim.value = withSpring(0, { damping: 15 });
+
+    // Rotation animation for decorative elements
+    rotateAnim.value = withRepeat(
+      withTiming(360, { duration: 20000 }),
+      -1
+    );
   }, []);
 
   useEffect(() => {
-    if (isLoading) {
-      // Start rotation animation when loading
-      Animated.loop(
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        })
-      ).start();
-    } else {
-      // Stop rotation when not loading
-      rotateAnim.setValue(0);
+    if (isSuccess) {
+      successAnim.value = withSpring(1, { damping: 15 });
+      checkmarkScale.value = withSpring(1, { damping: 10 });
     }
-  }, [isLoading]);
+  }, [isSuccess]);
+
+  const fadeInStyle = useAnimatedStyle(() => ({
+    opacity: fadeAnim.value,
+    transform: [{ translateY: slideAnim.value }],
+  }));
+
+  const rotateStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotateAnim.value}deg` }],
+  }));
+
+  const successStyle = useAnimatedStyle(() => ({
+    opacity: successAnim.value,
+    transform: [{ translateY: withTiming(isSuccess ? 0 : -50, { duration: 500 }) }],
+  }));
+
+  const checkmarkStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkmarkScale.value }],
+  }));
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -93,27 +130,10 @@ export default function NDA() {
       setIsLoading(false);
       setIsSuccess(true);
       
-      // Animate success elements
-      Animated.sequence([
-        Animated.parallel([
-          Animated.spring(successAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-            tension: 100,
-            friction: 8,
-          }),
-          Animated.spring(checkmarkScale, {
-            toValue: 1,
-            useNativeDriver: true,
-            tension: 150,
-            friction: 7,
-          }),
-        ]),
-        Animated.delay(1500), // Show success for 1.5 seconds
-      ]).start(() => {
-        // Auto-redirect after animation completes
+      // Auto-redirect after showing success
+      setTimeout(() => {
         router.replace('/join');
-      });
+      }, 2500);
       
     } catch (error) {
       Alert.alert('Error', 'Failed to submit NDA. Please try again.');
@@ -122,682 +142,771 @@ export default function NDA() {
   };
 
   return (
-    <>
+    <View style={commonStyles.appContainer}>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="dark" />
-      <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-        <Header />
-        
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
-        >
-          <ScrollView 
-            style={{ flex: 1 }}
-            contentContainerStyle={{ padding: 16 }}
-            showsVerticalScrollIndicator={false}
-          >
-            <Animated.View 
-              style={{ 
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-                backgroundColor: '#ffffff',
-                borderRadius: 16,
-                padding: 24,
-                marginBottom: 20,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 8,
-              }}
-            >
-              {/* Header */}
-              <View style={{ alignItems: 'center', marginBottom: 32 }}>
-                <View 
-                  style={{
-                    backgroundColor: '#d946ef',
-                    borderRadius: 30,
-                    padding: 16,
-                    marginBottom: 16
-                  }}
-                >
-                  <MaterialIcons name="security" size={32} color="#ffffff" />
-                </View>
-                <Text 
-                  style={{ 
-                    fontSize: 28,
-                    fontWeight: 'bold',
-                    color: '#1f2937',
-                    textAlign: 'center',
-                    marginBottom: 8
-                  }}
-                >
-                  Confidentiality Agreement
-                </Text>
-                <Text 
-                  style={{ 
-                    fontSize: 16,
-                    color: '#6b7280',
-                    textAlign: 'center',
-                    lineHeight: 24
-                  }}
-                >
-                  Bletchley Point Ltd. • Dated 19/08/2025
+      <StatusBar style={isDark ? "light" : "dark"} />
+      
+      {/* Header */}
+      <Header />
+      
+      {/* Background aurora effect */}
+      <AuroraBackground />
+      
+      {/* Success State */}
+      {isSuccess && (
+        <Animated.View style={[successStyle, styles.successContainer]}>
+          <View style={styles.successContent}>
+            <Animated.View style={[checkmarkStyle, styles.checkmarkContainer]}>
+              <Ionicons name="checkmark" size={40} color="#ffffff" />
+            </Animated.View>
+            
+            <Text style={[commonStyles.title, { marginBottom: 12 }]}>
+              NDA Signed Successfully!
+            </Text>
+            
+            <Text style={[commonStyles.text, { marginBottom: 24, maxWidth: 400 }]}>
+              Thank you {name}! Redirecting you back to complete your application...
+            </Text>
+            
+            <View style={styles.infoContainer}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <Ionicons name="information-circle" size={20} color={colors.success} style={{ marginRight: 8 }} />
+                <Text style={[commonStyles.text, { fontWeight: '600', color: colors.success }]}>
+                  What happens next?
                 </Text>
               </View>
-
-              {/* NDA Content */}
-              <View style={{ marginBottom: 32 }}>
-                <Text style={{ fontSize: 18, fontWeight: '600', color: '#1f2937', marginBottom: 16 }}>
-                  Agreement Overview
-                </Text>
-                <Text style={{ fontSize: 14, color: '#4b5563', lineHeight: 22, marginBottom: 16 }}>
-                  This confidentiality agreement is between Bletchley Point Ltd., and any future entity to which 
-                  the venture may be renamed (the "Company"), represented by Maxi Gorynski [General Director], 
-                  and you (the "New Member").
-                </Text>
-
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937', marginBottom: 12 }}>
-                  Key Terms:
+              <Text style={[commonStyles.text, { color: colors.success, lineHeight: 20 }]}>
+                • You can now complete your volunteer application{'\n'}
+                • Your NDA signature is securely stored{'\n'}
+                • Redirecting automatically...
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+      )}
+      
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        {!isSuccess && (
+          <ScrollView 
+            style={[{ flex: 1 }, styles.scrollView]} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollViewContent}
+          >
+            {/* Main Content */}
+            <View style={commonStyles.content}>
+              {/* Hero Section */}
+              <Animated.View style={[fadeInStyle, styles.heroContainer]}>
+                <View style={styles.highlightContainer}>
+                  <LinearGradient
+                    colors={gradients.primary}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={commonStyles.highlightBackground}
+                  >
+                    <Text style={commonStyles.highlightText}>Confidentiality Agreement</Text>
+                  </LinearGradient>
+                </View>
+                
+                <Text style={[commonStyles.title, { 
+                  fontSize: isMobile ? 32 : 48, 
+                  marginBottom: 20,
+                  textAlign: 'center',
+                  paddingHorizontal: isMobile ? 16 : 0
+                }]}>
+                  Secure Your Access
                 </Text>
                 
-                <View style={{ marginBottom: 16 }}>
-                  <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-                    <View style={{ 
-                      backgroundColor: '#d946ef', 
-                      borderRadius: 4, 
-                      width: 8, 
-                      height: 8, 
-                      marginTop: 8, 
-                      marginRight: 12 
-                    }} />
-                    <Text style={{ fontSize: 14, color: '#4b5563', flex: 1, lineHeight: 22 }}>
-                      <Text style={{ fontWeight: '600' }}>Non-Disclosure:</Text> You agree not to copy, distribute, 
-                      or disseminate any Company materials including documents, strategic plans, contact registers, 
-                      software products, and financial information.
-                    </Text>
-                  </View>
-                  
-                  <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-                    <View style={{ 
-                      backgroundColor: '#d946ef', 
-                      borderRadius: 4, 
-                      width: 8, 
-                      height: 8, 
-                      marginTop: 8, 
-                      marginRight: 12 
-                    }} />
-                    <Text style={{ fontSize: 14, color: '#4b5563', flex: 1, lineHeight: 22 }}>
-                      <Text style={{ fontWeight: '600' }}>Purpose Limitation:</Text> Confidential information may only 
-                      be used for work with Bletchley Point and its subsidiaries, including the Progress party.
-                    </Text>
-                  </View>
-                  
-                  <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-                    <View style={{ 
-                      backgroundColor: '#d946ef', 
-                      borderRadius: 4, 
-                      width: 8, 
-                      height: 8, 
-                      marginTop: 8, 
-                      marginRight: 12 
-                    }} />
-                    <Text style={{ fontSize: 14, color: '#4b5563', flex: 1, lineHeight: 22 }}>
-                      <Text style={{ fontWeight: '600' }}>No Commercial Use:</Text> You shall not use confidential 
-                      information for any commercial reason, independently or with third parties.
-                    </Text>
-                  </View>
-                  
-                  <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-                    <View style={{ 
-                      backgroundColor: '#d946ef', 
-                      borderRadius: 4, 
-                      width: 8, 
-                      height: 8, 
-                      marginTop: 8, 
-                      marginRight: 12 
-                    }} />
-                    <Text style={{ fontSize: 14, color: '#4b5563', flex: 1, lineHeight: 22 }}>
-                      <Text style={{ fontWeight: '600' }}>Duration:</Text> Obligations continue for 5 years from 
-                      this agreement date, with trade secrets protected as long as they remain confidential.
-                    </Text>
-                  </View>
-                  
-                  <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-                    <View style={{ 
-                      backgroundColor: '#d946ef', 
-                      borderRadius: 4, 
-                      width: 8, 
-                      height: 8, 
-                      marginTop: 8, 
-                      marginRight: 12 
-                    }} />
-                    <Text style={{ fontSize: 14, color: '#4b5563', flex: 1, lineHeight: 22 }}>
-                      <Text style={{ fontWeight: '600' }}>Health & Social Care Exception:</Text> This agreement does 
-                      not restrict discussion of matters pertaining solely to health and social care policy.
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={{ 
-                  backgroundColor: '#fef3c7', 
-                  borderColor: '#f59e0b', 
-                  borderWidth: 1, 
-                  borderRadius: 8, 
-                  padding: 16, 
-                  marginBottom: 16 
-                }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                    <Ionicons name="warning" size={20} color="#f59e0b" style={{ marginRight: 8, marginTop: 2 }} />
-                    <Text style={{ fontSize: 14, color: '#92400e', flex: 1, lineHeight: 20 }}>
-                      <Text style={{ fontWeight: '600' }}>Important:</Text> This is a legally binding agreement. 
-                      Please read the full terms carefully. By signing, you acknowledge understanding and agreement 
-                      to all terms and conditions.
-                    </Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity 
-                  onPress={() => setShowFullNDA(true)}
-                  style={{
-                    backgroundColor: '#f3f4f6',
-                    borderRadius: 8,
-                    padding: 12,
-                    alignItems: 'center',
-                    marginBottom: 24,
-                    flexDirection: 'row',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <MaterialIcons name="article" size={20} color="#6b7280" style={{ marginRight: 8 }} />
-                  <Text style={{ color: '#6b7280', fontSize: 14, fontWeight: '500' }}>
-                    View Full Legal Document
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Name Input */}
-              <View style={{ marginBottom: 24 }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937', marginBottom: 8 }}>
-                  Your Name
+                <Text style={[commonStyles.text, { 
+                  fontSize: isMobile ? 16 : 18, 
+                  marginBottom: 32, 
+                  lineHeight: isMobile ? 24 : 28, 
+                  maxWidth: isMobile ? width - 32 : 600,
+                  textAlign: 'center',
+                  paddingHorizontal: isMobile ? 16 : 0
+                }]}>
+                  To protect sensitive information and maintain confidentiality within Progress UK, all volunteers must sign our confidentiality agreement.
                 </Text>
-                <View 
-                  style={{
-                    borderWidth: 2,
-                    borderColor: nameFocused ? '#d946ef' : '#e5e7eb',
-                    borderRadius: 12,
-                    backgroundColor: '#ffffff',
-                  }}
-                >
+
+                <View style={styles.benefitsRow}>
+                  <Ionicons name="shield-checkmark" size={20} color={colors.success} />
+                  <Text style={[commonStyles.text, { marginLeft: 8 }]}>
+                    Secure • Confidential • Legally Binding
+                  </Text>
+                </View>
+              </Animated.View>
+
+              {/* Form Container */}
+              <Animated.View style={[fadeInStyle, styles.formContainer]}>
+                <View style={{ alignItems: 'center', marginBottom: 32 }}>
+                  <LinearGradient
+                    colors={gradients.accent}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      borderRadius: 20,
+                      padding: 16,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <MaterialIcons name="security" size={32} color={colors.text} />
+                  </LinearGradient>
+                  <Text 
+                    style={[commonStyles.title, { 
+                      fontSize: 28,
+                      marginBottom: 8
+                    }]}
+                  >
+                    Confidentiality Agreement
+                  </Text>
+                  <Text 
+                    style={[commonStyles.text, {
+                      fontSize: 16,
+                      color: colors.textSecondary,
+                      lineHeight: 24,
+                      marginBottom: 8,
+                      textAlign: 'center'
+                    }]}
+                  >
+                    Bletchley Point Ltd. • Dated {currentDate}
+                  </Text>
+                </View>
+
+                {/* NDA Content */}
+                <View style={{ marginBottom: 32 }}>
+                  <Text style={[styles.inputLabel, { fontSize: 18, marginBottom: 16 }]}>
+                    Agreement Overview
+                  </Text>
+                  <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 16, textAlign: 'left' }]}>
+                    This confidentiality agreement is between Bletchley Point Ltd., and any future entity to which 
+                    the venture may be renamed (the "Company"), represented by Maxi Gorynski [General Director], 
+                    and you (the "New Member").
+                  </Text>
+
+                  <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 12 }]}>
+                    Key Terms:
+                  </Text>
+                  
+                  <View style={{ marginBottom: 16 }}>
+                    <View style={styles.termItem}>
+                      <View style={styles.termBullet} />
+                      <Text style={[commonStyles.text, { fontSize: 14, flex: 1, lineHeight: 22, textAlign: 'left' }]}>
+                        <Text style={{ fontWeight: '600' }}>Non-Disclosure:</Text> You agree not to copy, distribute, 
+                        or disseminate any Company materials including documents, strategic plans, contact registers, 
+                        software products, and financial information.
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.termItem}>
+                      <View style={styles.termBullet} />
+                      <Text style={[commonStyles.text, { fontSize: 14, flex: 1, lineHeight: 22, textAlign: 'left' }]}>
+                        <Text style={{ fontWeight: '600' }}>Purpose Limitation:</Text> Confidential information may only 
+                        be used for work with Bletchley Point and its subsidiaries, including the Progress party.
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.termItem}>
+                      <View style={styles.termBullet} />
+                      <Text style={[commonStyles.text, { fontSize: 14, flex: 1, lineHeight: 22, textAlign: 'left' }]}>
+                        <Text style={{ fontWeight: '600' }}>No Commercial Use:</Text> You shall not use confidential 
+                        information for any commercial reason, independently or with third parties.
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.termItem}>
+                      <View style={styles.termBullet} />
+                      <Text style={[commonStyles.text, { fontSize: 14, flex: 1, lineHeight: 22, textAlign: 'left' }]}>
+                        <Text style={{ fontWeight: '600' }}>Duration:</Text> Obligations continue for 5 years from 
+                        this agreement date, with trade secrets protected as long as they remain confidential.
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.termItem}>
+                      <View style={styles.termBullet} />
+                      <Text style={[commonStyles.text, { fontSize: 14, flex: 1, lineHeight: 22, textAlign: 'left' }]}>
+                        <Text style={{ fontWeight: '600' }}>Health & Social Care Exception:</Text> This agreement does 
+                        not restrict discussion of matters pertaining solely to health and social care policy.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.warningContainer}>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                      <Ionicons name="warning" size={20} color={colors.warning} style={{ marginRight: 8, marginTop: 2 }} />
+                      <Text style={[commonStyles.text, { fontSize: 14, color: colors.warning, flex: 1, lineHeight: 20, textAlign: 'left' }]}>
+                        <Text style={{ fontWeight: '600' }}>Important:</Text> This is a legally binding agreement. 
+                        Please read the full terms carefully. By signing, you acknowledge understanding and agreement 
+                        to all terms and conditions.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity 
+                    onPress={() => setShowFullNDA(true)}
+                    style={styles.viewFullButton}
+                  >
+                    <MaterialIcons name="article" size={20} color={colors.accent} style={{ marginRight: 8 }} />
+                    <Text style={[commonStyles.text, { color: colors.accent, fontSize: 14, fontWeight: '500' }]}>
+                      View Full Legal Document
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Name Input */}
+                <View style={{ marginBottom: 24 }}>
+                  <Text style={styles.inputLabel}>
+                    Your Name *
+                  </Text>
                   <TextInput
                     value={name}
                     onChangeText={setName}
                     onFocus={() => setNameFocused(true)}
                     onBlur={() => setNameFocused(false)}
                     placeholder="Enter your full legal name"
-                    style={{
-                      padding: 16,
-                      fontSize: 16,
-                      color: '#1f2937',
-                    }}
+                    placeholderTextColor={colors.textSecondary}
+                    style={[
+                      styles.textInput,
+                      nameFocused && styles.textInputFocused
+                    ]}
                     autoCapitalize="words"
                     autoComplete="name"
                   />
                 </View>
-              </View>
 
-              {/* Agreement Checkbox */}
-              <TouchableOpacity 
-                onPress={() => setAgreed(!agreed)}
-                style={{ 
-                  flexDirection: 'row', 
-                  alignItems: 'flex-start', 
-                  marginBottom: 32,
-                  paddingVertical: 8
-                }}
-              >
-                <View 
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: 6,
-                    borderWidth: 2,
-                    borderColor: agreed ? '#d946ef' : '#d1d5db',
-                    backgroundColor: agreed ? '#d946ef' : '#ffffff',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: 12,
-                    marginTop: 2
-                  }}
+                {/* Agreement Checkbox */}
+                <TouchableOpacity 
+                  onPress={() => setAgreed(!agreed)}
+                  style={[
+                    styles.optionCard,
+                    agreed && styles.optionCardSelected
+                  ]}
                 >
-                  {agreed && <Ionicons name="checkmark" size={16} color="#ffffff" />}
-                </View>
-                <Text style={{ fontSize: 14, color: '#4b5563', flex: 1, lineHeight: 22 }}>
-                  I have read, understood, and agree to be bound by the terms of this Confidentiality Agreement. 
-                  I acknowledge that this creates a legally binding obligation and that breach may result in 
-                  legal action including injunctive relief.
-                </Text>
-              </TouchableOpacity>
-
-              {/* Submit Button */}
-              <TouchableOpacity 
-                onPress={handleSubmit}
-                disabled={isLoading || !name.trim() || !agreed}
-                style={{
-                  backgroundColor: isLoading ? '#9CA3AF' : 
-                                 (!name.trim() || !agreed) ? '#d1d5db' : '#d946ef',
-                  borderRadius: 12,
-                  paddingVertical: 16,
-                  alignItems: 'center',
-                  marginBottom: 16,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  elevation: 3,
-                  opacity: isLoading ? 0.8 : 1,
-                }}
-              >
-                {isLoading ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Animated.View
-                      style={{
-                        transform: [{
-                          rotate: rotateAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0deg', '360deg'],
-                          })
-                        }]
-                      }}
-                    >
-                      <Ionicons name="refresh" size={20} color="#ffffff" style={{ marginRight: 8 }} />
-                    </Animated.View>
-                    <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600' }}>
-                      Signing NDA...
+                  <View style={[
+                    styles.checkbox,
+                    agreed && styles.checkboxSelected
+                  ]}>
+                    {agreed && (
+                      <Ionicons name="checkmark" size={16} color={colors.text} />
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.optionTitle, agreed && styles.optionTitleSelected]}>
+                      I agree to the terms
+                    </Text>
+                    <Text style={[styles.optionDescription, agreed && styles.optionDescriptionSelected]}>
+                      I have read, understood, and agree to be bound by the terms of this Confidentiality Agreement. 
+                      I acknowledge that this creates a legally binding obligation.
                     </Text>
                   </View>
-                ) : (
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <MaterialIcons name="security" size={20} color="#ffffff" style={{ marginRight: 8 }} />
-                    <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600' }}>
-                      Sign NDA Agreement
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
+                </TouchableOpacity>
 
-              <TouchableOpacity 
-                onPress={() => router.back()}
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#d1d5db',
-                  borderRadius: 12,
-                  paddingVertical: 16,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: '#6b7280', fontSize: 16, fontWeight: '500' }}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+                {/* Submit Button */}
+                <TouchableOpacity
+                  onPress={handleSubmit}
+                  disabled={isLoading || !name.trim() || !agreed}
+                  style={[
+                    styles.submitButton,
+                    (!name.trim() || !agreed) && styles.submitButtonDisabled
+                  ]}
+                >
+                  <LinearGradient
+                    colors={(!name.trim() || !agreed) ? [colors.border, colors.border] : gradients.accent}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.submitButtonGradient}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                      {isLoading ? (
+                        <>
+                          <Animated.View style={[rotateStyle, { marginRight: 8 }]}>
+                            <Ionicons name="refresh" size={20} color={colors.text} />
+                          </Animated.View>
+                          <Text style={styles.submitButtonText}>
+                            Signing NDA...
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <MaterialIcons name="security" size={20} color={colors.text} style={{ marginRight: 8 }} />
+                          <Text style={styles.submitButtonText}>
+                            Sign NDA Agreement
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
 
-        {/* Success Animation Overlay */}
-        {isSuccess && (
-          <Animated.View
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              justifyContent: 'center',
-              alignItems: 'center',
-              zIndex: 1000,
-              opacity: successAnim,
-            }}
-          >
-            <Animated.View
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: 24,
-                padding: 40,
-                alignItems: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 20 },
-                shadowOpacity: 0.3,
-                shadowRadius: 30,
-                elevation: 20,
-                transform: [
-                  {
-                    scale: successAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.8, 1],
-                    }),
-                  },
-                ],
-              }}
-            >
-              <Animated.View
-                style={{
-                  backgroundColor: '#10B981',
-                  borderRadius: 50,
-                  padding: 20,
-                  marginBottom: 24,
-                  transform: [{ scale: checkmarkScale }],
-                }}
-              >
-                <Ionicons name="checkmark" size={40} color="#ffffff" />
+                <TouchableOpacity 
+                  onPress={() => router.back()}
+                  style={styles.cancelButton}
+                >
+                  <Text style={styles.cancelButtonText}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
               </Animated.View>
-              
-              <Text
-                style={{
-                  fontSize: 24,
-                  fontWeight: 'bold',
-                  color: '#1f2937',
-                  textAlign: 'center',
-                  marginBottom: 12,
-                }}
-              >
-                NDA Signed Successfully!
-              </Text>
-              
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: '#6b7280',
-                  textAlign: 'center',
-                  lineHeight: 24,
-                  maxWidth: 280,
-                }}
-              >
-                Thank you {name}! Redirecting you back to complete your application...
-              </Text>
-              
-              <View style={{ 
-                flexDirection: 'row', 
-                alignItems: 'center', 
-                marginTop: 20,
-                backgroundColor: '#f3f4f6',
-                borderRadius: 8,
-                padding: 8
-              }}>
-                <Animated.View
-                  style={{
-                    transform: [{
-                      rotate: rotateAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '360deg'],
-                      })
-                    }]
-                  }}
-                >
-                  <Ionicons name="refresh" size={16} color="#6b7280" style={{ marginRight: 8 }} />
-                </Animated.View>
-                <Text style={{ fontSize: 14, color: '#6b7280' }}>
-                  Redirecting...
-                </Text>
-              </View>
-            </Animated.View>
-          </Animated.View>
-        )}
-
-        {/* Full NDA Modal */}
-        <Modal
-          visible={showFullNDA}
-          animationType="slide"
-          presentationStyle="pageSheet"
-        >
-          <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-            <View style={{ 
-              flexDirection: 'row', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              padding: 16, 
-              backgroundColor: '#ffffff',
-              borderBottomWidth: 1,
-              borderBottomColor: '#e5e7eb',
-              paddingTop: Platform.OS === 'ios' ? 50 : 16
-            }}>
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#1f2937' }}>
-                Confidentiality Agreement - Full Text
-              </Text>
-              <TouchableOpacity onPress={() => setShowFullNDA(false)}>
-                <Ionicons name="close" size={24} color="#6b7280" />
-              </TouchableOpacity>
             </View>
-            
-            <ScrollView style={{ flex: 1, padding: 16 }}>
-              <View style={{ 
-                backgroundColor: '#ffffff',
-                borderRadius: 12,
-                padding: 20,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-                elevation: 4,
-              }}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1f2937', textAlign: 'center', marginBottom: 8 }}>
-                  Bletchley Point Ltd.
-                </Text>
-                <Text style={{ fontSize: 18, fontWeight: '600', color: '#1f2937', textAlign: 'center', marginBottom: 16 }}>
-                  Confidentiality Agreement
-                </Text>
-                <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 24 }}>
-                  This confidentiality agreement (the "Agreement") is dated 19/08/2025.
-                </Text>
+            {/* Bottom spacing */}
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        )}
+      </KeyboardAvoidingView>
 
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 16 }}>
-                  The Agreement is to hold between Bletchley Point Ltd., and any future entity to which the venture in question may in future be renamed (the "Company"), represented by Maxi Gorynski [General Director], and <Text style={{ fontWeight: '600' }}>Your name</Text> (the "New Member").
-                </Text>
+      {/* Full NDA Modal */}
+      <Modal
+        visible={showFullNDA}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={styles.modalHeader}>
+            <Text style={[commonStyles.title, { fontSize: 18 }]}>
+              Confidentiality Agreement - Full Text
+            </Text>
+            <TouchableOpacity onPress={() => setShowFullNDA(false)}>
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            style={[{ flex: 1, padding: 16 }, styles.scrollView]} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollViewContent}
+          >
+            <View style={styles.modalContent}>
+              <Text style={[commonStyles.title, { fontSize: 20, marginBottom: 8 }]}>
+                Bletchley Point Ltd.
+              </Text>
+              <Text style={[commonStyles.title, { fontSize: 18, marginBottom: 16 }]}>
+                Confidentiality Agreement
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 24 }]}>
+                This confidentiality agreement (the "Agreement") is dated {currentDate}.
+              </Text>
 
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937', marginBottom: 12 }}>
-                  Definitions
-                </Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  For the purposes of this Agreement:
-                </Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 16 }}>
-                  "Confidential Information" means any and all non-public information disclosed by the Company to the New Member, including but not limited to:
-                </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                The Agreement is to hold between Bletchley Point Ltd., and any future entity to which the venture in question may in future be renamed (the "Company"), represented by Maxi Gorynski [General Director], and <Text style={{ fontWeight: '600' }}>You</Text> (the "New Member").
+              </Text>
 
-                <View style={{ marginLeft: 16, marginBottom: 16 }}>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                    • Technological products, software, systems, and technical specifications
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                    • Electoral strategies, campaign plans, and political positioning
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                    • Communication plans, messaging strategies, and media relations approaches
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                    • Logistical operational plans, organizational structures, and strategic initiatives
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                    • Financial information, budgets, and resource allocation plans
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                    • Donor lists, supporter databases, and contact registers
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                    • Internal documents, correspondence, and meeting records
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                    • Any other proprietary information that a political organization would reasonably consider confidential
-                  </Text>
-                </View>
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 12 }]}>
+                Definitions
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 8, textAlign: 'left' }]}>
+                For the purposes of this Agreement:
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                "Confidential Information" means any and all non-public information disclosed by the Company to the New Member, including but not limited to:
+              </Text>
 
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 16 }}>
-                  Confidential Information does not include information that falls within the exclusions set forth in Section 1A of this Agreement.
+              <View style={{ marginLeft: 16, marginBottom: 16 }}>
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Technological products, software, systems, and technical specifications
                 </Text>
-
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937', marginBottom: 12 }}>
-                  1. Non-Disclosure of Confidential Information
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Electoral strategies, campaign plans, and political positioning
                 </Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  By signing this confidentiality agreement, the New Member agrees to the following:
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Communication plans, messaging strategies, and media relations approaches
                 </Text>
-
-                <View style={{ marginLeft: 16, marginBottom: 16 }}>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    They shall not copy, distribute, or otherwise disseminate any material belonging to the Company – inclusive of but not limited to documents, digital or material assets, logos, strategic plans, marketing materials, contact registers, software products, codebases, databases, communications logs, letters and correspondence, and financial information; they shall not do so orally, in writing, or by any other format
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    They shall not use or exploit any Confidential Information given to them in any way except for the Purpose, the Purpose which shall be defined as any and all work for Bletchley Point and any and all of its subsidiaries, including the Progress party, which the New Member enters into individually or in collaboration with other Members;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    That while the New Member may accept contract or other forms of agreement to work on initiatives in a comparable space to the Company, they agree not to unduly disseminate sensitive knowledge or proprietary materials that are property of the Company to third parties without express, prior approval of the Company;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    They shall not disclose or make available the Confidential Information to any third party, except as expressly permitted by this Agreement;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    They shall not utilise the Confidential Information for any commercial reason, independently or in collaboration with any third party;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    They shall not copy, reduce to writing or otherwise record the Confidential Information except as strictly necessary for the Purpose (and any such copies, reductions to writing and records shall be the property of the Disclosing Party); and
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    They shall apply the same security measures and degree of care to the Confidential Information as the Recipient applies to its own confidential information
-                  </Text>
-                </View>
-
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937', marginBottom: 12 }}>
-                  1A. Exclusions from Confidential Information
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Logistical operational plans, organizational structures, and strategic initiatives
                 </Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  The obligations set forth in Section 1 shall not apply to information that:
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Financial information, budgets, and resource allocation plans
                 </Text>
-
-                <View style={{ marginLeft: 16, marginBottom: 16 }}>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • Is or becomes generally available to the public through no breach of this Agreement by the New Member;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • Was known to the New Member prior to disclosure by the Company, as evidenced by written records predating such disclosure;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • Is independently developed by the New Member without use of or reference to the Company's Confidential Information, as evidenced by written records;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • Is rightfully received by the New Member from a third party without breach of any confidentiality obligation;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • Is required to be disclosed by law, court order, or governmental regulation, provided the New Member gives the Company reasonable advance notice of such required disclosure to permit the Company to seek protective measures;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • Pertains solely to matters of health and social care, including but not limited to topics falling under the remit of public health policy, service provision, or healthcare system operations.
-                  </Text>
-                </View>
-
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937', marginBottom: 12 }}>
-                  1B. Residuals
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Donor lists, supporter databases, and contact registers
                 </Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  Notwithstanding any other provision of this Agreement, the New Member shall be free to use and employ, in any lawful manner, any general skills, experience, concepts, ideas, or know-how of a general nature that are:
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Internal documents, correspondence, and meeting records
                 </Text>
-
-                <View style={{ marginLeft: 16, marginBottom: 16 }}>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • Retained in the unaided memory of the New Member following termination of their involvement with the Company;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • Part of the general knowledge, skills, and experience developed by the New Member during their involvement with the Company; or
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • Publicly available techniques, methodologies, or approaches that become part of the New Member's general professional competence.
-                  </Text>
-                </View>
-
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 16 }}>
-                  This residuals clause shall not permit the New Member to disclose or use specific Confidential Information (as defined above) that constitutes trade secrets or proprietary information of the Company.
-                </Text>
-
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937', marginBottom: 12 }}>
-                  2. Permitted Disclosure of Confidential Information
-                </Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  The New Member may not disclose Confidential Information outside the remit of the Company except with the express, prior permission of the Company. They may disclose the Company's Confidential Information to those of the New Member's Representatives who need to know this Confidential Information for the Purpose, provided that:
-                </Text>
-
-                <View style={{ marginLeft: 16, marginBottom: 16 }}>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • it informs its Representatives of the confidential nature of the Confidential Information, or the aspects of the Solution to be disclosed, before disclosure, and likewise obtains signed, written approval from the Disclosing Party for the Confidential Information to be disclosed;
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • It procures that its Representatives shall, in relation to any Confidential Information disclosed to them (or information shared as regards the Solution), comply with this Agreement as if they were the Recipient and, if the Disclosing Party so requests, procure that any relevant Representative enters into a confidentiality agreement with the Disclosing Party on terms equivalent to those contained in this Agreement,
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • The Recipient may disclose Confidential Information, or information about the Solution, to the extent such Confidential Information is required:
-                  </Text>
-                  <View style={{ marginLeft: 16, marginBottom: 8 }}>
-                    <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                      - to be disclosed by law, rule or regulation; or
-                    </Text>
-                    <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 4 }}>
-                      - by any governmental, judicial or other regulatory authority (including, without limitation, any recognised stock exchange or by a court or other authority of competent jurisdiction),
-                    </Text>
-                  </View>
-                  <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                    • The parties agree that this Agreement shall not restrict the discussion, disclosure, or use of information that pertains solely to matters of health and social care, including but not limited to topics falling under the remit of public health policy, service provision, or healthcare system operations.
-                  </Text>
-                </View>
-
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937', marginBottom: 12 }}>
-                  3. Reservation of Rights and Acknowledgement
-                </Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  All Confidential Information shall remain the property of the Disclosing Party. The Disclosing Party reserves all rights in its Confidential Information. No rights, including, but not limited to, intellectual property rights, in respect of the Disclosing Party's Confidential Information are granted to the Recipient and no obligations are imposed on the Disclosing Party other than those expressly stated in this Agreement.
-                </Text>
-
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  Intellectual Property specifically created by the New Member solely for the Company's proprietary use and directly related to the Company's confidential technological products or electoral strategies shall be owned by the Company, unless an agreement is brokered and achieved between the New Member and the Company to specify an alternative arrangement of ownership relative to specific IP. General skills, methodologies, and non-proprietary work product developed by the New Member shall remain the property of the New Member.
-                </Text>
-
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  The disclosure of Confidential Information by the Disclosing Party shall not form any offer by, or representation or warranty on the part of, the Disclosing Party to enter into any further agreement in relation to the Purpose.
-                </Text>
-
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  The Recipient acknowledges that damages alone would not be an adequate remedy for the breach of any of the provisions of this Agreement. Accordingly, without prejudice to any other rights and remedies it may have, the Disclosing Party shall be entitled to seek the granting of equitable relief (including without limitation injunctive relief) concerning any threatened or actual breach of any of the provisions of this Agreement.
-                </Text>
-
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  If the Recipient has included a secondary name/handle at the head of this document (for example, a pseudonym/social media handle), then it shall also follow that the Company shall hold the Recipient's legal name as Confidential Information belonging to the Recipient and shall not reveal it, including, if it is the Recipient's wish, to any personnel outside of the Company's Heads of Function, unless compelled to do so by law.
-                </Text>
-
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  The obligations of each Party shall, notwithstanding any earlier termination of negotiations or discussions between the parties in relation to the Purpose, continue for a period of five (5) years from the date of this Agreement, except that obligations relating to trade secrets shall continue for so long as such information remains a trade secret under applicable law.
-                </Text>
-
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  Any failure to exercise or any delay in exercising any right or remedy under this Agreement shall not constitute a waiver of that right or remedy or a waiver of any other right or remedy and no single or partial exercise of any right or remedy under this Agreement will prevent any further exercise of that right or remedy or the exercise of any other right or remedy.
-                </Text>
-
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 16 }}>
-                  No variation or agreed termination of this Agreement shall be of any force or effect unless in writing and signed by each Party.
-                </Text>
-
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#1f2937', marginBottom: 12 }}>
-                  4. Governing Law and Jurisdiction
-                </Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 }}>
-                  This Agreement and any dispute or claim arising out of or in connection with it or its subject matter or formation (including non-contractual disputes or claims) shall be governed by and construed in accordance with the law of England and Wales.
-                </Text>
-                <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 24 }}>
-                  Each party irrevocably agrees that the courts of England and Wales shall have exclusive jurisdiction to settle any dispute or claim arising out of or in connection with this Agreement or its subject matter or formation (including non-contractual disputes or claims).
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Any other proprietary information that a political organization would reasonably consider confidential
                 </Text>
               </View>
-            </ScrollView>
-          </View>
-        </Modal>
-      </View>
-    </>
+
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                Confidential Information does not include information that falls within the exclusions set forth in Section 1A of this Agreement.
+              </Text>
+
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
+                1A. Exclusions
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 8, textAlign: 'left' }]}>
+                The following information shall not be deemed "Confidential Information":
+              </Text>
+              <View style={{ marginLeft: 16, marginBottom: 16 }}>
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Information that is or becomes publicly available through no breach of this Agreement
+                </Text>
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Information that was known to the New Member prior to disclosure by the Company
+                </Text>
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Information independently developed by the New Member without use of Confidential Information
+                </Text>
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Information required to be disclosed by law or court order (with advance notice to Company)
+                </Text>
+                <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 4, textAlign: 'left' }]}>
+                  • Information pertaining solely to health and social care policy
+                </Text>
+              </View>
+
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
+                1. Non-Disclosure of Confidential Information
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                By signing this confidentiality agreement, the New Member agrees to maintain strict confidentiality of all information provided by the Company and shall not copy, distribute, or disseminate any Company materials including documents, strategic plans, contact registers, software products, and financial information.
+              </Text>
+
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
+                2. Permitted Use
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                Confidential information may only be used for work with Bletchley Point and its subsidiaries, including the Progress party. The New Member shall not use confidential information for any commercial reason, independently or with third parties.
+              </Text>
+
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
+                3. Duration and Return of Information
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 8, textAlign: 'left' }]}>
+                The obligations under this Agreement shall continue for a period of five (5) years from the date of this Agreement. Trade secrets shall be protected as long as they remain confidential.
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                Upon termination of the New Member's relationship with the Company, or upon request, all confidential materials must be returned or destroyed, including all copies and derivative works.
+              </Text>
+
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
+                4. Legal Remedies
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                The New Member acknowledges that breach of this Agreement may cause irreparable harm to the Company for which monetary damages would be inadequate. Therefore, the Company shall be entitled to seek injunctive relief and other equitable remedies.
+              </Text>
+
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
+                5. Governing Law
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                This Agreement shall be governed by and construed in accordance with the laws of England and Wales. Any disputes arising under this Agreement shall be subject to the exclusive jurisdiction of the courts of England and Wales.
+              </Text>
+
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
+                6. Severability
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                If any provision of this Agreement is found to be unenforceable, the remainder of the Agreement shall remain in full force and effect.
+              </Text>
+
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
+                7. Entire Agreement
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                This Agreement constitutes the entire agreement between the parties concerning the subject matter hereof and supersedes all prior agreements and understandings.
+              </Text>
+
+              <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
+                Agreement and Signature
+              </Text>
+              <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
+                By signing this Agreement, both parties acknowledge that they have read, understood, and agree to be bound by these terms and conditions.
+              </Text>
+
+              <View style={{ backgroundColor: `${colors.warning}20`, borderColor: colors.warning, borderWidth: 1, borderRadius: 8, padding: 16, marginTop: 24 }}>
+                <Text style={[commonStyles.text, { fontSize: 14, color: colors.warning, lineHeight: 20, textAlign: 'left', fontWeight: '600' }]}>
+                  IMPORTANT LEGAL NOTICE: This is a legally binding confidentiality agreement. Please read all terms carefully before signing. By proceeding with the digital signature, you acknowledge full understanding and acceptance of all obligations outlined herein.
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+    </View>
   );
 }
+
+const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.create({
+  successContainer: {
+    backgroundColor: colors.surface,
+    marginHorizontal: isMobile ? 16 : 20,
+    marginTop: 20,
+    borderRadius: isMobile ? 16 : 20,
+    padding: isMobile ? 24 : 32,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.success,
+    position: 'relative',
+    zIndex: 3,
+  },
+  successContent: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  checkmarkContainer: {
+    backgroundColor: colors.success,
+    borderRadius: 40,
+    width: 80,
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  infoContainer: {
+    backgroundColor: `${colors.success}20`,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  heroContainer: {
+    alignItems: 'center',
+    marginBottom: isMobile ? 40 : 60,
+    paddingVertical: isMobile ? 20 : 40,
+    paddingHorizontal: isMobile ? 16 : 0,
+  },
+  highlightContainer: {
+    marginBottom: 16,
+  },
+  benefitsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  formContainer: {
+    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
+    borderRadius: isMobile ? 16 : 24,
+    padding: isMobile ? 20 : 40,
+    maxWidth: isMobile ? width - 32 : 700,
+    alignSelf: 'center',
+    width: '100%',
+    marginHorizontal: isMobile ? 16 : 0,
+    borderWidth: 1,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
+    position: 'relative',
+    zIndex: 2,
+    ...(Platform.OS === 'web' && {
+      backdropFilter: 'blur(10px)',
+    } as any),
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+    ...(Platform.OS === 'web' && {
+      fontFamily: "'Montserrat', sans-serif",
+    }),
+  },
+  textInput: {
+    borderWidth: 2,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}40` : `${colors.text}30`,
+    borderRadius: isMobile ? 8 : 12,
+    paddingHorizontal: isMobile ? 12 : 16,
+    paddingVertical: isMobile ? 12 : 14,
+    fontSize: isMobile ? 14 : 16,
+    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}80` : `${colors.surface}60`,
+    color: colors.text,
+    ...(Platform.OS === 'web' && {
+      fontFamily: "'Montserrat', sans-serif",
+      backdropFilter: 'blur(10px)',
+    } as any),
+  },
+  textInputFocused: {
+    borderColor: colors.accent,
+  },
+  termItem: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  termBullet: {
+    backgroundColor: colors.accent,
+    borderRadius: 4,
+    width: 8,
+    height: 8,
+    marginTop: 8,
+    marginRight: 12,
+  },
+  warningContainer: {
+    backgroundColor: `${colors.warning}20`,
+    borderColor: colors.warning,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+  },
+  viewFullButton: {
+    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}60` : `${colors.surface}40`,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.accent,
+    ...(Platform.OS === 'web' && { 
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+    } as any)
+  },
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}60` : `${colors.surface}40`,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
+    marginBottom: 32,
+    ...(Platform.OS === 'web' && { 
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+    } as any)
+  },
+  optionCardSelected: {
+    backgroundColor: `${colors.accent}20`,
+    borderColor: colors.accent,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: `${colors.text}40`,
+    borderRadius: 6,
+    backgroundColor: `${colors.surface}20`,
+    marginRight: 12,
+    marginTop: 2,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  checkboxSelected: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accent,
+  },
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+    ...(Platform.OS === 'web' && {
+      fontFamily: "'Montserrat', sans-serif",
+    }),
+  },
+  optionTitleSelected: {
+    color: colors.text,
+  },
+  optionDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    ...(Platform.OS === 'web' && {
+      fontFamily: "'Montserrat', sans-serif",
+    }),
+  },
+  optionDescriptionSelected: {
+    color: colors.textSecondary,
+  },
+  submitButton: {
+    borderRadius: 16,
+    marginBottom: 20,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    ...(Platform.OS === 'web' && { 
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+    } as any)
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    ...(Platform.OS === 'web' && { 
+      cursor: 'not-allowed' 
+    } as any)
+  },
+  submitButtonGradient: {
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitButtonText: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
+    ...(Platform.OS === 'web' && {
+      fontFamily: "'Montserrat', sans-serif",
+    }),
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    ...(Platform.OS === 'web' && { 
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+    } as any)
+  },
+  cancelButtonText: {
+    color: colors.textSecondary,
+    fontSize: 16,
+    fontWeight: '500',
+    ...(Platform.OS === 'web' && {
+      fontFamily: "'Montserrat', sans-serif",
+    }),
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingTop: Platform.OS === 'ios' ? 50 : 16,
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  scrollView: {
+    ...(Platform.OS === 'web' && {
+      // Custom scrollbar for web
+      '&::-webkit-scrollbar': {
+        width: '8px',
+      },
+      '&::-webkit-scrollbar-track': {
+        background: colors.background === '#ffffff' ? '#f1f1f1' : '#2a2a2a',
+        borderRadius: '4px',
+      },
+      '&::-webkit-scrollbar-thumb': {
+        background: colors.accent,
+        borderRadius: '4px',
+        opacity: 0.7,
+      },
+      '&::-webkit-scrollbar-thumb:hover': {
+        background: colors.accent,
+        opacity: 1,
+      },
+    } as any),
+  },
+  scrollViewContent: {
+    paddingBottom: Platform.OS === 'web' ? 20 : 0,
+  },
+});

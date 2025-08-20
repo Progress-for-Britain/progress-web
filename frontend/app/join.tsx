@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Alert, KeyboardAvoidingView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Alert, KeyboardAvoidingView, StyleSheet, Linking } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
@@ -57,7 +57,6 @@ export default function Join() {
   const [hasSavedData, setHasSavedData] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [showApiError, setShowApiError] = useState(false);
-  const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   // Animation values
@@ -895,6 +894,28 @@ export default function Join() {
                     <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 20, textAlign: 'left' }]}>
                       Please complete the following fields for your volunteer application
                     </Text>
+
+                    {/* Should I Join? PDF Link */}
+                    <View style={{ marginBottom: 16 }}>
+                      <Text style={styles.inputLabel}>
+                      Not sure if you should volunteer?
+                      </Text>
+                      <TouchableOpacity
+                      onPress={() => {
+                        const pdfUrl = `${process.env.EXPO_PUBLIC_API_URL}/should-i-join-progress.pdf`;
+                        if (Platform.OS === 'web') {
+                        window.open(pdfUrl, '_blank');
+                        } else {
+                          Linking.openURL(pdfUrl);
+                        }
+                      }}
+                      style={{ marginTop: 4 }}
+                      >
+                      <Text style={[styles.checkboxLink, { fontSize: 14 }]}>
+                        Read: Should I Join as a Volunteer? (PDF) →
+                      </Text>
+                      </TouchableOpacity>
+                    </View>
 
                     {/* Social Media Handle */}
                     <View style={{ marginBottom: 16 }}>

@@ -25,6 +25,9 @@ app.use('/api/news', newsRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/pending-users', pendingUserRoutes);
 
+// Serve static files from the /public folder
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
