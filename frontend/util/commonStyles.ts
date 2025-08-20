@@ -120,7 +120,7 @@ export const injectWebAuroraStyles = (isDark: boolean = true) => {
 export const lightColors = {
   primary: '#B10024',
   secondary: '#001A4F',
-  accent: '#d946ef',
+  accent: '#660033',
   success: '#10b981',
   error: '#DC2626',
   warning: '#F59E0B',
@@ -134,7 +134,7 @@ export const lightColors = {
 export const darkColors = {
   primary: '#B10024',
   secondary: '#001A4F',
-  accent: '#d946ef',
+  accent: '#660033',
   success: '#10b981',
   error: '#DC2626',
   warning: '#F59E0B',
@@ -155,13 +155,13 @@ export const colors = darkColors;
 export const lightGradients = {
   primary: ['#B10024', '#001A4F'] as const,
   aurora: ['#0369a1', '#0284c7', '#0ea5e9', '#38bdf8', '#0369a1'] as const,
-  accent: ['#d946ef', '#a855f7'] as const,
+  accent: ['#660033', '#880044'] as const,
 };
 
 export const darkGradients = {
   primary: ['#B10024', '#001A4F'] as const,
   aurora: ['#012168', '#123995', '#2854b0', '#3a66c5', '#012168'] as const,
-  accent: ['#d946ef', '#a855f7'] as const,
+  accent: ['#660033', '#880044'] as const,
 };
 
 // Function to get gradients based on theme

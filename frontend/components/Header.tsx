@@ -164,7 +164,7 @@ export default function Header() {
         case 'primary':
           return {
             ...baseStyles,
-            backgroundColor: 'rgba(177, 0, 36, 0.8)', // Progress red
+            backgroundColor: '#660033', // Updated Join Us button color
             paddingHorizontal: isMobile ? 16 : 20,
             paddingVertical: isMobile ? 14 : 12,
             borderRadius: 12,
@@ -296,51 +296,21 @@ export default function Header() {
             paddingVertical: 8,
             width: '100%'
           }}>
-            {/* Enhanced Logo with Progress aesthetic */}
+            {/* Progress brand name */}
             <TouchableOpacity 
               onPress={() => router.push('/')} 
               style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
             >
-              <View 
-                style={{ 
-                  width: isMobile ? 36 : 40, 
-                  height: isMobile ? 36 : 40, 
-                  backgroundColor: 'rgba(177, 0, 36, 0.8)', // Progress red color
-                  borderRadius: 8, 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  marginRight: isMobile ? 8 : 12,
-                  shadowColor: '#B10024',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.6,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-              >
-                <FontAwesome5 name="flag" size={isMobile ? 16 : 18} color={colors.text} />
-              </View>
-              <View>
-                <Text style={{ 
-                  fontSize: isMobile ? 18 : 22, 
-                  fontWeight: '700', 
-                  color: colors.text,
-                  lineHeight: isMobile ? 22 : 26,
-                  fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
-                  letterSpacing: 1,
-                }}>
-                  Progress
-                </Text>
-                <Text style={{ 
-                  fontSize: isMobile ? 10 : 11, 
-                  color: colors.textSecondary,
-                  fontWeight: '500',
-                  letterSpacing: 0.5,
-                  textTransform: 'uppercase',
-                  fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
-                }}>
-                  Beyond Left & Right
-                </Text>
-              </View>
+              <Text style={{ 
+                fontSize: isMobile ? 18 : 22, 
+                fontWeight: '700', 
+                color: colors.text,
+                lineHeight: isMobile ? 22 : 26,
+                fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
+                letterSpacing: 1,
+              }}>
+                PROGRESS
+              </Text>
             </TouchableOpacity>
 
             {/* Desktop Navigation */}
@@ -351,8 +321,8 @@ export default function Header() {
                   // Unauthenticated navigation
                   <>
                   <NavButton href="/" icon="home">Home</NavButton>
-                  <NavButton href="/donate" icon="heart" variant="secondary">Donate</NavButton>
-                  <NavButton href="/join" icon="people" variant="primary">Join Us</NavButton>
+                  {/* <NavButton href="/donate" icon="heart" variant="secondary">Donate</NavButton> */}
+                  <NavButton href="/join" icon="people">Join Us</NavButton>
                   <NavButton href="/login" icon="log-in">Login</NavButton>
                   </>
                 ) : (
@@ -479,7 +449,7 @@ export default function Header() {
               // Unauthenticated mobile navigation with staggered animations
               <>
                 <NavButton href="/" icon="home" isMobileMenu animationDelay={0}>Home</NavButton>
-                <NavButton href="/donate" icon="heart" variant="secondary" isMobileMenu animationDelay={100}>Donate</NavButton>
+                {/* <NavButton href="/donate" icon="heart" variant="secondary" isMobileMenu animationDelay={100}>Donate</NavButton> */}
                 <NavButton href="/join" icon="people" variant="primary" isMobileMenu animationDelay={200}>Join Us</NavButton>
                 <NavButton href="/login" icon="log-in" isMobileMenu animationDelay={300}>Login</NavButton>
               </>

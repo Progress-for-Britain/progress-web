@@ -23,7 +23,7 @@ export default function Register() {
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [codeValidated, setCodeValidated] = useState(false);
   const [suggestedRole, setSuggestedRole] = useState('');
-  const { register } = useAuth();
+  const { register, isStorageReady } = useAuth();
   const { isDark } = useTheme();
   const router = useRouter();
 
@@ -57,7 +57,17 @@ export default function Register() {
         Alert.alert('Invalid Code', response.message);
       }
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to validate access code. Please try again.');
+      let errorMessage = 'Failed to validate access code. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Network error') || error.message.includes('timeout')) {
+          errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsValidatingCode(false);
     }
@@ -91,6 +101,16 @@ export default function Register() {
       return;
     }
 
+    // Check if storage is ready before attempting registration
+    if (!isStorageReady) {
+      Alert.alert(
+        'Storage Error', 
+        'Device storage is not ready. Please ensure you have sufficient storage space and try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
       await register({ 
@@ -102,7 +122,20 @@ export default function Register() {
       });
       router.replace('/account');
     } catch (error) {
-      Alert.alert('Registration Failed', error instanceof Error ? error.message : 'An error occurred');
+      let errorMessage = 'An error occurred';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Provide more helpful error messages for mobile users
+        if (error.message.includes('Network error') || error.message.includes('timeout')) {
+          errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+        } else if (error.message.includes('Storage not available')) {
+          errorMessage = 'Device storage is not accessible. Please ensure you have sufficient storage space.';
+        }
+      }
+      
+      Alert.alert('Registration Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }

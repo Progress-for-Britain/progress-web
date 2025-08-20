@@ -30,6 +30,9 @@
       "description": "Progress UK - A progressive political movement unleashing potential across the UK",
       "themeColor": "#d946ef",
       "backgroundColor": "#ffffff"
-    }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

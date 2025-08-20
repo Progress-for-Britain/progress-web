@@ -17,7 +17,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const { login } = useAuth();
+  const { login, isStorageReady } = useAuth();
   const { isDark } = useTheme();
   const router = useRouter();
 
@@ -42,12 +42,35 @@ export default function Login() {
       return;
     }
 
+    // Check if storage is ready before attempting login
+    if (!isStorageReady) {
+      Alert.alert(
+        'Storage Error', 
+        'Device storage is not ready. Please ensure you have sufficient storage space and try again.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
       await login({ email, password });
       router.replace('/account');
     } catch (error) {
-      Alert.alert('Login Failed', error instanceof Error ? error.message : 'An error occurred');
+      let errorMessage = 'An error occurred';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Provide more helpful error messages for mobile users
+        if (error.message.includes('Network error') || error.message.includes('timeout')) {
+          errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+        } else if (error.message.includes('Storage not available')) {
+          errorMessage = 'Device storage is not accessible. Please ensure you have sufficient storage space.';
+        }
+      }
+      
+      Alert.alert('Login Failed', errorMessage);
     } finally {
       setIsLoading(false);
     }

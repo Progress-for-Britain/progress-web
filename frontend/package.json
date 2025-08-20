@@ -30,7 +30,8 @@
     "react-native-screens": "~4.11.1",
     "react-native-web": "^0.20.0",
     "react-time-picker": "^8.0.2",
-    "expo-linear-gradient": "~14.1.5"
+    "expo-linear-gradient": "~14.1.5",
+    "expo-secure-store": "~14.2.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
