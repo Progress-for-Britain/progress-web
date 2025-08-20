@@ -3,15 +3,19 @@ import { View, Text, TouchableOpacity, Platform, Animated, Modal } from 'react-n
 import { Link, useRouter, usePathname } from 'expo-router';
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useAuth } from '../util/auth-context';
+import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
+import { getColors } from '../util/commonStyles';
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { isMobile } = useResponsive();
+  const colors = getColors(isDark);
   
   // Animation values
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -150,9 +154,9 @@ export default function Header() {
       if (isActive && variant === 'default') {
         return {
           ...baseStyles,
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
           borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.2)',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)',
         };
       }
 
@@ -181,18 +185,18 @@ export default function Header() {
     };
 
     const getTextColor = () => {
-      // Handle active state - keep white but make it bolder
+      // Handle active state - always ensure good contrast
       if (isActive && variant === 'default') {
-        return '#ffffff';
+        return colors.text;
       }
 
       switch (variant) {
         case 'primary':
-          return '#ffffff';
+          return '#ffffff'; // Keep white for primary buttons (colored background)
         case 'secondary':
-          return '#ffffff';
+          return colors.text; // Use theme text color for secondary buttons
         default:
-          return '#ffffff';
+          return colors.text; // Use theme text color for default buttons
       }
     };
 
@@ -272,12 +276,12 @@ export default function Header() {
     <>
       <View 
         style={{
-          backgroundColor: '#000000',
+          backgroundColor: colors.background,
           borderBottomWidth: 1,
-          borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-          shadowColor: '#000',
+          borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+          shadowColor: isDark ? '#000' : '#000',
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.8,
+          shadowOpacity: isDark ? 0.8 : 0.1,
           shadowRadius: 8,
           elevation: 4,
           width: '100%',
@@ -313,13 +317,13 @@ export default function Header() {
                   elevation: 4,
                 }}
               >
-                <FontAwesome5 name="flag" size={isMobile ? 16 : 18} color="#ffffff" />
+                <FontAwesome5 name="flag" size={isMobile ? 16 : 18} color={colors.text} />
               </View>
               <View>
                 <Text style={{ 
                   fontSize: isMobile ? 18 : 22, 
                   fontWeight: '700', 
-                  color: '#ffffff',
+                  color: colors.text,
                   lineHeight: isMobile ? 22 : 26,
                   fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                   letterSpacing: 1,
@@ -328,7 +332,7 @@ export default function Header() {
                 </Text>
                 <Text style={{ 
                   fontSize: isMobile ? 10 : 11, 
-                  color: 'rgba(255, 255, 255, 0.7)',
+                  color: colors.textSecondary,
                   fontWeight: '500',
                   letterSpacing: 0.5,
                   textTransform: 'uppercase',
@@ -342,6 +346,7 @@ export default function Header() {
             {/* Desktop Navigation */}
             {!isMobile && (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                
                 {!isAuthenticated ? (
                   // Unauthenticated navigation
                   <>
@@ -365,6 +370,23 @@ export default function Header() {
                   </NavButton>
                   </>
                 )}
+                {/* Theme Toggle */}
+                <TouchableOpacity
+                  onPress={toggleTheme}
+                  style={{
+                    marginRight: 16,
+                    padding: 8,
+                    borderRadius: 20,
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
+                  }}
+                >
+                  <Ionicons 
+                    name={isDark ? "moon" : "sunny"} 
+                    size={20} 
+                    color={colors.text} 
+                  />
+                </TouchableOpacity>
                 </View>
             )}
 
@@ -395,7 +417,7 @@ export default function Header() {
                   <Ionicons 
                     name={isMobileMenuOpen ? "close" : "menu"} 
                     size={24} 
-                    color={isMobileMenuOpen ? '#ffffff' : 'rgba(255, 255, 255, 0.8)'} 
+                    color={isMobileMenuOpen ? colors.text : colors.textSecondary}
                   />
                 </Animated.View>
               </TouchableOpacity>
@@ -408,14 +430,14 @@ export default function Header() {
       {isMobile && (
         <Animated.View
           style={{
-            backgroundColor: '#000000',
+            backgroundColor: colors.background,
             borderBottomWidth: 1,
-            borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+            borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
             paddingHorizontal: 16,
             paddingTop: 8,
-            shadowColor: '#000',
+            shadowColor: isDark ? '#000' : '#000',
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.8,
+            shadowOpacity: isDark ? 0.8 : 0.1,
             shadowRadius: 12,
             elevation: 8,
             maxHeight: slideAnim.interpolate({
@@ -452,6 +474,41 @@ export default function Header() {
                 marginHorizontal: -16,
               }}
             />
+            
+            {/* Theme Toggle for Mobile */}
+            <TouchableOpacity
+              onPress={toggleTheme}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 16,
+                paddingHorizontal: 20,
+                marginHorizontal: -16,
+                marginBottom: 8,
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                borderRadius: 12,
+              }}
+            >
+              <Ionicons 
+                name={isDark ? "moon" : "sunny"} 
+                size={20} 
+                color={colors.text}
+                style={{ marginRight: 16 }}
+              />
+              <Text style={{
+                fontSize: 16,
+                fontWeight: '500',
+                color: colors.text,
+                flex: 1,
+              }}>
+                {isDark ? 'Dark Mode' : 'Light Mode'}
+              </Text>
+              <Ionicons 
+                name="chevron-forward" 
+                size={16} 
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
             
             {!isAuthenticated ? (
               // Unauthenticated mobile navigation with staggered animations

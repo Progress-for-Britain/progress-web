@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { AuthProvider } from "../util/auth-context";
+import { ThemeProvider } from "../util/theme-context";
 
 function RootLayoutNav() {
   return (
@@ -80,8 +81,10 @@ function RootLayoutNav() {
 
 export default function Layout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

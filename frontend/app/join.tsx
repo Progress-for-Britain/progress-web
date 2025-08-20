@@ -15,9 +15,16 @@ import { useAuth } from '../util/auth-context';
 import { api } from '../util/api';
 import Header from '../components/Header';
 import { AuroraBackground } from '../util/auroraComponents';
-import { commonStyles, colors, gradients } from '../util/commonStyles';
+import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
+import { useTheme } from '../util/theme-context';
 
 export default function Join() {
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  const gradients = getGradients(isDark);
+  const commonStyles = getCommonStyles(isDark);
+  const styles = getStyles(colors);
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -437,7 +444,7 @@ export default function Join() {
   return (
     <View style={commonStyles.appContainer}>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       
       {/* Header */}
       <Header />
@@ -1379,7 +1386,7 @@ export default function Join() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   successContainer: {
     backgroundColor: colors.surface,
     marginHorizontal: 20,
@@ -1436,12 +1443,12 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderWidth: 2,
-    borderColor: `${colors.text}30`,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}40` : `${colors.text}30`,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    backgroundColor: `${colors.surface}60`,
+    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}80` : `${colors.surface}60`,
     color: colors.text,
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
@@ -1486,14 +1493,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   formContainer: {
-    backgroundColor: `${colors.surface}80`,
+    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
     borderRadius: 24,
     padding: 40,
     maxWidth: 700,
     alignSelf: 'center',
     width: '100%',
     borderWidth: 1,
-    borderColor: `${colors.text}20`,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
     position: 'relative',
     zIndex: 2,
     ...(Platform.OS === 'web' && {
@@ -1573,9 +1580,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   interestTag: {
-    backgroundColor: `${colors.surface}40`,
+    backgroundColor: colors.background === '#ffffff' ? `${colors.text}08` : `${colors.surface}40`,
     borderWidth: 2,
-    borderColor: `${colors.text}30`,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -1590,23 +1597,24 @@ const styles = StyleSheet.create({
   },
   interestTagText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: colors.text,
+    fontWeight: '600',
+    color: colors.background === '#ffffff' ? colors.text : colors.text,
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
   },
   interestTagTextSelected: {
-    color: colors.text,
+    color: '#ffffff',
+    fontWeight: '600',
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: `${colors.surface}40`,
+    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}60` : `${colors.surface}40`,
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,
-    borderColor: `${colors.text}20`,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
     ...(Platform.OS === 'web' && { 
       cursor: 'pointer',
       transition: 'all 0.2s ease',
@@ -1734,9 +1742,9 @@ const styles = StyleSheet.create({
   yesNoButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: `${colors.surface}40`,
+    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}60` : `${colors.surface}40`,
     borderWidth: 2,
-    borderColor: `${colors.text}30`,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}40` : `${colors.text}30`,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -1751,23 +1759,24 @@ const styles = StyleSheet.create({
   },
   yesNoButtonText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.text,
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
   },
   yesNoButtonTextSelected: {
-    color: colors.text,
+    color: '#ffffff',
+    fontWeight: '600',
   },
   textArea: {
     minHeight: 100,
     textAlignVertical: 'top',
   },
   volunteerInterestTag: {
-    backgroundColor: `${colors.surface}40`,
+    backgroundColor: colors.background === '#ffffff' ? `${colors.text}08` : `${colors.surface}40`,
     borderWidth: 2,
-    borderColor: `${colors.text}30`,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1782,19 +1791,20 @@ const styles = StyleSheet.create({
   },
   volunteerInterestTagText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.text,
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
   },
   volunteerInterestTagTextSelected: {
-    color: colors.text,
+    color: '#ffffff',
+    fontWeight: '600',
   },
   contributionTag: {
-    backgroundColor: `${colors.surface}40`,
+    backgroundColor: colors.background === '#ffffff' ? `${colors.text}08` : `${colors.surface}40`,
     borderWidth: 2,
-    borderColor: `${colors.text}30`,
+    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1809,14 +1819,15 @@ const styles = StyleSheet.create({
   },
   contributionTagText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.text,
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
   },
   contributionTagTextSelected: {
-    color: colors.text,
+    color: '#ffffff',
+    fontWeight: '600',
   },
   checkboxContainer: {
     flexDirection: 'row',

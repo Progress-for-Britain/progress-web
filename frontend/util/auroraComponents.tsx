@@ -8,13 +8,14 @@ import Animated, {
   withTiming,
   interpolate,
 } from 'react-native-reanimated';
-import { injectWebAuroraStyles } from './commonStyles';
+import { injectWebAuroraStyles, getGradients } from './commonStyles';
+import { useTheme } from './theme-context';
 
 // Web-specific aurora component
-export const WebAurora = () => {
+export const WebAurora = ({ isDark = true }: { isDark?: boolean }) => {
   useEffect(() => {
-    return injectWebAuroraStyles();
-  }, []);
+    return injectWebAuroraStyles(isDark);
+  }, [isDark]);
 
   if (Platform.OS === 'web') {
     return (
@@ -63,7 +64,9 @@ export const useAuroraAnimation = () => {
 
 // Common aurora background component
 export const AuroraBackground = () => {
+  const { isDark } = useTheme();
   const { auroraAnimatedStyle } = useAuroraAnimation();
+  const gradients = getGradients(isDark);
 
   return (
     <View style={{ 
@@ -74,11 +77,11 @@ export const AuroraBackground = () => {
       height: '100%', 
       overflow: 'hidden', 
       zIndex: 1, 
-      opacity: 0.3,
+      opacity: isDark ? 0.3 : 0.4,
       ...(Platform.OS === 'web' && { pointerEvents: 'none' as any }),
     }}>
       {/* Web-specific aurora with original CSS effects */}
-      <WebAurora />
+      <WebAurora isDark={isDark} />
       
       {/* Mobile-friendly aurora using React Native components */}
       {Platform.OS !== 'web' && (
@@ -90,7 +93,7 @@ export const AuroraBackground = () => {
           bottom: -20,
         }, auroraAnimatedStyle]}>
           <LinearGradient
-            colors={['#012168', '#123995', '#2854b0', '#3a66c5', '#012168']}
+            colors={gradients.aurora}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -99,11 +102,14 @@ export const AuroraBackground = () => {
               left: 0,
               right: 0,
               bottom: 0,
-              opacity: 0.6,
+              opacity: isDark ? 0.6 : 0.7,
             }}
           />
           <LinearGradient
-            colors={['transparent', '#ffffff20', 'transparent', '#ffffff20', 'transparent']}
+            colors={isDark 
+              ? ['transparent', '#ffffff20', 'transparent', '#ffffff20', 'transparent']
+              : ['transparent', '#00000025', 'transparent', '#00000025', 'transparent']
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={{
@@ -112,7 +118,7 @@ export const AuroraBackground = () => {
               left: 0,
               right: 0,
               bottom: 0,
-              opacity: 0.4,
+              opacity: isDark ? 0.4 : 0.5,
             }}
           />
         </Animated.View>

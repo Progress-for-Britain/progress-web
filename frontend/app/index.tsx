@@ -3,9 +3,14 @@ import { View, Text, Platform, StyleSheet } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import { AuroraBackground } from '../util/auroraComponents';
-import { commonStyles, colors, gradients } from '../util/commonStyles';
+import { getCommonStyles, getGradients } from '../util/commonStyles';
+import { useTheme } from '../util/theme-context';
 
 export default function Home() {
+  const { isDark } = useTheme();
+  const commonStyles = getCommonStyles(isDark);
+  const gradients = getGradients(isDark);
+  
   return (
     <View style={commonStyles.appContainer}>
       {/* Header Component */}
