@@ -101,10 +101,10 @@ export default function Login() {
             <Animated.View 
               style={{ 
                 backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 16,
-                padding: 32,
+                borderRadius: 20,
+                padding: 40,
                 width: '100%',
-                maxWidth: 400,
+                maxWidth: 500,
                 shadowColor: isDark ? colors.accent : '#000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: isDark ? 0.3 : 0.1,
@@ -124,15 +124,15 @@ export default function Login() {
                 ]
               }}
             >
-              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: 28 }]}>
+              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: 32 }]}>
                 Welcome Back
               </Text>
               <Text 
                 style={{ 
-                  fontSize: 16,
+                  fontSize: 18,
                   color: colors.textSecondary,
                   textAlign: 'center',
-                  marginBottom: 32,
+                  marginBottom: 40,
                   ...(Platform.OS === 'web' && {
                     fontFamily: "'Montserrat', sans-serif",
                   }),
@@ -141,8 +141,8 @@ export default function Login() {
                 Sign in to your Progress account
               </Text>
 
-            <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 18, fontWeight: '500', color: colors.text, marginBottom: 10, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Email
               </Text>
               <TextInput
@@ -159,10 +159,10 @@ export default function Login() {
                 style={{
                   borderWidth: 1,
                   borderColor: emailFocused || email ? colors.accent : colors.border,
-                  borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  fontSize: 16,
+                  borderRadius: 10,
+                  paddingHorizontal: 18,
+                  paddingVertical: 16,
+                  fontSize: 18,
                   backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
                   color: colors.text,
                   ...(Platform.OS === 'web' && { 
@@ -175,8 +175,8 @@ export default function Login() {
               />
             </View>
 
-            <View style={{ marginBottom: 24 }}>
-              <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+            <View style={{ marginBottom: 28 }}>
+              <Text style={{ fontSize: 18, fontWeight: '500', color: colors.text, marginBottom: 10, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Password
               </Text>
               <View style={{ position: 'relative' }}>
@@ -193,11 +193,11 @@ export default function Login() {
                   style={{
                     borderWidth: 1,
                     borderColor: passwordFocused || password ? colors.accent : colors.border,
-                    borderRadius: 8,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    paddingRight: 48,
-                    fontSize: 16,
+                    borderRadius: 10,
+                    paddingHorizontal: 18,
+                    paddingVertical: 16,
+                    paddingRight: 55,
+                    fontSize: 18,
                     backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
                     color: colors.text,
                     ...(Platform.OS === 'web' && { 
@@ -212,17 +212,17 @@ export default function Login() {
                   onPress={() => setIsPasswordVisible(!isPasswordVisible)}
                   style={{
                     position: 'absolute',
-                    right: 12,
+                    right: 15,
                     top: '50%',
                     transform: [{ translateY: -12 }],
-                    padding: 4,
+                    padding: 6,
                     ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
                   }}
                   activeOpacity={0.6}
                 >
                   <Ionicons
                     name={isPasswordVisible ? 'eye' : 'eye-off'}
-                    size={20}
+                    size={22}
                     color={colors.textSecondary}
                   />
                 </TouchableOpacity>
@@ -230,17 +230,17 @@ export default function Login() {
             </View>
 
             <TouchableOpacity
-              style={{ alignSelf: 'flex-end', marginBottom: 24 }}
+              style={{ alignSelf: 'flex-end', marginBottom: 28 }}
             >
-              <Text style={{ color: colors.accent, fontSize: 14, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              <Text style={{ color: colors.accent, fontSize: 16, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Forgot Password?
               </Text>
             </TouchableOpacity>
 
             <View
               style={{
-                marginBottom: 16,
-                borderRadius: 8,
+                marginBottom: 20,
+                borderRadius: 10,
                 ...(Platform.OS === 'ios' && !isLoading && {
                   shadowColor: colors.accent,
                   shadowOffset: { width: 0, height: 4 },
@@ -262,7 +262,7 @@ export default function Login() {
                 }}
                 disabled={isLoading}
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 10,
                   overflow: 'hidden',
                   ...(Platform.OS === 'web' && { 
                     cursor: isLoading ? 'not-allowed' : 'pointer',
@@ -275,14 +275,14 @@ export default function Login() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{
-                    paddingVertical: 16,
+                    paddingVertical: 18,
                     alignItems: 'center',
                   }}
                 >
                   <Text 
                     style={{ 
                       color: '#ffffff',
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: '600',
                       textAlign: 'center',
                       ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
@@ -295,10 +295,10 @@ export default function Login() {
             </View>
 
             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: colors.textSecondary, fontSize: 16, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 18, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Don't have an account?{' '}
               </Text>
-              <Link href="/register" style={{ color: colors.accent, fontSize: 16, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              <Link href="/register" style={{ color: colors.accent, fontSize: 18, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Sign up
               </Link>
             </View>
