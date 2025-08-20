@@ -1,20 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, Platform, ScrollView, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, Platform, ScrollView, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
   withTiming, 
   withSpring,
-  withRepeat,
-  interpolate,
-  Extrapolate
+  withRepeat
 } from "react-native-reanimated";
 import Header from '../components/Header';
+import { AuroraBackground } from '../util/auroraComponents';
+import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
+import { useTheme } from '../util/theme-context';
+import useResponsive from '../util/useResponsive';
 
 export default function Donate() {
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  const gradients = getGradients(isDark);
+  const commonStyles = getCommonStyles(isDark);
+  const { isMobile, width } = useResponsive();
+  const styles = getStyles(colors, isMobile, width);
+  
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [frequency, setFrequency] = useState<'one-time' | 'monthly'>('one-time');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,27 +32,16 @@ export default function Donate() {
   // Animation values
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(30);
-  const rotateAnim = useSharedValue(0);
 
   useEffect(() => {
     // Animate elements on mount
     fadeAnim.value = withTiming(1, { duration: 800 });
     slideAnim.value = withSpring(0, { damping: 15 });
-    
-    // Rotation animation for decorative elements
-    rotateAnim.value = withRepeat(
-      withTiming(360, { duration: 25000 }),
-      -1
-    );
   }, []);
 
   const fadeInStyle = useAnimatedStyle(() => ({
     opacity: fadeAnim.value,
     transform: [{ translateY: slideAnim.value }],
-  }));
-
-  const rotateStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotateAnim.value}deg` }],
   }));
 
   const donationAmounts = [25, 50, 100, 250, 500, 1000];
@@ -58,7 +57,7 @@ export default function Donate() {
       // In a real app, this would integrate with a payment processor
       Alert.alert(
         'Thank You!', 
-        `Your ${frequency} donation of $${selectedAmount} is being processed. You will be redirected to our secure payment processor.`,
+        `Your ${frequency} donation of £${selectedAmount} is being processed. You will be redirected to our secure payment processor.`,
         [{ text: 'OK' }]
       );
     } catch (error) {
@@ -83,42 +82,26 @@ export default function Donate() {
       buttonAnim.value = withSpring(1);
     };
 
+    const isSelected = selectedAmount === amount;
+
     return (
       <TouchableOpacity
         onPress={() => setSelectedAmount(amount)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={{
-          backgroundColor: selectedAmount === amount ? '#d946ef' : '#ffffff',
-          borderWidth: 2,
-          borderColor: selectedAmount === amount ? '#d946ef' : '#e5e7eb',
-          borderRadius: 16,
-          paddingVertical: 20,
-          paddingHorizontal: 24,
-          marginBottom: 12,
-          marginHorizontal: 6,
-          flex: 1,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: selectedAmount === amount ? 6 : 2 },
-          shadowOpacity: selectedAmount === amount ? 0.15 : 0.05,
-          shadowRadius: selectedAmount === amount ? 12 : 6,
-          elevation: selectedAmount === amount ? 8 : 3,
-          ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
-        }}
+        style={[
+          styles.amountButton,
+          isSelected && styles.amountButtonSelected
+        ]}
       >
-        <Animated.View style={[{ alignItems: 'center' }, animatedStyle]}>
-          <Text 
-            style={{ 
-              fontSize: 24,
-              fontWeight: '700',
-              textAlign: 'center',
-              color: selectedAmount === amount ? '#ffffff' : '#374151',
-              marginBottom: 4
-            }}
-          >
+        <Animated.View style={[styles.amountButtonContent, animatedStyle]}>
+          <Text style={[
+            styles.amountButtonText,
+            isSelected && styles.amountButtonTextSelected
+          ]}>
             £{amount}
           </Text>
-          {selectedAmount === amount && (
+          {isSelected && (
             <Ionicons name="checkmark-circle" size={20} color="#ffffff" />
           )}
         </Animated.View>
@@ -141,43 +124,29 @@ export default function Donate() {
       buttonAnim.value = withSpring(1);
     };
 
+    const isSelected = frequency === freq;
+
     return (
       <TouchableOpacity
         onPress={() => setFrequency(freq)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={{
-          backgroundColor: frequency === freq ? '#d946ef' : '#ffffff',
-          borderWidth: 2,
-          borderColor: frequency === freq ? '#d946ef' : '#e5e7eb',
-          borderRadius: 16,
-          paddingVertical: 16,
-          paddingHorizontal: 24,
-          marginHorizontal: 8,
-          flex: 1,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: frequency === freq ? 4 : 2 },
-          shadowOpacity: frequency === freq ? 0.1 : 0.05,
-          shadowRadius: frequency === freq ? 8 : 4,
-          elevation: frequency === freq ? 6 : 2,
-          ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
-        }}
+        style={[
+          styles.frequencyButton,
+          isSelected && styles.frequencyButtonSelected
+        ]}
       >
-        <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }, animatedStyle]}>
+        <Animated.View style={[styles.frequencyButtonContent, animatedStyle]}>
           <Ionicons 
             name={icon as any} 
             size={20} 
-            color={frequency === freq ? '#ffffff' : '#6B7280'} 
+            color={isSelected ? '#ffffff' : colors.textSecondary} 
             style={{ marginRight: 8 }} 
           />
-          <Text 
-            style={{ 
-              fontSize: 16,
-              fontWeight: '600',
-              textAlign: 'center',
-              color: frequency === freq ? '#ffffff' : '#374151'
-            }}
-          >
+          <Text style={[
+            styles.frequencyButtonText,
+            isSelected && styles.frequencyButtonTextSelected
+          ]}>
             {label}
           </Text>
         </Animated.View>
@@ -188,416 +157,669 @@ export default function Donate() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="light" />
-      <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={commonStyles.appContainer}>
+        {/* Header Component */}
         <Header />
         
+        {/* Background aurora effect */}
+        <AuroraBackground />
+
+        {/* Donate Page Content */}
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          {/* Hero Section with Background Image */}
-          <ImageBackground
-            source={{ 
-              uri: 'https://images.unsplash.com/photo-1559166631-ef208440c75a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'
-            }}
-            style={{ 
-              paddingVertical: 80,
-              paddingHorizontal: 20,
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-            resizeMode="cover"
-          >
-            {/* Dark overlay for better text readability */}
-            <View 
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(30, 41, 59, 0.75)',
-              }}
-            />
-
-            {/* Animated Background Elements */}
-            <Animated.View 
-              style={[
-                {
-                  position: 'absolute',
-                  top: 40,
-                  right: 40,
-                  width: 80,
-                  height: 80,
-                  backgroundColor: 'rgba(217, 70, 239, 0.2)',
-                  borderRadius: 40,
-                },
-                rotateStyle
-              ]}
-            />
-
+          <View style={commonStyles.content}>
             <Animated.View style={fadeInStyle}>
-              <View style={{ alignItems: 'center', maxWidth: 700 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-                  <FontAwesome5 name="heart" size={28} color="#ffffff" style={{ marginRight: 12 }} />
-                  <Text 
-                    style={{ 
-                      fontSize: 16,
-                      fontWeight: '600',
-                      color: '#f0f9ff',
-                      letterSpacing: 1.5,
-                      textTransform: 'uppercase'
-                    }}
+              {/* Hero Section */}
+              <View style={styles.heroContainer}>
+                <View style={styles.highlightContainer}>
+                  <LinearGradient
+                    colors={gradients.primary}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={commonStyles.highlightBackground}
                   >
-                    Support Progress
-                  </Text>
+                    <Text style={commonStyles.highlightText}>Support Progress UK</Text>
+                  </LinearGradient>
                 </View>
                 
-                <Text 
-                  style={{ 
-                    fontSize: Platform.OS === 'web' ? 48 : 32,
-                    fontWeight: 'bold',
-                    color: '#ffffff',
-                    textAlign: 'center',
-                    marginBottom: 20,
-                    lineHeight: Platform.OS === 'web' ? 56 : 40,
-                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                    textShadowOffset: { width: 0, height: 2 },
-                    textShadowRadius: 4,
-                  }}
-                >
+                <Text style={[commonStyles.title, { 
+                  fontSize: isMobile ? 32 : 48, 
+                  marginBottom: 20,
+                  textAlign: 'center',
+                  paddingHorizontal: isMobile ? 16 : 0
+                }]}>
                   Invest in Britain's Future
                 </Text>
                 
-                <Text 
-                  style={{ 
-                    fontSize: 18,
-                    color: '#e0f2fe',
-                    textAlign: 'center',
-                    lineHeight: 28,
-                    maxWidth: 600,
-                    marginBottom: 30
-                  }}
-                >
-                  Power our campaigns for unicorn farms, prosperity zones, and policies that unleash innovation across every region of Britain.
+                <Text style={[commonStyles.text, { 
+                  fontSize: isMobile ? 16 : 18, 
+                  marginBottom: 32, 
+                  lineHeight: isMobile ? 24 : 28, 
+                  maxWidth: isMobile ? width - 32 : 600,
+                  textAlign: 'center',
+                  paddingHorizontal: isMobile ? 16 : 0
+                }]}>
+                  Power our campaigns for unicorn farms, prosperity zones, and policies that unleash innovation across every region of Britain. Every contribution fuels progress across the UK.
                 </Text>
 
-                {/* Key impact stats */}
-                <View style={{ 
-                  flexDirection: Platform.OS === 'web' ? 'row' : 'column',
-                  gap: 20,
-                  alignItems: 'center',
-                  marginBottom: 20
-                }}>
-                  <View style={{ alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 12, padding: 16, minWidth: 140 }}>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#ffffff' }}>£2.1M</Text>
-                    <Text style={{ fontSize: 14, color: '#cbd5e1', textAlign: 'center' }}>Raised to Date</Text>
-                  </View>
-                  <View style={{ alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 12, padding: 16, minWidth: 140 }}>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#ffffff' }}>15K+</Text>
-                    <Text style={{ fontSize: 14, color: '#cbd5e1', textAlign: 'center' }}>Active Donors</Text>
-                  </View>
-                  <View style={{ alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 12, padding: 16, minWidth: 140 }}>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#ffffff' }}>98%</Text>
-                    <Text style={{ fontSize: 14, color: '#cbd5e1', textAlign: 'center' }}>Direct Impact</Text>
-                  </View>
-                </View>
-              </View>
-            </Animated.View>
-          </ImageBackground>
-
-          {/* Donation Form */}
-          <View style={{ maxWidth: 700, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 60 }}>
-            <Animated.View 
-              style={[
-                { 
-                  backgroundColor: '#ffffff',
-                  borderRadius: 24,
-                  padding: 40,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.12,
-                  shadowRadius: 20,
-                  elevation: 12
-                },
-                fadeInStyle
-              ]}
-            >
-              <View style={{ alignItems: 'center', marginBottom: 32 }}>
-                <View 
-                  style={{
-                    backgroundColor: '#d946ef20',
-                    borderRadius: 16,
-                    padding: 16,
-                    marginBottom: 16,
-                  }}
-                >
-                  <MaterialIcons name="volunteer-activism" size={32} color="#d946ef" />
-                </View>
-                <Text 
-                  style={{ 
-                    fontSize: 28,
-                    fontWeight: 'bold',
-                    color: '#111827',
-                    textAlign: 'center',
-                    marginBottom: 8
-                  }}
-                >
-                  Make Your Contribution
-                </Text>
-                <Text 
-                  style={{ 
-                    fontSize: 16,
-                    color: '#6B7280',
-                    textAlign: 'center',
-                    lineHeight: 24
-                  }}
-                >
-                  Every contribution fuels innovation and progress across Britain
-                </Text>
-              </View>
-
-              {/* Frequency Selection */}
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 16 }}>
-                <Ionicons name="time" size={18} color="#6B7280" style={{ marginRight: 8 }} />
-                Donation Frequency
-              </Text>
-              <View style={{ flexDirection: 'row', marginBottom: 32 }}>
-                <FrequencyButton freq="one-time" label="One-time" icon="flash" />
-                <FrequencyButton freq="monthly" label="Monthly" icon="refresh" />
-              </View>
-
-              {/* Amount Selection */}
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 16 }}>
-                <Ionicons name="card" size={18} color="#6B7280" style={{ marginRight: 8 }} />
-                Select Amount
-              </Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 32 }}>
-                {donationAmounts.map((amount) => (
-                  <View key={amount} style={{ width: '33.33%', paddingHorizontal: 4 }}>
-                    <AmountButton amount={amount} />
-                  </View>
-                ))}
-              </View>
-
-              {/* Impact Description */}
-              {selectedAmount && (
-                <View 
-                  style={{ 
-                    backgroundColor: '#f0fdf4',
-                    borderLeftWidth: 4,
-                    borderLeftColor: '#10b981',
-                    borderRadius: 16,
-                    padding: 20,
-                    marginBottom: 32
-                  }}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                    <View 
-                      style={{
-                        backgroundColor: '#10b981',
-                        borderRadius: 12,
-                        padding: 8,
-                        marginRight: 12,
-                      }}
-                    >
-                      <Ionicons name="analytics" size={20} color="#ffffff" />
-                    </View>
-                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#166534' }}>
-                      Your Impact: £{selectedAmount} {frequency}
-                    </Text>
-                  </View>
-                  <Text style={{ fontSize: 15, color: '#15803d', lineHeight: 22 }}>
-                    {selectedAmount >= 500 ? 
-                      "Powers a full innovation hub deployment in a prosperity zone for one month" :
-                      selectedAmount >= 250 ?
-                      "Funds skills training programs for 50+ workers in emerging technologies" :
-                      selectedAmount >= 100 ?
-                      "Supports unicorn farm startup incubation and mentorship programs" :
-                      "Helps fund community engagement events and digital infrastructure"
-                    }
+                <View style={styles.benefitsRow}>
+                  <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+                  <Text style={[commonStyles.text, { marginLeft: 8 }]}>
+                    Secure donations • Full transparency • 98% direct impact
                   </Text>
                 </View>
-              )}
+              </View>
 
-              {/* Donate Button */}
-              <TouchableOpacity
-                onPress={handleDonate}
-                disabled={!selectedAmount || isLoading}
-                style={{
-                  backgroundColor: (!selectedAmount || isLoading) ? '#9CA3AF' : '#d946ef',
-                  borderRadius: 16,
-                  paddingVertical: 20,
-                  marginBottom: 20,
-                  shadowColor: '#d946ef',
-                  shadowOffset: { width: 0, height: (!selectedAmount || isLoading) ? 0 : 6 },
-                  shadowOpacity: (!selectedAmount || isLoading) ? 0 : 0.3,
-                  shadowRadius: (!selectedAmount || isLoading) ? 0 : 12,
-                  elevation: (!selectedAmount || isLoading) ? 0 : 8,
-                  ...(Platform.OS === 'web' && { cursor: (!selectedAmount || isLoading) ? 'not-allowed' : 'pointer' } as any)
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                  {!isLoading && (
-                    <FontAwesome5 name="heart" size={18} color="#ffffff" style={{ marginRight: 12 }} />
-                  )}
-                  <Text 
-                    style={{ 
-                      color: '#ffffff',
-                      fontSize: 18,
-                      fontWeight: '700',
-                      textAlign: 'center'
+              {/* Key Impact Stats */}
+              <View style={styles.statsContainer}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>£2.1M</Text>
+                  <Text style={styles.statLabel}>Raised to Date</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>15K+</Text>
+                  <Text style={styles.statLabel}>Active Donors</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>98%</Text>
+                  <Text style={styles.statLabel}>Direct Impact</Text>
+                </View>
+              </View>
+
+              {/* Donation Form */}
+              <View style={styles.donationForm}>
+                <View style={styles.formHeader}>
+                  <LinearGradient
+                    colors={gradients.accent}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      borderRadius: 20,
+                      padding: 16,
+                      marginBottom: 16,
                     }}
                   >
-                    {isLoading ? 'Processing...' : `Donate £${selectedAmount || 0} ${frequency}`}
+                    <MaterialIcons name="volunteer-activism" size={32} color={colors.text} />
+                  </LinearGradient>
+                  <Text style={styles.formTitle}>Make Your Contribution</Text>
+                  <Text style={styles.formSubtitle}>Choose your donation frequency and amount below</Text>
+                </View>
+
+                {/* Frequency Selection */}
+                <Text style={styles.sectionTitle}>
+                  <Ionicons name="time" size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
+                  Donation Frequency
+                </Text>
+                <View style={styles.frequencyContainer}>
+                  <FrequencyButton freq="one-time" label="One-time" icon="flash" />
+                  <FrequencyButton freq="monthly" label="Monthly" icon="refresh" />
+                </View>
+
+                {/* Amount Selection */}
+                <Text style={styles.sectionTitle}>
+                  <Ionicons name="card" size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
+                  Select Amount
+                </Text>
+                <View style={styles.amountsContainer}>
+                  {donationAmounts.map((amount) => (
+                    <View key={amount} style={styles.amountButtonWrapper}>
+                      <AmountButton amount={amount} />
+                    </View>
+                  ))}
+                </View>
+
+                {/* Impact Description */}
+                {selectedAmount && (
+                  <View style={styles.impactContainer}>
+                    <View style={styles.impactHeader}>
+                      <View style={styles.impactIconContainer}>
+                        <Ionicons name="analytics" size={20} color="#ffffff" />
+                      </View>
+                      <Text style={styles.impactTitle}>
+                        Your Impact: £{selectedAmount} {frequency}
+                      </Text>
+                    </View>
+                    <Text style={styles.impactDescription}>
+                      {selectedAmount >= 500 ? 
+                        "Powers a full innovation hub deployment in a prosperity zone for one month" :
+                        selectedAmount >= 250 ?
+                        "Funds skills training programs for 50+ workers in emerging technologies" :
+                        selectedAmount >= 100 ?
+                        "Supports unicorn farm startup incubation and mentorship programs" :
+                        "Helps fund community engagement events and digital infrastructure"
+                      }
+                    </Text>
+                  </View>
+                )}
+
+                {/* Donate Button */}
+                <TouchableOpacity
+                  onPress={handleDonate}
+                  disabled={!selectedAmount || isLoading}
+                  style={[
+                    styles.donateButton,
+                    (!selectedAmount || isLoading) && styles.donateButtonDisabled
+                  ]}
+                >
+                  <LinearGradient
+                    colors={(!selectedAmount || isLoading) ? [colors.textSecondary, colors.textSecondary] : gradients.accent}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.donateButtonGradient}
+                  >
+                    <View style={styles.donateButtonContent}>
+                      {!isLoading && (
+                        <FontAwesome5 name="heart" size={18} color="#ffffff" style={{ marginRight: 12 }} />
+                      )}
+                      <Text style={styles.donateButtonText}>
+                        {isLoading ? 'Processing...' : `Donate £${selectedAmount || 0} ${frequency}`}
+                      </Text>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <View style={styles.securityNote}>
+                  <Ionicons name="shield-checkmark" size={16} color={colors.success} style={{ marginRight: 8 }} />
+                  <Text style={styles.securityText}>
+                    Secure, encrypted, and GDPR compliant processing
                   </Text>
                 </View>
-              </TouchableOpacity>
+              </View>
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="shield-checkmark" size={16} color="#10b981" style={{ marginRight: 8 }} />
-                <Text style={{ fontSize: 12, color: '#6B7280', textAlign: 'center', lineHeight: 18 }}>
-                  Secure, encrypted, and GDPR compliant processing
-                </Text>
+              {/* Why Donate Section */}
+              <View style={styles.whyDonateSection}>
+                <View style={styles.whyDonateHeader}>
+                  <View style={styles.highlightContainer}>
+                    <LinearGradient
+                      colors={gradients.primary}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={commonStyles.highlightBackground}
+                    >
+                      <Text style={commonStyles.highlightText}>Your Investment Matters</Text>
+                    </LinearGradient>
+                  </View>
+                  <Text style={styles.whyDonateTitle}>Power Britain's Progressive Future</Text>
+                  <Text style={styles.whyDonateSubtitle}>
+                    Every pound you contribute directly powers Britain's innovation economy and progressive policies
+                  </Text>
+                </View>
+                
+                <View style={styles.causesContainer}>
+                  <View style={[styles.causeItem, { borderLeftColor: colors.accent }]}>
+                    <LinearGradient
+                      colors={[`${colors.accent}20`, `${colors.accent}10`]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{ borderRadius: 20, padding: 24, margin: -24, marginBottom: -24 }}
+                    >
+                      <View style={styles.causeHeader}>
+                        <View style={[styles.causeIconContainer, { backgroundColor: `${colors.accent}30` }]}>
+                          <Ionicons name="rocket" size={24} color={colors.accent} />
+                        </View>
+                        <Text style={styles.causeTitle}>Innovation Economy</Text>
+                      </View>
+                      <Text style={styles.causeDescription}>
+                        Fund unicorn farms, tech incubators, and startup ecosystems that position Britain as the global leader in innovation and entrepreneurship.
+                      </Text>
+                    </LinearGradient>
+                  </View>
+                  
+                  <View style={[styles.causeItem, { borderLeftColor: colors.success }]}>
+                    <LinearGradient
+                      colors={[`${colors.success}20`, `${colors.success}10`]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{ borderRadius: 20, padding: 24, margin: -24, marginBottom: -24 }}
+                    >
+                      <View style={styles.causeHeader}>
+                        <View style={[styles.causeIconContainer, { backgroundColor: `${colors.success}30` }]}>
+                          <Ionicons name="business" size={24} color={colors.success} />
+                        </View>
+                        <Text style={styles.causeTitle}>Prosperity Zones</Text>
+                      </View>
+                      <Text style={styles.causeDescription}>
+                        Power Special Economic Zones that give the North its own back, creating high-skilled jobs and rebalancing Britain's economy.
+                      </Text>
+                    </LinearGradient>
+                  </View>
+                  
+                  <View style={[styles.causeItem, { borderLeftColor: colors.warning }]}>
+                    <LinearGradient
+                      colors={[`${colors.warning}20`, `${colors.warning}10`]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{ borderRadius: 20, padding: 24, margin: -24, marginBottom: -24 }}
+                    >
+                      <View style={styles.causeHeader}>
+                        <View style={[styles.causeIconContainer, { backgroundColor: `${colors.warning}30` }]}>
+                          <Ionicons name="school" size={24} color={colors.warning} />
+                        </View>
+                        <Text style={styles.causeTitle}>Skills Capital</Text>
+                      </View>
+                      <Text style={styles.causeDescription}>
+                        Invest in deep skills training, apprenticeships, and lifelong learning programs that build Britain's human capital for the future economy.
+                      </Text>
+                    </LinearGradient>
+                  </View>
+                </View>
+
+                {/* Transparency Section */}
+                <View style={styles.transparencySection}>
+                  <Ionicons name="bar-chart" size={32} color={colors.success} style={{ marginBottom: 16 }} />
+                  <Text style={styles.transparencyTitle}>Full Financial Transparency</Text>
+                  <Text style={styles.transparencyDescription}>
+                    98% of donations go directly to programs and campaigns. View our detailed financial reports and impact metrics online.
+                  </Text>
+                </View>
               </View>
             </Animated.View>
-          </View>
-
-          {/* Why Donate Section */}
-          <View style={{ backgroundColor: '#1e293b', paddingVertical: 80, paddingHorizontal: 20 }}>
-            <View style={{ maxWidth: 1000, alignSelf: 'center' }}>
-              <View style={{ alignItems: 'center', marginBottom: 60 }}>
-                <MaterialIcons name="trending-up" size={48} color="#d946ef" style={{ marginBottom: 20 }} />
-                <Text 
-                  style={{ 
-                    fontSize: 36,
-                    fontWeight: 'bold',
-                    color: '#ffffff',
-                    textAlign: 'center',
-                    marginBottom: 16
-                  }}
-                >
-                  Why Your Investment Matters
-                </Text>
-                <Text 
-                  style={{ 
-                    fontSize: 18,
-                    color: '#cbd5e1',
-                    textAlign: 'center',
-                    lineHeight: 28,
-                    maxWidth: 600
-                  }}
-                >
-                  Every pound you contribute directly powers Britain's innovation economy and progressive policies
-                </Text>
-              </View>
-              
-              <View style={{ flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 24 }}>
-                <View style={{ 
-                  flex: 1, 
-                  backgroundColor: '#334155', 
-                  borderRadius: 20, 
-                  padding: 30,
-                  borderLeftWidth: 4,
-                  borderLeftColor: '#d946ef'
-                }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                    <View 
-                      style={{
-                        backgroundColor: '#d946ef20',
-                        borderRadius: 12,
-                        padding: 12,
-                        marginRight: 16,
-                      }}
-                    >
-                      <Ionicons name="rocket" size={24} color="#d946ef" />
-                    </View>
-                    <Text style={{ fontSize: 20, fontWeight: '700', color: '#ffffff' }}>
-                      Innovation Economy
-                    </Text>
-                  </View>
-                  <Text style={{ color: '#cbd5e1', lineHeight: 24, fontSize: 15 }}>
-                    Fund unicorn farms, tech incubators, and startup ecosystems that position Britain as the global leader in innovation and entrepreneurship.
-                  </Text>
-                </View>
-                
-                <View style={{ 
-                  flex: 1, 
-                  backgroundColor: '#334155', 
-                  borderRadius: 20, 
-                  padding: 30,
-                  borderLeftWidth: 4,
-                  borderLeftColor: '#10b981'
-                }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                    <View 
-                      style={{
-                        backgroundColor: '#10b98120',
-                        borderRadius: 12,
-                        padding: 12,
-                        marginRight: 16,
-                      }}
-                    >
-                      <Ionicons name="business" size={24} color="#10b981" />
-                    </View>
-                    <Text style={{ fontSize: 20, fontWeight: '700', color: '#ffffff' }}>
-                      Prosperity Zones
-                    </Text>
-                  </View>
-                  <Text style={{ color: '#cbd5e1', lineHeight: 24, fontSize: 15 }}>
-                    Power Special Economic Zones that give the North its own back, creating high-skilled jobs and rebalancing Britain's economy.
-                  </Text>
-                </View>
-                
-                <View style={{ 
-                  flex: 1, 
-                  backgroundColor: '#334155', 
-                  borderRadius: 20, 
-                  padding: 30,
-                  borderLeftWidth: 4,
-                  borderLeftColor: '#f59e0b'
-                }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                    <View 
-                      style={{
-                        backgroundColor: '#f59e0b20',
-                        borderRadius: 12,
-                        padding: 12,
-                        marginRight: 16,
-                      }}
-                    >
-                      <Ionicons name="school" size={24} color="#f59e0b" />
-                    </View>
-                    <Text style={{ fontSize: 20, fontWeight: '700', color: '#ffffff' }}>
-                      Skills Capital
-                    </Text>
-                  </View>
-                  <Text style={{ color: '#cbd5e1', lineHeight: 24, fontSize: 15 }}>
-                    Invest in deep skills training, apprenticeships, and lifelong learning programs that build Britain's human capital for the future economy.
-                  </Text>
-                </View>
-              </View>
-
-              {/* Transparency Section */}
-              <View style={{ 
-                backgroundColor: '#475569', 
-                borderRadius: 16, 
-                padding: 24, 
-                marginTop: 40,
-                alignItems: 'center'
-              }}>
-                <Ionicons name="bar-chart" size={32} color="#10b981" style={{ marginBottom: 16 }} />
-                <Text style={{ fontSize: 18, fontWeight: '600', color: '#ffffff', marginBottom: 12, textAlign: 'center' }}>
-                  Full Financial Transparency
-                </Text>
-                <Text style={{ color: '#cbd5e1', textAlign: 'center', lineHeight: 22 }}>
-                  98% of donations go directly to programs and campaigns. View our detailed financial reports and impact metrics online.
-                </Text>
-              </View>
-            </View>
           </View>
         </ScrollView>
       </View>
     </>
   );
 }
+
+const getStyles = (colors: any, isMobile: boolean, width: number) => {
+  return StyleSheet.create({
+    heroContainer: {
+      alignItems: 'center',
+      marginBottom: isMobile ? 40 : 60,
+      paddingVertical: isMobile ? 20 : 40,
+      paddingHorizontal: isMobile ? 16 : 0,
+    },
+    highlightContainer: {
+      marginBottom: 16,
+    },
+    heroText: {
+      lineHeight: 28,
+      fontSize: 18,
+      textAlign: 'center',
+    },
+    benefitsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    statsContainer: {
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-around',
+      gap: 20,
+      marginBottom: 60,
+      paddingHorizontal: 20,
+    },
+    statItem: {
+      alignItems: 'center',
+      backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
+      borderRadius: 16,
+      padding: 20,
+      minWidth: 140,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
+      ...(Platform.OS === 'web' && {
+        backdropFilter: 'blur(10px)',
+      } as any),
+    },
+    statNumber: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 4,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    statLabel: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    donationForm: {
+      backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
+      borderRadius: isMobile ? 16 : 24,
+      padding: isMobile ? 20 : 40,
+      marginBottom: 60,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
+      maxWidth: isMobile ? width - 32 : 700,
+      alignSelf: 'center',
+      width: '100%',
+      marginHorizontal: isMobile ? 16 : 0,
+      position: 'relative',
+      zIndex: 2,
+      ...(Platform.OS === 'web' && {
+        backdropFilter: 'blur(10px)',
+      } as any),
+    },
+    formHeader: {
+      alignItems: 'center',
+      marginBottom: 32,
+    },
+    iconContainer: {
+      backgroundColor: `${colors.accent}20`,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 16,
+    },
+    formTitle: {
+      fontSize: isMobile ? 24 : 28,
+      fontWeight: 'bold',
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: 8,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    formSubtitle: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 24,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 16,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    frequencyContainer: {
+      flexDirection: 'row',
+      marginBottom: 32,
+      gap: 10,
+    },
+    frequencyButton: {
+      backgroundColor: colors.background === '#ffffff' ? `${colors.text}08` : `${colors.surface}40`,
+      borderWidth: 2,
+      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
+      borderRadius: 16,
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      flex: 1,
+      ...(Platform.OS === 'web' && { 
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      } as any)
+    },
+    frequencyButtonSelected: {
+      backgroundColor: colors.accent,
+      borderColor: colors.accent,
+    },
+    frequencyButtonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    frequencyButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      textAlign: 'center',
+      color: colors.text,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    frequencyButtonTextSelected: {
+      color: '#ffffff',
+    },
+    amountsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginBottom: 32,
+      gap: 8,
+    },
+    amountButtonWrapper: {
+      width: isMobile ? '48%' : '32%',
+    },
+    amountButton: {
+      backgroundColor: colors.background === '#ffffff' ? `${colors.text}08` : `${colors.surface}40`,
+      borderWidth: 2,
+      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
+      borderRadius: 16,
+      paddingVertical: 20,
+      paddingHorizontal: 16,
+      marginBottom: 12,
+      ...(Platform.OS === 'web' && { 
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      } as any)
+    },
+    amountButtonSelected: {
+      backgroundColor: colors.accent,
+      borderColor: colors.accent,
+    },
+    amountButtonContent: {
+      alignItems: 'center',
+    },
+    amountButtonText: {
+      fontSize: 24,
+      fontWeight: '700',
+      textAlign: 'center',
+      color: colors.text,
+      marginBottom: 4,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    amountButtonTextSelected: {
+      color: '#ffffff',
+    },
+    impactContainer: {
+      backgroundColor: colors.background === '#ffffff' ? `${colors.success}15` : `${colors.success}20`,
+      borderLeftWidth: 4,
+      borderLeftColor: colors.success,
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 32,
+      borderWidth: 1,
+      borderColor: `${colors.success}30`,
+    },
+    impactHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    impactIconContainer: {
+      backgroundColor: colors.success,
+      borderRadius: 12,
+      padding: 8,
+      marginRight: 12,
+    },
+    impactTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.success,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    impactDescription: {
+      fontSize: 15,
+      color: colors.success,
+      lineHeight: 22,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    donateButton: {
+      borderRadius: 16,
+      marginBottom: 20,
+      shadowColor: colors.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      ...(Platform.OS === 'web' && { 
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      } as any)
+    },
+    donateButtonDisabled: {
+      opacity: 0.6,
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+      ...(Platform.OS === 'web' && { 
+        cursor: 'not-allowed' 
+      } as any)
+    },
+    donateButtonGradient: {
+      paddingVertical: 18,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    donateButtonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    donateButtonText: {
+      color: '#ffffff',
+      fontSize: 18,
+      fontWeight: '700',
+      textAlign: 'center',
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    securityNote: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    securityText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 18,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    whyDonateSection: {
+      backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
+      borderRadius: isMobile ? 16 : 24,
+      padding: isMobile ? 24 : 40,
+      marginBottom: 40,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
+      maxWidth: isMobile ? width - 32 : 1000,
+      alignSelf: 'center',
+      width: '100%',
+      marginHorizontal: isMobile ? 16 : 0,
+      position: 'relative',
+      zIndex: 2,
+      ...(Platform.OS === 'web' && {
+        backdropFilter: 'blur(10px)',
+      } as any),
+    },
+    whyDonateHeader: {
+      alignItems: 'center',
+      marginBottom: 40,
+    },
+    whyDonateTitle: {
+      fontSize: isMobile ? 24 : 28,
+      fontWeight: 'bold',
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: 16,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    whyDonateSubtitle: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 24,
+      maxWidth: 600,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    causesContainer: {
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: 24,
+      marginBottom: 40,
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+    },
+    causeItem: {
+      flex: 1,
+      minWidth: isMobile ? width - 96 : 280,
+      maxWidth: isMobile ? width - 96 : undefined,
+      backgroundColor: colors.background === '#ffffff' ? `${colors.text}05` : `${colors.surface}40`,
+      borderRadius: 20,
+      padding: 24,
+      borderLeftWidth: 4,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? `${colors.text}20` : `${colors.text}25`,
+      ...(Platform.OS === 'web' && {
+        transition: 'all 0.3s ease',
+      } as any),
+    },
+    causeHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    causeIconContainer: {
+      borderRadius: 12,
+      padding: 12,
+      marginRight: 16,
+    },
+    causeTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    causeDescription: {
+      color: colors.textSecondary,
+      lineHeight: 24,
+      fontSize: 15,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    transparencySection: {
+      backgroundColor: colors.background === '#ffffff' ? `${colors.success}10` : `${colors.success}15`,
+      borderRadius: 16,
+      padding: 24,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: `${colors.success}25`,
+    },
+    transparencyTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+      textAlign: 'center',
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+    transparencyDescription: {
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 22,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
+  });
+};

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Platform, StyleSheet } from "react-native";
+import { View, Text, Platform, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import { AuroraBackground } from '../util/auroraComponents';
@@ -12,40 +12,44 @@ export default function Home() {
   const gradients = getGradients(isDark);
   
   return (
-    <View style={commonStyles.appContainer}>
-      {/* Header Component */}
-      <Header />
-      
-      {/* Background aurora effect */}
-      <AuroraBackground />
+    <>
+      <View style={commonStyles.appContainer}>
+        {/* Header Component */}
+        <Header />
+        
+        {/* Background aurora effect */}
+        <AuroraBackground />
 
-      {/* Home Page Content */}
-      <View style={commonStyles.content}>
-        <View style={styles.heroHighlightContainer}>
-          <Text style={commonStyles.title}>Welcome to Progress</Text>
-          <View style={styles.textBlock}>
-            <View style={styles.highlightTextContainer}>
-              <LinearGradient
-                colors={gradients.primary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={commonStyles.highlightBackground}
-              >
-                <Text style={commonStyles.highlightText}>A political party beyond left and right.</Text>
-              </LinearGradient>
+        {/* Home Page Content */}
+        <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.heroHighlightContainer}>
+            <Text style={commonStyles.title}>Welcome to Progress</Text>
+            <View style={styles.textBlock}>
+              <View style={styles.highlightTextContainer}>
+                <LinearGradient
+                  colors={gradients.primary}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={commonStyles.highlightBackground}
+                >
+                  <Text style={commonStyles.highlightText}>A political party beyond left and right.</Text>
+                </LinearGradient>
+              </View>
+              <Text style={[commonStyles.text, styles.normalText]}>
+                {'\n'}A workshop in which the future of Britain is being built.{'\n'}
+                A partnership of the able.{'\n\n\n\n'}
+                Maybe you hate politics.{'\n'}
+                Maybe you think ordinary people could govern better than politicians do.{'\n'}
+                We think you're right.{'\n\n\n'}
+                That's what Progress is - a party full of ordinary people, doing extraordinary things.
+              </Text>
             </View>
-            <Text style={[commonStyles.text, styles.normalText]}>
-              {'\n'}A workshop in which the future of Britain is being built.{'\n'}
-              A partnership of the able.{'\n\n\n\n'}
-              Maybe you hate politics.{'\n'}
-              Maybe you think ordinary people could govern better than politicians do.{'\n'}
-              We think you're right.{'\n\n\n'}
-              That's what Progress is - a party full of ordinary people, doing extraordinary things.
-            </Text>
           </View>
-        </View>
+          {/* Add extra space at the bottom for mobile scroll */}
+          <View style={{ height: 800 }} />
+        </ScrollView>
       </View>
-    </View>
+    </>
   );
 }
 
