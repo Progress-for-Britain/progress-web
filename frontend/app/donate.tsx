@@ -19,10 +19,10 @@ import useResponsive from '../util/useResponsive';
 
 export default function Donate() {
   const { isDark } = useTheme();
+  const { isMobile, width } = useResponsive();
   const colors = getColors(isDark);
   const gradients = getGradients(isDark);
-  const commonStyles = getCommonStyles(isDark);
-  const { isMobile, width } = useResponsive();
+  const commonStyles = getCommonStyles(isDark, isMobile, width);
   const styles = getStyles(colors, isMobile, width);
   
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
@@ -170,7 +170,7 @@ export default function Donate() {
           <View style={commonStyles.content}>
             <Animated.View style={fadeInStyle}>
               {/* Hero Section */}
-              <View style={styles.heroContainer}>
+              <View style={commonStyles.heroContainer}>
                 <View style={styles.highlightContainer}>
                   <LinearGradient
                     colors={gradients.primary}
@@ -185,8 +185,7 @@ export default function Donate() {
                 <Text style={[commonStyles.title, { 
                   fontSize: isMobile ? 32 : 48, 
                   marginBottom: 20,
-                  textAlign: 'center',
-                  paddingHorizontal: isMobile ? 16 : 0
+                  textAlign: 'center'
                 }]}>
                   Invest in Britain's Future
                 </Text>
@@ -196,8 +195,7 @@ export default function Donate() {
                   marginBottom: 32, 
                   lineHeight: isMobile ? 24 : 28, 
                   maxWidth: isMobile ? width - 32 : 600,
-                  textAlign: 'center',
-                  paddingHorizontal: isMobile ? 16 : 0
+                  textAlign: 'center'
                 }]}>
                   Power our campaigns for unicorn farms, prosperity zones, and policies that unleash innovation across every region of Britain. Every contribution fuels progress across the UK.
                 </Text>
@@ -211,24 +209,24 @@ export default function Donate() {
               </View>
 
               {/* Key Impact Stats */}
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
+              <View style={commonStyles.statsContainer}>
+                <View style={commonStyles.statItem}>
                   <Text style={styles.statNumber}>£2.1M</Text>
                   <Text style={styles.statLabel}>Raised to Date</Text>
                 </View>
-                <View style={styles.statItem}>
+                <View style={commonStyles.statItem}>
                   <Text style={styles.statNumber}>15K+</Text>
                   <Text style={styles.statLabel}>Active Donors</Text>
                 </View>
-                <View style={styles.statItem}>
+                <View style={commonStyles.statItem}>
                   <Text style={styles.statNumber}>98%</Text>
                   <Text style={styles.statLabel}>Direct Impact</Text>
                 </View>
               </View>
 
               {/* Donation Form */}
-              <View style={styles.donationForm}>
-                <View style={styles.formHeader}>
+              <View style={[commonStyles.cardContainer, { marginBottom: 60 }]}>
+                <View style={commonStyles.sectionHeader}>
                   <LinearGradient
                     colors={gradients.accent}
                     start={{ x: 0, y: 0 }}
@@ -250,7 +248,7 @@ export default function Donate() {
                   <Ionicons name="time" size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
                   Donation Frequency
                 </Text>
-                <View style={styles.frequencyContainer}>
+                <View style={commonStyles.buttonRow}>
                   <FrequencyButton freq="one-time" label="One-time" icon="flash" />
                   <FrequencyButton freq="monthly" label="Monthly" icon="refresh" />
                 </View>
@@ -260,7 +258,7 @@ export default function Donate() {
                   <Ionicons name="card" size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
                   Select Amount
                 </Text>
-                <View style={styles.amountsContainer}>
+                <View style={commonStyles.tagContainer}>
                   {donationAmounts.map((amount) => (
                     <View key={amount} style={styles.amountButtonWrapper}>
                       <AmountButton amount={amount} />
@@ -327,8 +325,8 @@ export default function Donate() {
               </View>
 
               {/* Why Donate Section */}
-              <View style={styles.whyDonateSection}>
-                <View style={styles.whyDonateHeader}>
+              <View style={[commonStyles.cardContainer, { marginBottom: 40 }]}>
+                <View style={commonStyles.sectionHeader}>
                   <View style={styles.highlightContainer}>
                     <LinearGradient
                       colors={gradients.primary}
@@ -345,23 +343,25 @@ export default function Donate() {
                   </Text>
                 </View>
                 
-                <View style={styles.causesContainer}>
+                <View style={commonStyles.cardGrid}>
                   <View style={[styles.causeItem, { borderLeftColor: colors.accent }]}>
                     <LinearGradient
                       colors={[`${colors.accent}20`, `${colors.accent}10`]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
-                      style={{ borderRadius: 20, padding: 24, margin: -24, marginBottom: -24 }}
+                      style={{ borderRadius: 20, padding: 24, margin: -24, flex: 1, justifyContent: 'space-between' }}
                     >
-                      <View style={styles.causeHeader}>
-                        <View style={[styles.causeIconContainer, { backgroundColor: `${colors.accent}30` }]}>
-                          <Ionicons name="rocket" size={24} color={colors.accent} />
+                      <View>
+                        <View style={styles.causeHeader}>
+                          <View style={[styles.causeIconContainer, { backgroundColor: `${colors.accent}30` }]}>
+                            <Ionicons name="rocket" size={24} color={colors.accent} />
+                          </View>
+                          <Text style={styles.causeTitle}>Innovation Economy</Text>
                         </View>
-                        <Text style={styles.causeTitle}>Innovation Economy</Text>
+                        <Text style={styles.causeDescription}>
+                          Fund unicorn farms, tech incubators, and startup ecosystems that position Britain as the global leader in innovation and entrepreneurship.
+                        </Text>
                       </View>
-                      <Text style={styles.causeDescription}>
-                        Fund unicorn farms, tech incubators, and startup ecosystems that position Britain as the global leader in innovation and entrepreneurship.
-                      </Text>
                     </LinearGradient>
                   </View>
                   
@@ -370,17 +370,19 @@ export default function Donate() {
                       colors={[`${colors.success}20`, `${colors.success}10`]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
-                      style={{ borderRadius: 20, padding: 24, margin: -24, marginBottom: -24 }}
+                      style={{ borderRadius: 20, padding: 24, margin: -24, flex: 1, justifyContent: 'space-between' }}
                     >
-                      <View style={styles.causeHeader}>
-                        <View style={[styles.causeIconContainer, { backgroundColor: `${colors.success}30` }]}>
-                          <Ionicons name="business" size={24} color={colors.success} />
+                      <View>
+                        <View style={styles.causeHeader}>
+                          <View style={[styles.causeIconContainer, { backgroundColor: `${colors.success}30` }]}>
+                            <Ionicons name="business" size={24} color={colors.success} />
+                          </View>
+                          <Text style={styles.causeTitle}>Prosperity Zones</Text>
                         </View>
-                        <Text style={styles.causeTitle}>Prosperity Zones</Text>
+                        <Text style={styles.causeDescription}>
+                          Power Special Economic Zones that give the North its own back, creating high-skilled jobs and rebalancing Britain's economy.
+                        </Text>
                       </View>
-                      <Text style={styles.causeDescription}>
-                        Power Special Economic Zones that give the North its own back, creating high-skilled jobs and rebalancing Britain's economy.
-                      </Text>
                     </LinearGradient>
                   </View>
                   
@@ -389,17 +391,19 @@ export default function Donate() {
                       colors={[`${colors.warning}20`, `${colors.warning}10`]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
-                      style={{ borderRadius: 20, padding: 24, margin: -24, marginBottom: -24 }}
+                      style={{ borderRadius: 20, padding: 24, margin: -24, flex: 1, justifyContent: 'space-between' }}
                     >
-                      <View style={styles.causeHeader}>
-                        <View style={[styles.causeIconContainer, { backgroundColor: `${colors.warning}30` }]}>
-                          <Ionicons name="school" size={24} color={colors.warning} />
+                      <View>
+                        <View style={styles.causeHeader}>
+                          <View style={[styles.causeIconContainer, { backgroundColor: `${colors.warning}30` }]}>
+                            <Ionicons name="school" size={24} color={colors.warning} />
+                          </View>
+                          <Text style={styles.causeTitle}>Skills Capital</Text>
                         </View>
-                        <Text style={styles.causeTitle}>Skills Capital</Text>
+                        <Text style={styles.causeDescription}>
+                          Invest in deep skills training, apprenticeships, and lifelong learning programs that build Britain's human capital for the future economy.
+                        </Text>
                       </View>
-                      <Text style={styles.causeDescription}>
-                        Invest in deep skills training, apprenticeships, and lifelong learning programs that build Britain's human capital for the future economy.
-                      </Text>
                     </LinearGradient>
                   </View>
                 </View>
@@ -423,12 +427,6 @@ export default function Donate() {
 
 const getStyles = (colors: any, isMobile: boolean, width: number) => {
   return StyleSheet.create({
-    heroContainer: {
-      alignItems: 'center',
-      marginBottom: isMobile ? 40 : 60,
-      paddingVertical: isMobile ? 20 : 40,
-      paddingHorizontal: isMobile ? 16 : 0,
-    },
     highlightContainer: {
       marginBottom: 16,
     },
@@ -441,25 +439,6 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-    },
-    statsContainer: {
-      flexDirection: isMobile ? 'column' : 'row',
-      justifyContent: 'space-around',
-      gap: 20,
-      marginBottom: 60,
-      paddingHorizontal: 20,
-    },
-    statItem: {
-      alignItems: 'center',
-      backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
-      borderRadius: 16,
-      padding: 20,
-      minWidth: 140,
-      borderWidth: 1,
-      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
-      ...(Platform.OS === 'web' && {
-        backdropFilter: 'blur(10px)',
-      } as any),
     },
     statNumber: {
       fontSize: 24,
@@ -477,27 +456,6 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
       }),
-    },
-    donationForm: {
-      backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
-      borderRadius: isMobile ? 16 : 24,
-      padding: isMobile ? 20 : 40,
-      marginBottom: 60,
-      borderWidth: 1,
-      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
-      maxWidth: isMobile ? width - 32 : 700,
-      alignSelf: 'center',
-      width: '100%',
-      marginHorizontal: isMobile ? 16 : 0,
-      position: 'relative',
-      zIndex: 2,
-      ...(Platform.OS === 'web' && {
-        backdropFilter: 'blur(10px)',
-      } as any),
-    },
-    formHeader: {
-      alignItems: 'center',
-      marginBottom: 32,
     },
     iconContainer: {
       backgroundColor: `${colors.accent}20`,
@@ -525,7 +483,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       }),
     },
     sectionTitle: {
-      fontSize: 18,
+      fontSize: isMobile ? 16 : 18,
       fontWeight: '600',
       color: colors.text,
       marginBottom: 16,
@@ -533,18 +491,13 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
         fontFamily: "'Montserrat', sans-serif",
       }),
     },
-    frequencyContainer: {
-      flexDirection: 'row',
-      marginBottom: 32,
-      gap: 10,
-    },
     frequencyButton: {
       backgroundColor: colors.background === '#ffffff' ? `${colors.text}08` : `${colors.surface}40`,
       borderWidth: 2,
       borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
-      borderRadius: 16,
-      paddingVertical: 16,
-      paddingHorizontal: 24,
+      borderRadius: isMobile ? 12 : 16,
+      paddingVertical: isMobile ? 14 : 16,
+      paddingHorizontal: isMobile ? 16 : 24,
       flex: 1,
       ...(Platform.OS === 'web' && { 
         cursor: 'pointer',
@@ -561,7 +514,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       justifyContent: 'center',
     },
     frequencyButtonText: {
-      fontSize: 16,
+      fontSize: isMobile ? 14 : 16,
       fontWeight: '600',
       textAlign: 'center',
       color: colors.text,
@@ -572,23 +525,18 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
     frequencyButtonTextSelected: {
       color: '#ffffff',
     },
-    amountsContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginBottom: 32,
-      gap: 8,
-    },
     amountButtonWrapper: {
       width: isMobile ? '48%' : '32%',
+      marginBottom: isMobile ? 8 : 0,
     },
     amountButton: {
       backgroundColor: colors.background === '#ffffff' ? `${colors.text}08` : `${colors.surface}40`,
       borderWidth: 2,
       borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
-      borderRadius: 16,
-      paddingVertical: 20,
+      borderRadius: isMobile ? 12 : 16,
+      paddingVertical: isMobile ? 16 : 20,
       paddingHorizontal: 16,
-      marginBottom: 12,
+      marginBottom: isMobile ? 8 : 12,
       ...(Platform.OS === 'web' && { 
         cursor: 'pointer',
         transition: 'all 0.2s ease',
@@ -602,7 +550,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       alignItems: 'center',
     },
     amountButtonText: {
-      fontSize: 24,
+      fontSize: isMobile ? 20 : 24,
       fontWeight: '700',
       textAlign: 'center',
       color: colors.text,
@@ -618,8 +566,8 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       backgroundColor: colors.background === '#ffffff' ? `${colors.success}15` : `${colors.success}20`,
       borderLeftWidth: 4,
       borderLeftColor: colors.success,
-      borderRadius: 16,
-      padding: 20,
+      borderRadius: isMobile ? 12 : 16,
+      padding: isMobile ? 16 : 20,
       marginBottom: 32,
       borderWidth: 1,
       borderColor: `${colors.success}30`,
@@ -652,7 +600,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       }),
     },
     donateButton: {
-      borderRadius: 16,
+      borderRadius: isMobile ? 12 : 16,
       marginBottom: 20,
       shadowColor: colors.accent,
       shadowOffset: { width: 0, height: 4 },
@@ -674,8 +622,8 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       } as any)
     },
     donateButtonGradient: {
-      paddingVertical: 18,
-      borderRadius: 16,
+      paddingVertical: isMobile ? 16 : 18,
+      borderRadius: isMobile ? 12 : 16,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -686,7 +634,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
     },
     donateButtonText: {
       color: '#ffffff',
-      fontSize: 18,
+      fontSize: isMobile ? 16 : 18,
       fontWeight: '700',
       textAlign: 'center',
       ...(Platform.OS === 'web' && {
@@ -711,13 +659,13 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
       borderRadius: isMobile ? 16 : 24,
       padding: isMobile ? 24 : 40,
-      marginBottom: 40,
-      borderWidth: 1,
-      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
       maxWidth: isMobile ? width - 32 : 1000,
       alignSelf: 'center',
       width: '100%',
       marginHorizontal: isMobile ? 16 : 0,
+      marginBottom: 40,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
       position: 'relative',
       zIndex: 2,
       ...(Platform.OS === 'web' && {
@@ -728,6 +676,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
       alignItems: 'center',
       marginBottom: 40,
     },
+    // Custom section titles for the donate page
     whyDonateTitle: {
       fontSize: isMobile ? 24 : 28,
       fontWeight: 'bold',
@@ -748,23 +697,19 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => {
         fontFamily: "'Montserrat', sans-serif",
       }),
     },
-    causesContainer: {
-      flexDirection: isMobile ? 'column' : 'row',
-      gap: 24,
-      marginBottom: 40,
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-    },
+    // Custom cause item styling (extends itemCard)
     causeItem: {
       flex: 1,
-      minWidth: isMobile ? width - 96 : 280,
-      maxWidth: isMobile ? width - 96 : undefined,
+      minWidth: isMobile ? width - 64 : 280,
+      maxWidth: isMobile ? width - 64 : 350,
+      minHeight: isMobile ? 200 : 280,
       backgroundColor: colors.background === '#ffffff' ? `${colors.text}05` : `${colors.surface}40`,
       borderRadius: 20,
       padding: 24,
       borderLeftWidth: 4,
       borderWidth: 1,
       borderColor: colors.background === '#ffffff' ? `${colors.text}20` : `${colors.text}25`,
+      marginHorizontal: isMobile ? 0 : 8,
       ...(Platform.OS === 'web' && {
         transition: 'all 0.3s ease',
       } as any),

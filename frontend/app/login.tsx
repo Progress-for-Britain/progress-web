@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Animated } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Animated, ScrollView } from 'react-native';
 import { Stack, useRouter, Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
+import { AuroraBackground } from '../util/auroraComponents';
+import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
+import { useTheme } from '../util/theme-context';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -14,7 +18,12 @@ export default function Login() {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const { login } = useAuth();
+  const { isDark } = useTheme();
   const router = useRouter();
+
+  const commonStyles = getCommonStyles(isDark);
+  const gradients = getGradients(isDark);
+  const colors = getColors(isDark);
 
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -26,21 +35,6 @@ export default function Login() {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
-
-  const animatePress = () => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -62,68 +56,72 @@ export default function Login() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="dark" />
-      <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={commonStyles.appContainer}>
+        {/* Header Component */}
         <Header />
         
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16 }}
-        >
-          <Animated.View 
-            style={{ 
-              backgroundColor: '#ffffff',
-              borderRadius: 16,
-              padding: 32,
-              width: '100%',
-              maxWidth: 400,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 12,
-              elevation: 8,
-              opacity: fadeAnim,
-              transform: [
-                { scale: scaleAnim },
-                {
-                  translateY: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  }),
-                }
-              ]
-            }}
+        {/* Background aurora effect */}
+        <AuroraBackground />
+
+        {/* Login Page Content */}
+        <ScrollView contentContainerStyle={[commonStyles.content, { justifyContent: 'center', minHeight: '80%' }]} showsVerticalScrollIndicator={false}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <Text 
+            <Animated.View 
               style={{ 
-                fontSize: 28,
-                fontWeight: 'bold',
-                color: '#111827',
-                textAlign: 'center',
-                marginBottom: 8
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 16,
+                padding: 32,
+                width: '100%',
+                maxWidth: 400,
+                shadowColor: isDark ? colors.accent : '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: isDark ? 0.3 : 0.1,
+                shadowRadius: 12,
+                elevation: 8,
+                opacity: fadeAnim,
+                borderWidth: isDark ? 1 : 0,
+                borderColor: isDark ? 'rgba(217, 70, 239, 0.3)' : 'transparent',
+                transform: [
+                  { scale: scaleAnim },
+                  {
+                    translateY: fadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0],
+                    }),
+                  }
+                ]
               }}
             >
-              Welcome Back
-            </Text>
-            <Text 
-              style={{ 
-                fontSize: 16,
-                color: '#6B7280',
-                textAlign: 'center',
-                marginBottom: 32
-              }}
-            >
-              Sign in to your Progress account
-            </Text>
+              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: 28 }]}>
+                Welcome Back
+              </Text>
+              <Text 
+                style={{ 
+                  fontSize: 16,
+                  color: colors.textSecondary,
+                  textAlign: 'center',
+                  marginBottom: 32,
+                  ...(Platform.OS === 'web' && {
+                    fontFamily: "'Montserrat', sans-serif",
+                  }),
+                }}
+              >
+                Sign in to your Progress account
+              </Text>
 
             <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151', marginBottom: 8 }}>
+              <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Email
               </Text>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
                 placeholder="Enter your email"
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -132,23 +130,25 @@ export default function Login() {
                 onBlur={() => setEmailFocused(false)}
                 style={{
                   borderWidth: 1,
-                  borderColor: emailFocused || email ? '#d946ef' : '#D1D5DB',
+                  borderColor: emailFocused || email ? colors.accent : colors.border,
                   borderRadius: 8,
                   paddingHorizontal: 16,
                   paddingVertical: 12,
                   fontSize: 16,
-                  backgroundColor: '#ffffff',
+                  backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
+                  color: colors.text,
                   ...(Platform.OS === 'web' && { 
                     outline: 'none',
                     transition: 'all 0.2s ease',
-                    boxShadow: emailFocused ? '0 0 0 3px rgba(217, 70, 239, 0.1)' : 'none'
+                    boxShadow: emailFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                    fontFamily: "'Montserrat', sans-serif"
                   } as any)
                 }}
               />
             </View>
 
             <View style={{ marginBottom: 24 }}>
-              <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151', marginBottom: 8 }}>
+              <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Password
               </Text>
               <View style={{ position: 'relative' }}>
@@ -156,6 +156,7 @@ export default function Login() {
                   value={password}
                   onChangeText={setPassword}
                   placeholder="Enter your password"
+                  placeholderTextColor={colors.textSecondary}
                   secureTextEntry={!isPasswordVisible}
                   autoComplete="current-password"
                   textContentType="password"
@@ -163,17 +164,19 @@ export default function Login() {
                   onBlur={() => setPasswordFocused(false)}
                   style={{
                     borderWidth: 1,
-                    borderColor: passwordFocused || password ? '#d946ef' : '#D1D5DB',
+                    borderColor: passwordFocused || password ? colors.accent : colors.border,
                     borderRadius: 8,
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     paddingRight: 48,
                     fontSize: 16,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
+                    color: colors.text,
                     ...(Platform.OS === 'web' && { 
                       outline: 'none',
                       transition: 'all 0.2s ease',
-                      boxShadow: passwordFocused ? '0 0 0 3px rgba(217, 70, 239, 0.1)' : 'none'
+                      boxShadow: passwordFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                      fontFamily: "'Montserrat', sans-serif"
                     } as any)
                   }}
                 />
@@ -192,7 +195,7 @@ export default function Login() {
                   <Ionicons
                     name={isPasswordVisible ? 'eye' : 'eye-off'}
                     size={20}
-                    color="#6B7280"
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -201,56 +204,82 @@ export default function Login() {
             <TouchableOpacity
               style={{ alignSelf: 'flex-end', marginBottom: 24 }}
             >
-              <Text style={{ color: '#d946ef', fontSize: 14, fontWeight: '500' }}>
+              <Text style={{ color: colors.accent, fontSize: 14, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Forgot Password?
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => {
-                handleLogin();
-              }}
-              disabled={isLoading}
+            <View
               style={{
-                backgroundColor: isLoading ? '#9CA3AF' : '#d946ef',
-                borderRadius: 8,
-                paddingVertical: 16,
                 marginBottom: 16,
-                shadowColor: isLoading ? 'transparent' : '#d946ef',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: isLoading ? 0 : 6,
-                ...(Platform.OS === 'web' && { 
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease'
+                borderRadius: 8,
+                ...(Platform.OS === 'ios' && !isLoading && {
+                  shadowColor: colors.accent,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 12,
+                }),
+                ...(Platform.OS === 'android' && !isLoading && {
+                  elevation: 8,
+                }),
+                ...(Platform.OS === 'web' && !isLoading && {
+                  filter: `drop-shadow(0 4px 12px ${colors.accent}66)`,
+                  transition: 'all 0.2s ease',
                 } as any)
               }}
-              activeOpacity={0.8}
             >
-              <Text 
-                style={{ 
-                  color: '#ffffff',
-                  fontSize: 16,
-                  fontWeight: '600',
-                  textAlign: 'center'
+              <TouchableOpacity
+                onPress={() => {
+                  handleLogin();
                 }}
+                disabled={isLoading}
+                style={{
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  ...(Platform.OS === 'web' && { 
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                  } as any)
+                }}
+                activeOpacity={0.8}
               >
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </Text>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={isLoading ? [colors.textSecondary, colors.textSecondary] : gradients.primary}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    paddingVertical: 16,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text 
+                    style={{ 
+                      color: '#ffffff',
+                      fontSize: 16,
+                      fontWeight: '600',
+                      textAlign: 'center',
+                      ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
+                    }}
+                  >
+                    {isLoading ? 'Signing In...' : 'Sign In'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
 
             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: '#6B7280', fontSize: 16 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 16, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Don't have an account?{' '}
               </Text>
-              <Link href="/register" style={{ color: '#d946ef', fontSize: 16, fontWeight: '500' }}>
+              <Link href="/register" style={{ color: colors.accent, fontSize: 16, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Sign up
               </Link>
             </View>
           </Animated.View>
         </KeyboardAvoidingView>
-      </View>
+        {/* Add extra space at the bottom for mobile scroll */}
+        <View style={{ height: 200 }} />
+      </ScrollView>
+    </View>
     </>
   );
 }

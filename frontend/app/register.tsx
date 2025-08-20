@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { Stack, useRouter, Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../util/auth-context';
 import { api } from '../util/api';
 import Header from '../components/Header';
+import { AuroraBackground } from '../util/auroraComponents';
+import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
+import { useTheme } from '../util/theme-context';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -20,7 +24,12 @@ export default function Register() {
   const [codeValidated, setCodeValidated] = useState(false);
   const [suggestedRole, setSuggestedRole] = useState('');
   const { register } = useAuth();
+  const { isDark } = useTheme();
   const router = useRouter();
+
+  const commonStyles = getCommonStyles(isDark);
+  const gradients = getGradients(isDark);
+  const colors = getColors(isDark);
 
   const validateAccessCode = async () => {
     const { accessCode, email } = formData;
@@ -106,46 +115,48 @@ export default function Register() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="dark" />
-      <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={commonStyles.appContainer}>
+        {/* Header Component */}
         <Header />
         
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
-        >
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 32 }}>
+        {/* Background aurora effect */}
+        <AuroraBackground />
+
+        {/* Register Page Content */}
+        <ScrollView contentContainerStyle={[commonStyles.content, { justifyContent: 'center', minHeight: '80%' }]} showsVerticalScrollIndicator={false}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
             <View 
               style={{ 
-                backgroundColor: '#ffffff',
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                 borderRadius: 16,
                 padding: 32,
                 width: '100%',
                 maxWidth: 400,
-                shadowColor: '#000',
+                shadowColor: isDark ? colors.accent : '#000',
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
+                shadowOpacity: isDark ? 0.3 : 0.1,
                 shadowRadius: 12,
-                elevation: 8
+                elevation: 8,
+                borderWidth: isDark ? 1 : 0,
+                borderColor: isDark ? 'rgba(217, 70, 239, 0.3)' : 'transparent',
               }}
             >
-              <Text 
-                style={{ 
-                  fontSize: 28,
-                  fontWeight: 'bold',
-                  color: '#111827',
-                  textAlign: 'center',
-                  marginBottom: 8
-                }}
-              >
+              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: 28 }]}>
                 Complete Registration
               </Text>
               <Text 
                 style={{ 
                   fontSize: 16,
-                  color: '#6B7280',
+                  color: colors.textSecondary,
                   textAlign: 'center',
-                  marginBottom: 32
+                  marginBottom: 32,
+                  ...(Platform.OS === 'web' && {
+                    fontFamily: "'Montserrat', sans-serif",
+                  }),
                 }}
               >
                 Use your access code to create your account
@@ -153,121 +164,136 @@ export default function Register() {
 
               <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                     First Name
                   </Text>
                   <TextInput
                     value={formData.firstName}
                     onChangeText={(value) => updateField('firstName', value)}
                     placeholder="First name"
+                    placeholderTextColor={colors.textSecondary}
                     style={{
                       borderWidth: 1,
-                      borderColor: '#D1D5DB',
+                      borderColor: colors.border,
                       borderRadius: 8,
                       paddingHorizontal: 16,
                       paddingVertical: 12,
                       fontSize: 16,
-                      backgroundColor: '#ffffff'
+                      backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
+                      color: colors.text,
+                      ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
                     }}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                     Last Name
                   </Text>
                   <TextInput
                     value={formData.lastName}
                     onChangeText={(value) => updateField('lastName', value)}
                     placeholder="Last name"
+                    placeholderTextColor={colors.textSecondary}
                     style={{
                       borderWidth: 1,
-                      borderColor: '#D1D5DB',
+                      borderColor: colors.border,
                       borderRadius: 8,
                       paddingHorizontal: 16,
                       paddingVertical: 12,
                       fontSize: 16,
-                      backgroundColor: '#ffffff'
+                      backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
+                      color: colors.text,
+                      ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
                     }}
                   />
                 </View>
               </View>
 
               <View style={{ marginBottom: 16 }}>
-                <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151', marginBottom: 8 }}>
+                <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Email
                 </Text>
                 <TextInput
                   value={formData.email}
                   onChangeText={(value) => updateField('email', value)}
                   placeholder="Enter your email"
+                  placeholderTextColor={colors.textSecondary}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   style={{
                     borderWidth: 1,
-                    borderColor: '#D1D5DB',
+                    borderColor: colors.border,
                     borderRadius: 8,
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     fontSize: 16,
-                    backgroundColor: '#ffffff'
+                    backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
+                    color: colors.text,
+                    ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
                   }}
                 />
               </View>
 
               <View style={{ marginBottom: 16 }}>
-                <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151', marginBottom: 8 }}>
+                <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Password
                 </Text>
                 <TextInput
                   value={formData.password}
                   onChangeText={(value) => updateField('password', value)}
                   placeholder="Create a password"
+                  placeholderTextColor={colors.textSecondary}
                   secureTextEntry
                   style={{
                     borderWidth: 1,
-                    borderColor: '#D1D5DB',
+                    borderColor: colors.border,
                     borderRadius: 8,
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     fontSize: 16,
-                    backgroundColor: '#ffffff'
+                    backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
+                    color: colors.text,
+                    ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
                   }}
                 />
               </View>
 
               <View style={{ marginBottom: 24 }}>
-                <Text style={{ fontSize: 16, fontWeight: '500', color: '#374151', marginBottom: 8 }}>
+                <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Confirm Password
                 </Text>
                 <TextInput
                   value={formData.confirmPassword}
                   onChangeText={(value) => updateField('confirmPassword', value)}
                   placeholder="Confirm your password"
+                  placeholderTextColor={colors.textSecondary}
                   secureTextEntry
                   style={{
                     borderWidth: 1,
-                    borderColor: '#D1D5DB',
+                    borderColor: colors.border,
                     borderRadius: 8,
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     fontSize: 16,
-                    backgroundColor: '#ffffff'
+                    backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
+                    color: colors.text,
+                    ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
                   }}
                 />
               </View>
               {/* Access Code Section */}
               <View style={{ 
-                backgroundColor: '#fef3c7', 
+                backgroundColor: isDark ? 'rgba(251, 191, 36, 0.15)' : '#fef3c7', 
                 padding: 16, 
                 borderRadius: 8, 
                 marginBottom: 24,
                 borderWidth: 1,
-                borderColor: '#f59e0b'
+                borderColor: isDark ? 'rgba(245, 158, 11, 0.5)' : '#f59e0b'
               }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Access Code (Required)
                 </Text>
-                <Text style={{ fontSize: 14, color: '#7c2d12', marginBottom: 12 }}>
+                <Text style={{ fontSize: 14, color: isDark ? '#fbbf24' : '#7c2d12', marginBottom: 12, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   You need an access code that was sent to your email after your membership application was approved. Please check your email and enter the code below.
                 </Text>
                 
@@ -276,6 +302,7 @@ export default function Register() {
                     value={formData.accessCode}
                     onChangeText={(value) => updateField('accessCode', value.toUpperCase())}
                     placeholder="Enter your access code (required)"
+                    placeholderTextColor={colors.textSecondary}
                     autoCapitalize="characters"
                     style={{
                       borderWidth: 2,
@@ -284,38 +311,71 @@ export default function Register() {
                       paddingHorizontal: 16,
                       paddingVertical: 12,
                       fontSize: 16,
-                      backgroundColor: '#ffffff'
+                      backgroundColor: isDark ? 'rgba(55, 65, 81, 0.7)' : '#ffffff',
+                      color: colors.text,
+                      ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
                     }}
                   />
                 </View>
                 
                 {formData.accessCode && !codeValidated && (
-                  <TouchableOpacity
-                    onPress={validateAccessCode}
-                    disabled={isValidatingCode || !formData.email}
+                  <View
                     style={{
-                      backgroundColor: (!formData.email || isValidatingCode) ? '#9ca3af' : '#f59e0b',
-                      paddingVertical: 10,
-                      paddingHorizontal: 16,
+                      marginBottom: 12,
                       borderRadius: 6,
-                      alignItems: 'center'
+                      overflow: 'hidden',
+                      ...(Platform.OS === 'ios' && !isValidatingCode && !formData.email && {
+                        shadowColor: '#f59e0b',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 4,
+                      }),
+                      ...(Platform.OS === 'android' && !isValidatingCode && !formData.email && {
+                        elevation: 3,
+                      }),
+                      ...(Platform.OS === 'web' && !isValidatingCode && !formData.email && {
+                        filter: 'drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4))',
+                      } as any)
                     }}
                   >
-                    <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 14 }}>
-                      {isValidatingCode ? 'Validating...' : 'Validate Code'}
-                    </Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={validateAccessCode}
+                      disabled={isValidatingCode || !formData.email}
+                      style={{
+                        borderRadius: 6,
+                        overflow: 'hidden',
+                        ...(Platform.OS === 'web' && { 
+                          cursor: (isValidatingCode || !formData.email) ? 'not-allowed' : 'pointer'
+                        } as any)
+                      }}
+                    >
+                      <LinearGradient
+                        colors={(!formData.email || isValidatingCode) ? [colors.textSecondary, colors.textSecondary] : ['#f59e0b', '#d97706']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{
+                          paddingVertical: 10,
+                          paddingHorizontal: 16,
+                          alignItems: 'center'
+                        }}
+                      >
+                        <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 14, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                          {isValidatingCode ? 'Validating...' : 'Validate Code'}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
                 )}
                 
                 {!formData.accessCode && (
                   <View style={{ 
                     flexDirection: 'row', 
                     alignItems: 'center',
-                    backgroundColor: '#fecaca',
+                    backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : '#fecaca',
                     padding: 12,
                     borderRadius: 6
                   }}>
-                    <Text style={{ color: '#991b1b', fontSize: 14, fontWeight: '600' }}>
+                    <Text style={{ color: isDark ? '#f87171' : '#991b1b', fontSize: 14, fontWeight: '600', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                       ⚠ Access code is required to create an account
                     </Text>
                   </View>
@@ -325,72 +385,105 @@ export default function Register() {
                   <View style={{ 
                     flexDirection: 'row', 
                     alignItems: 'center',
-                    backgroundColor: '#dcfce7',
+                    backgroundColor: isDark ? 'rgba(34, 197, 94, 0.15)' : '#dcfce7',
                     padding: 12,
                     borderRadius: 6
                   }}>
-                    <Text style={{ color: '#166534', fontSize: 14, fontWeight: '600' }}>
+                    <Text style={{ color: isDark ? '#4ade80' : '#166534', fontSize: 14, fontWeight: '600', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                       ✓ Access code validated! Role: {suggestedRole}
                     </Text>
                   </View>
                 )}
                 
                 {!codeValidated && formData.accessCode && (
-                  <Text style={{ fontSize: 12, color: '#7c2d12', marginTop: 8 }}>
+                  <Text style={{ fontSize: 12, color: isDark ? '#fbbf24' : '#7c2d12', marginTop: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                     You need to enter your email address first to validate the access code.
                   </Text>
                 )}
                 
                 {!formData.accessCode && (
-                  <Text style={{ fontSize: 12, color: '#991b1b', marginTop: 8 }}>
+                  <Text style={{ fontSize: 12, color: isDark ? '#f87171' : '#991b1b', marginTop: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                     Don't have an access code? You need to submit a membership application first at our join page.
                   </Text>
                 )}
               </View>
 
-              <TouchableOpacity
-                onPress={handleRegister}
-                disabled={isLoading || !codeValidated || !formData.accessCode}
+              <View
                 style={{
-                  backgroundColor: (isLoading || !codeValidated || !formData.accessCode) ? '#9CA3AF' : '#d946ef',
-                  borderRadius: 8,
-                  paddingVertical: 16,
                   marginBottom: 16,
-                  ...(Platform.OS === 'web' && { cursor: (isLoading || !codeValidated || !formData.accessCode) ? 'not-allowed' : 'pointer' } as any)
+                  borderRadius: 8,
+                  ...(Platform.OS === 'ios' && !isLoading && codeValidated && formData.accessCode && {
+                    shadowColor: colors.accent,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.4,
+                    shadowRadius: 12,
+                  }),
+                  ...(Platform.OS === 'android' && !isLoading && codeValidated && formData.accessCode && {
+                    elevation: 8,
+                  }),
+                  ...(Platform.OS === 'web' && !isLoading && codeValidated && formData.accessCode && {
+                    filter: `drop-shadow(0 4px 12px ${colors.accent}66)`,
+                    transition: 'all 0.2s ease',
+                  } as any)
                 }}
               >
-                <Text 
-                  style={{ 
-                    color: '#ffffff',
-                    fontSize: 16,
-                    fontWeight: '600',
-                    textAlign: 'center'
+                <TouchableOpacity
+                  onPress={handleRegister}
+                  disabled={isLoading || !codeValidated || !formData.accessCode}
+                  style={{
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    ...(Platform.OS === 'web' && { 
+                      cursor: (isLoading || !codeValidated || !formData.accessCode) ? 'not-allowed' : 'pointer',
+                    } as any)
                   }}
                 >
-                  {isLoading ? 'Creating Account...' : !formData.accessCode ? 'Access Code Required' : !codeValidated ? 'Validate Access Code First' : 'Create Account'}
-                </Text>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={(isLoading || !codeValidated || !formData.accessCode) ? [colors.textSecondary, colors.textSecondary] : gradients.primary}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      paddingVertical: 16,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text 
+                      style={{ 
+                        color: '#ffffff',
+                        fontSize: 16,
+                        fontWeight: '600',
+                        textAlign: 'center',
+                        ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
+                      }}
+                    >
+                      {isLoading ? 'Creating Account...' : !formData.accessCode ? 'Access Code Required' : !codeValidated ? 'Validate Access Code First' : 'Create Account'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-                <Text style={{ color: '#6B7280', fontSize: 14 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 14, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Don't have an access code?{' '}
                 </Text>
-                <Link href="/join" style={{ color: '#d946ef', fontSize: 14, fontWeight: '500' }}>
+                <Link href="/join" style={{ color: colors.accent, fontSize: 14, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Apply for membership
                 </Link>
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{ color: '#6B7280', fontSize: 16 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 16, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Already have an account?{' '}
                 </Text>
-                <Link href="/login" style={{ color: '#d946ef', fontSize: 16, fontWeight: '500' }}>
+                <Link href="/login" style={{ color: colors.accent, fontSize: 16, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Sign in
                 </Link>
               </View>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+          {/* Add extra space at the bottom for mobile scroll */}
+          <View style={{ height: 200 }} />
+        </ScrollView>
       </View>
     </>
   );

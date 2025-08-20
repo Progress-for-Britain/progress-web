@@ -21,10 +21,10 @@ import useResponsive from '../util/useResponsive';
 
 export default function Join() {
   const { isDark } = useTheme();
+  const { isMobile, width } = useResponsive();
   const colors = getColors(isDark);
   const gradients = getGradients(isDark);
-  const commonStyles = getCommonStyles(isDark);
-  const { isMobile, width } = useResponsive();
+  const commonStyles = getCommonStyles(isDark, isMobile, width);
   const styles = getStyles(colors, isMobile, width);
   
   const [formData, setFormData] = useState({
@@ -504,7 +504,7 @@ export default function Join() {
             {/* Main Content */}
             <View style={commonStyles.content}>
               {/* Hero Section */}
-              <View style={styles.heroContainer}>
+              <View style={commonStyles.heroContainer}>
                 <View style={styles.highlightContainer}>
                   <LinearGradient
                     colors={gradients.primary}
@@ -519,8 +519,7 @@ export default function Join() {
                 <Text style={[commonStyles.title, { 
                   fontSize: isMobile ? 32 : 48, 
                   marginBottom: 20,
-                  textAlign: 'center',
-                  paddingHorizontal: isMobile ? 16 : 0
+                  textAlign: 'center'
                 }]}>
                   Help Unleash Britain's Potential
                 </Text>
@@ -530,14 +529,13 @@ export default function Join() {
                   marginBottom: 32, 
                   lineHeight: isMobile ? 24 : 28, 
                   maxWidth: isMobile ? width - 32 : 600,
-                  textAlign: 'center',
-                  paddingHorizontal: isMobile ? 16 : 0
+                  textAlign: 'center'
                 }]}>
                   Join thousands of progressives building the innovation economy, creating prosperity zones, and making Britain work for everyone, everywhere.
                 </Text>
 
                 {/* Quick Stats */}
-                <View style={styles.statsContainer}>
+                <View style={commonStyles.statsContainer}>
                   <View style={styles.statItem}>
                     <Text style={styles.statNumber}>50K+</Text>
                     <Text style={styles.statLabel}>Active Members</Text>
@@ -561,7 +559,7 @@ export default function Join() {
               </View>
 
               {/* Form Container */}
-              <View style={styles.formContainer}>
+              <View style={commonStyles.cardContainer}>
                 {/* NDA Success Notification */}
                 {showNDASuccess && (
                   <Animated.View 
@@ -733,8 +731,8 @@ export default function Join() {
                 </View>
 
                 {/* Personal Information */}
-                <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 16, marginBottom: 20 }}>
-                  <View style={{ flex: 1 }}>
+                <View style={commonStyles.formRow}>
+                  <View style={commonStyles.formField}>
                     <Text style={styles.inputLabel}>
                       First Name *
                     </Text>
@@ -746,7 +744,7 @@ export default function Join() {
                       style={styles.textInput}
                     />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View style={commonStyles.formField}>
                     <Text style={styles.inputLabel}>
                       Last Name *
                     </Text>
@@ -775,8 +773,8 @@ export default function Join() {
                   />
                 </View>
 
-                <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 16, marginBottom: 24 }}>
-                  <View style={{ flex: 1 }}>
+                <View style={commonStyles.formRowLarge}>
+                  <View style={commonStyles.formField}>
                     <Text style={styles.inputLabel}>
                       Phone Number
                     </Text>
@@ -789,7 +787,7 @@ export default function Join() {
                       style={styles.textInput}
                     />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View style={commonStyles.formField}>
                     <Text style={styles.inputLabel}>
                       Constituency
                     </Text>
@@ -810,7 +808,7 @@ export default function Join() {
                 <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 16, textAlign: 'left' }]}>
                   Select the areas where you'd like to stay informed and get involved
                 </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 32 }}>
+                <View style={commonStyles.tagContainer}>
                   {interests.map((interest) => (
                     <TouchableOpacity
                       key={interest}
@@ -887,7 +885,11 @@ export default function Join() {
 
                 {/* Volunteer-Specific Fields */}
                 {formData.volunteer && (
-                  <View style={styles.volunteerSection}>
+                  <View style={[commonStyles.specialSection, { 
+                    backgroundColor: `${colors.secondary}20`,
+                    borderLeftColor: colors.secondary,
+                    borderColor: `${colors.secondary}30`,
+                  }]}>
                     <Text style={[commonStyles.title, { fontSize: 18, marginBottom: 16 }]}>
                       Volunteer Application Details
                     </Text>
@@ -1067,7 +1069,7 @@ export default function Join() {
                       <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 12, textAlign: 'left' }]}>
                         Select the volunteer activities that interest you
                       </Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                      <View style={commonStyles.tagContainerSmall}>
                         {volunteerInterests.map((interest) => (
                           <TouchableOpacity
                             key={interest}
@@ -1098,7 +1100,7 @@ export default function Join() {
                       <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 12, textAlign: 'left' }]}>
                         Select the skills and areas where you can contribute
                       </Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                      <View style={commonStyles.tagContainerSmall}>
                         {contributionAreas.map((area) => (
                           <TouchableOpacity
                             key={area}
@@ -1290,9 +1292,9 @@ export default function Join() {
             </View>
 
             {/* Membership Benefits */}
-            <View style={commonStyles.content}>
+            <View style={[commonStyles.content, { maxWidth: isMobile ? width - 32 : 1200, paddingHorizontal: isMobile ? 16 : 40 }]}>
               <Animated.View style={fadeInStyle}>
-                <View style={styles.benefitsContainer}>
+                <View style={commonStyles.sectionHeader}>
                   <View style={styles.highlightContainer}>
                     <LinearGradient
                       colors={gradients.primary}
@@ -1314,7 +1316,7 @@ export default function Join() {
                 </View>
               </Animated.View>
               
-              <View style={styles.benefitsGrid}>
+              <View style={[commonStyles.cardGrid, { justifyContent: 'center', alignItems: 'stretch' }]}>
                 <Animated.View style={[styles.benefitCard, fadeInStyle]}>
                   <LinearGradient
                     colors={[`${colors.accent}20`, `${colors.accent}10`]}
@@ -1377,7 +1379,7 @@ export default function Join() {
             {/* Bottom CTA Section */}
             <View style={commonStyles.content}>
               <Animated.View style={fadeInStyle}>
-                <View style={styles.ctaContainer}>
+                <View style={commonStyles.sectionHeader}>
                   <View style={styles.highlightContainer}>
                     <LinearGradient
                       colors={gradients.accent}
@@ -1490,20 +1492,8 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
       backdropFilter: 'blur(10px)',
     } as any),
   },
-  heroContainer: {
-    alignItems: 'center',
-    marginBottom: isMobile ? 40 : 60,
-    paddingVertical: isMobile ? 20 : 40,
-    paddingHorizontal: isMobile ? 16 : 0,
-  },
   highlightContainer: {
     marginBottom: 16,
-  },
-  statsContainer: {
-    flexDirection: isMobile ? 'column' : 'row',
-    alignItems: 'center',
-    gap: isMobile ? 16 : 24,
-    marginBottom: 32,
   },
   statItem: {
     alignItems: 'center',
@@ -1528,44 +1518,15 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     alignItems: 'center',
     gap: 8,
   },
-  formContainer: {
-    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
-    borderRadius: isMobile ? 16 : 24,
-    padding: isMobile ? 20 : 40,
-    maxWidth: isMobile ? width - 32 : 700,
-    alignSelf: 'center',
-    width: '100%',
-    marginHorizontal: isMobile ? 16 : 0,
-    borderWidth: 1,
-    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
-    position: 'relative',
-    zIndex: 2,
-    ...(Platform.OS === 'web' && {
-      backdropFilter: 'blur(10px)',
-    } as any),
-  },
-  benefitsContainer: {
-    alignItems: 'center',
-    marginBottom: 60,
-    paddingVertical: 40,
-  },
-  benefitsGrid: {
-    flexDirection: isMobile ? 'column' : 'row',
-    gap: isMobile ? 16 : 24,
-    marginBottom: 40,
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    maxWidth: 1000,
-    alignSelf: 'center',
-  },
   benefitCard: {
     flex: 1,
-    minWidth: isMobile ? width - 64 : 280,
-    maxWidth: isMobile ? width - 64 : undefined,
+    minWidth: isMobile ? width - 64 : 300,
+    maxWidth: isMobile ? width - 64 : 350,
     borderRadius: isMobile ? 16 : 20,
     borderWidth: 1,
     borderColor: `${colors.text}20`,
     overflow: 'hidden',
+    marginHorizontal: isMobile ? 0 : 8,
     ...(Platform.OS === 'web' && {
       transition: 'all 0.3s ease',
       cursor: 'pointer',
@@ -1575,6 +1536,9 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     padding: isMobile ? 24 : 32,
     alignItems: 'center',
     borderRadius: isMobile ? 16 : 20,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: isMobile ? 200 : 250,
   },
   benefitIconContainer: {
     borderRadius: 16,
@@ -1599,11 +1563,6 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
-  },
-  ctaContainer: {
-    alignItems: 'center',
-    marginBottom: 60,
-    paddingVertical: 40,
   },
   ctaFeatures: {
     flexDirection: isMobile ? 'column' : 'row',
@@ -1766,16 +1725,6 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
-  },
-  volunteerSection: {
-    marginBottom: 32,
-    padding: isMobile ? 16 : 20,
-    backgroundColor: `${colors.secondary}20`,
-    borderRadius: isMobile ? 12 : 16,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.secondary,
-    borderWidth: 1,
-    borderColor: `${colors.secondary}30`,
   },
   yesNoButton: {
     flexDirection: 'row',

@@ -46,7 +46,7 @@ export default function Home() {
             </View>
           </View>
           {/* Add extra space at the bottom for mobile scroll */}
-          <View style={{ height: 800 }} />
+          <View style={{ height: 600 }} />
         </ScrollView>
       </View>
     </>

@@ -171,7 +171,7 @@ export const getGradients = (isDark: boolean) => isDark ? darkGradients : lightG
 export const gradients = darkGradients;
 
 // Theme-aware common styles function
-export const getCommonStyles = (isDark: boolean) => {
+export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, width: number = 800) => {
   const themeColors = getColors(isDark);
   
   return StyleSheet.create({
@@ -186,7 +186,7 @@ export const getCommonStyles = (isDark: boolean) => {
       maxWidth: 800,
       marginTop: 50,
       marginHorizontal: 'auto',
-      paddingHorizontal: 20,
+      paddingHorizontal: isMobile ? 16 : 20,
       position: 'relative',
       zIndex: 2,
       ...(Platform.OS === 'web' && {
@@ -227,8 +227,187 @@ export const getCommonStyles = (isDark: boolean) => {
         fontFamily: "'Montserrat', sans-serif",
       }),
     },
+    // Common container for forms/cards
+    cardContainer: {
+      backgroundColor: themeColors.background === '#ffffff' ? `${themeColors.surface}95` : `${themeColors.surface}80`,
+      borderRadius: isMobile ? 16 : 24,
+      padding: isMobile ? 20 : 40,
+      maxWidth: isMobile ? width - 32 : 700,
+      alignSelf: 'center',
+      width: '100%',
+      marginHorizontal: isMobile ? 0 : 'auto',
+      borderWidth: 1,
+      borderColor: themeColors.background === '#ffffff' ? `${themeColors.text}25` : `${themeColors.text}20`,
+      position: 'relative',
+      zIndex: 2,
+      ...(Platform.OS === 'web' && {
+        backdropFilter: 'blur(10px)',
+      } as any),
+    },
+    // Wide container for sections like benefits/causes
+    wideCardContainer: {
+      backgroundColor: themeColors.background === '#ffffff' ? `${themeColors.surface}95` : `${themeColors.surface}80`,
+      borderRadius: isMobile ? 16 : 24,
+      padding: isMobile ? 24 : 40,
+      maxWidth: isMobile ? width - 32 : 1000,
+      alignSelf: 'center',
+      width: '100%',
+      marginHorizontal: isMobile ? 0 : 'auto',
+      borderWidth: 1,
+      borderColor: themeColors.background === '#ffffff' ? `${themeColors.text}25` : `${themeColors.text}20`,
+      position: 'relative',
+      zIndex: 2,
+      ...(Platform.OS === 'web' && {
+        backdropFilter: 'blur(10px)',
+      } as any),
+    },
+    // Common item card style (for benefits, causes, etc.)
+    itemCard: {
+      flex: 1,
+      minWidth: isMobile ? width - 64 : 280,
+      maxWidth: isMobile ? width - 64 : undefined,
+      borderRadius: isMobile ? 16 : 20,
+      borderWidth: 1,
+      borderColor: `${themeColors.text}20`,
+      overflow: 'hidden',
+      ...(Platform.OS === 'web' && {
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+      } as any),
+    },
+    // Common button style
+    button: {
+      backgroundColor: themeColors.background === '#ffffff' ? `${themeColors.text}08` : `${themeColors.surface}40`,
+      borderWidth: 2,
+      borderColor: themeColors.background === '#ffffff' ? `${themeColors.text}25` : `${themeColors.text}30`,
+      borderRadius: isMobile ? 12 : 16,
+      paddingVertical: isMobile ? 14 : 16,
+      paddingHorizontal: isMobile ? 16 : 24,
+      ...(Platform.OS === 'web' && { 
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      } as any)
+    },
+    // Primary action button
+    primaryButton: {
+      borderRadius: isMobile ? 12 : 16,
+      shadowColor: themeColors.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      ...(Platform.OS === 'web' && { 
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      } as any)
+    },
+    // Hero container
+    heroContainer: {
+      alignItems: 'center',
+      marginBottom: isMobile ? 40 : 60,
+      paddingVertical: isMobile ? 20 : 40,
+      paddingHorizontal: isMobile ? 16 : 0,
+    },
+    // Stats container
+    statsContainer: {
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-around',
+      gap: 20,
+      marginBottom: 60,
+      paddingHorizontal: isMobile ? 16 : 20,
+    },
+    // Individual stat item
+    statItem: {
+      alignItems: 'center',
+      backgroundColor: themeColors.background === '#ffffff' ? `${themeColors.surface}95` : `${themeColors.surface}80`,
+      borderRadius: 16,
+      padding: 20,
+      minWidth: 140,
+      borderWidth: 1,
+      borderColor: themeColors.background === '#ffffff' ? `${themeColors.text}25` : `${themeColors.text}20`,
+      ...(Platform.OS === 'web' && {
+        backdropFilter: 'blur(10px)',
+      } as any),
+    },
+    // Section header styling
+    sectionHeader: {
+      alignItems: 'center',
+      marginBottom: 40,
+    },
+    // Grid container for cards
+    cardGrid: {
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? 16 : 24,
+      marginBottom: 40,
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+    },
+    // Common form layouts
+    formRow: {
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: 16,
+      marginBottom: 20,
+    },
+    formRowLarge: {
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: 16,
+      marginBottom: 24,
+    },
+    formField: {
+      flex: 1,
+    },
+    // Tag/chip layouts
+    tagContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      marginBottom: 32,
+    },
+    tagContainerSmall: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    // Common button layouts
+    buttonRow: {
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? 12 : 10,
+    },
+    // Special sections (like volunteer forms)
+    specialSection: {
+      marginBottom: 32,
+      padding: isMobile ? 16 : 20,
+      borderRadius: isMobile ? 12 : 16,
+      borderLeftWidth: 4,
+      borderWidth: 1,
+    },
+    // Common text input styling
+    textInput: {
+      borderWidth: 2,
+      borderColor: themeColors.background === '#ffffff' ? `${themeColors.text}40` : `${themeColors.text}30`,
+      borderRadius: isMobile ? 8 : 12,
+      paddingHorizontal: isMobile ? 12 : 16,
+      paddingVertical: isMobile ? 12 : 14,
+      fontSize: isMobile ? 14 : 16,
+      backgroundColor: themeColors.background === '#ffffff' ? `${themeColors.surface}80` : `${themeColors.surface}60`,
+      color: themeColors.text,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+        backdropFilter: 'blur(10px)',
+      } as any),
+    },
+    // Input label styling
+    inputLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: themeColors.text,
+      marginBottom: 8,
+      ...(Platform.OS === 'web' && {
+        fontFamily: "'Montserrat', sans-serif",
+      }),
+    },
   });
 };
 
 // Common styles (backward compatibility - dark theme)
-export const commonStyles = getCommonStyles(true);
+export const commonStyles = getCommonStyles(true, false, 800);
