@@ -902,7 +902,7 @@ export default function Join() {
                       </Text>
                       <TouchableOpacity
                       onPress={() => {
-                        const pdfUrl = `${process.env.EXPO_PUBLIC_API_URL}/should-i-join-progress.pdf`;
+                        const pdfUrl = `${process.env.EXPO_PUBLIC_API_URL}/public/should-i-join-progress.pdf`;
                         if (Platform.OS === 'web') {
                         window.open(pdfUrl, '_blank');
                         } else {
