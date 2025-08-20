@@ -140,18 +140,19 @@ export default function Header() {
     const getButtonStyles = () => {
       const baseStyles = {
         backgroundColor: 'transparent',
-        paddingHorizontal: isMobileMenu ? 16 : 16,
-        paddingVertical: isMobileMenu ? 14 : 10,
-        borderRadius: isMobileMenu ? 10 : 10,
+        paddingHorizontal: isMobile ? 16 : 16,
+        paddingVertical: isMobile ? 14 : 10,
+        borderRadius: isMobile ? 10 : 20,
         ...(isMobileMenu && { width: '100%' as const }),
       };
 
-      // Handle active state - just add bottom border for underline
+      // Handle active state - add subtle glow effect
       if (isActive && variant === 'default') {
         return {
           ...baseStyles,
-          borderBottomWidth: 2,
-          borderBottomColor: '#d946ef',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.2)',
         };
       }
 
@@ -159,19 +160,19 @@ export default function Header() {
         case 'primary':
           return {
             ...baseStyles,
-            backgroundColor: '#d946ef',
-            paddingHorizontal: isMobileMenu ? 16 : 20,
-            paddingVertical: isMobileMenu ? 14 : 12,
+            backgroundColor: 'rgba(177, 0, 36, 0.8)', // Progress red
+            paddingHorizontal: isMobile ? 16 : 20,
+            paddingVertical: isMobile ? 14 : 12,
             borderRadius: 12,
           };
         case 'secondary':
           return {
             ...baseStyles,
             backgroundColor: 'transparent',
-            borderWidth: 2,
-            borderColor: '#d946ef',
-            paddingHorizontal: isMobileMenu ? 16 : 16,
-            paddingVertical: isMobileMenu ? 14 : 10,
+            borderWidth: 1,
+            borderColor: 'rgba(177, 0, 36, 0.6)',
+            paddingHorizontal: isMobile ? 16 : 16,
+            paddingVertical: isMobile ? 14 : 10,
             borderRadius: 12,
           };
         default:
@@ -180,18 +181,18 @@ export default function Header() {
     };
 
     const getTextColor = () => {
-      // Handle active state - keep normal text color but make it bolder
+      // Handle active state - keep white but make it bolder
       if (isActive && variant === 'default') {
-        return '#374151'; // Keep the same color, just make it bold
+        return '#ffffff';
       }
 
       switch (variant) {
         case 'primary':
           return '#ffffff';
         case 'secondary':
-          return '#d946ef';
+          return '#ffffff';
         default:
-          return '#374151';
+          return '#ffffff';
       }
     };
 
@@ -213,13 +214,13 @@ export default function Header() {
             marginVertical: isMobileMenu ? 6 : 0,
             ...(Platform.OS === 'web' && { cursor: 'pointer' }),
             ...(isMobileMenu && {
-              backgroundColor: variant === 'default' ? '#f9fafb' : undefined,
+              backgroundColor: variant === 'default' ? 'rgba(255, 255, 255, 0.05)' : undefined,
             }),
           },
           (variant !== 'default') && {
-            shadowColor: variant === 'primary' ? '#d946ef' : '#000',
+            shadowColor: variant === 'primary' ? '#B10024' : '#000',
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: variant === 'primary' ? 0.2 : 0.1,
+            shadowOpacity: variant === 'primary' ? 0.4 : 0.3,
             shadowRadius: 4,
             elevation: 3,
           }
@@ -255,7 +256,8 @@ export default function Header() {
                 color: getTextColor(), 
                 fontWeight: isActive && variant === 'default' ? '700' : 
                            variant === 'default' ? '500' : '600',
-                fontSize: isMobileMenu ? 16 : 15
+                fontSize: isMobileMenu ? 16 : 15,
+                fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
               }}
             >
               {children}
@@ -270,12 +272,12 @@ export default function Header() {
     <>
       <View 
         style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: '#000000',
           borderBottomWidth: 1,
-          borderBottomColor: '#e5e7eb',
+          borderBottomColor: 'rgba(255, 255, 255, 0.1)',
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
+          shadowOpacity: 0.8,
           shadowRadius: 8,
           elevation: 4,
           width: '100%',
@@ -290,7 +292,7 @@ export default function Header() {
             paddingVertical: 8,
             width: '100%'
           }}>
-            {/* Enhanced Logo */}
+            {/* Enhanced Logo with Progress aesthetic */}
             <TouchableOpacity 
               onPress={() => router.push('/')} 
               style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
@@ -299,14 +301,14 @@ export default function Header() {
                 style={{ 
                   width: isMobile ? 36 : 40, 
                   height: isMobile ? 36 : 40, 
-                  backgroundColor: '#d946ef', 
-                  borderRadius: 12, 
+                  backgroundColor: 'rgba(177, 0, 36, 0.8)', // Progress red color
+                  borderRadius: 8, 
                   alignItems: 'center', 
                   justifyContent: 'center', 
                   marginRight: isMobile ? 8 : 12,
-                  shadowColor: '#d946ef',
+                  shadowColor: '#B10024',
                   shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
+                  shadowOpacity: 0.6,
                   shadowRadius: 6,
                   elevation: 4,
                 }}
@@ -316,20 +318,23 @@ export default function Header() {
               <View>
                 <Text style={{ 
                   fontSize: isMobile ? 18 : 22, 
-                  fontWeight: 'bold', 
-                  color: '#111827',
-                  lineHeight: isMobile ? 22 : 26
+                  fontWeight: '700', 
+                  color: '#ffffff',
+                  lineHeight: isMobile ? 22 : 26,
+                  fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
+                  letterSpacing: 1,
                 }}>
-                  Progress UK
+                  Progress
                 </Text>
                 <Text style={{ 
                   fontSize: isMobile ? 10 : 11, 
-                  color: '#6B7280',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   fontWeight: '500',
                   letterSpacing: 0.5,
-                  textTransform: 'uppercase'
+                  textTransform: 'uppercase',
+                  fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                 }}>
-                  Unleashing Potential
+                  Beyond Left & Right
                 </Text>
               </View>
             </TouchableOpacity>
@@ -370,9 +375,9 @@ export default function Header() {
                 style={{
                   padding: 10,
                   borderRadius: 10,
-                  backgroundColor: isMobileMenuOpen ? '#f3f4f6' : 'transparent',
+                  backgroundColor: isMobileMenuOpen ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                   borderWidth: 1,
-                  borderColor: isMobileMenuOpen ? '#d1d5db' : 'transparent',
+                  borderColor: isMobileMenuOpen ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
                 }}
               >
                 <Animated.View
@@ -390,7 +395,7 @@ export default function Header() {
                   <Ionicons 
                     name={isMobileMenuOpen ? "close" : "menu"} 
                     size={24} 
-                    color={isMobileMenuOpen ? '#d946ef' : '#374151'} 
+                    color={isMobileMenuOpen ? '#ffffff' : 'rgba(255, 255, 255, 0.8)'} 
                   />
                 </Animated.View>
               </TouchableOpacity>
@@ -403,14 +408,14 @@ export default function Header() {
       {isMobile && (
         <Animated.View
           style={{
-            backgroundColor: '#ffffff',
+            backgroundColor: '#000000',
             borderBottomWidth: 1,
-            borderBottomColor: '#e5e7eb',
+            borderBottomColor: 'rgba(255, 255, 255, 0.1)',
             paddingHorizontal: 16,
             paddingTop: 8,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
+            shadowOpacity: 0.8,
             shadowRadius: 12,
             elevation: 8,
             maxHeight: slideAnim.interpolate({
@@ -442,7 +447,7 @@ export default function Header() {
             <View 
               style={{
                 height: 1,
-                backgroundColor: '#f3f4f6',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 marginBottom: 16,
                 marginHorizontal: -16,
               }}
@@ -486,7 +491,7 @@ export default function Header() {
         <View
           style={{
             flex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
             justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: 20,
@@ -494,14 +499,16 @@ export default function Header() {
         >
           <View
             style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: '#111111',
               borderRadius: 16,
               padding: 24,
               width: '100%',
               maxWidth: 400,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.1)',
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
+              shadowOpacity: 0.6,
               shadowRadius: 12,
               elevation: 10,
             }}
@@ -511,22 +518,25 @@ export default function Header() {
                 style={{
                   width: 64,
                   height: 64,
-                  backgroundColor: '#fee2e2',
+                  backgroundColor: 'rgba(177, 0, 36, 0.2)',
                   borderRadius: 32,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 16,
+                  borderWidth: 1,
+                  borderColor: 'rgba(177, 0, 36, 0.3)',
                 }}
               >
-                <Ionicons name="log-out" size={28} color="#dc2626" />
+                <Ionicons name="log-out" size={28} color="#B10024" />
               </View>
               <Text
                 style={{
                   fontSize: 20,
                   fontWeight: 'bold',
-                  color: '#111827',
+                  color: '#ffffff',
                   textAlign: 'center',
                   marginBottom: 8,
+                  fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                 }}
               >
                 Confirm Logout
@@ -534,9 +544,10 @@ export default function Header() {
               <Text
                 style={{
                   fontSize: 16,
-                  color: '#6B7280',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textAlign: 'center',
                   lineHeight: 24,
+                  fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                 }}
               >
                 Are you sure you want to log out of your account?
@@ -548,18 +559,21 @@ export default function Header() {
                 onPress={handleLogoutCancel}
                 style={{
                   flex: 1,
-                  backgroundColor: '#f3f4f6',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
                   borderRadius: 8,
                   paddingVertical: 14,
                   alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
                   ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
                 }}
               >
                 <Text
                   style={{
-                    color: '#374151',
+                    color: '#ffffff',
                     fontSize: 16,
                     fontWeight: '600',
+                    fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                   }}
                 >
                   Cancel
@@ -569,13 +583,13 @@ export default function Header() {
                 onPress={handleLogoutConfirm}
                 style={{
                   flex: 1,
-                  backgroundColor: '#dc2626',
+                  backgroundColor: 'rgba(177, 0, 36, 0.8)',
                   borderRadius: 8,
                   paddingVertical: 14,
                   alignItems: 'center',
-                  shadowColor: '#dc2626',
+                  shadowColor: '#B10024',
                   shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
+                  shadowOpacity: 0.5,
                   shadowRadius: 4,
                   elevation: 4,
                   ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
@@ -586,6 +600,7 @@ export default function Header() {
                     color: '#ffffff',
                     fontSize: 16,
                     fontWeight: '600',
+                    fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                   }}
                 >
                   Yes, Logout
