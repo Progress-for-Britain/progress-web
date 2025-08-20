@@ -546,7 +546,7 @@ export default function Account() {
                         iconLibrary="Ionicons"
                         title="Latest News & Updates"
                         description="Stay informed with the latest party news, policy updates, and campaign progress"
-                        onPress={() => router.push('/newsroom')}
+                        onPress={() => router.replace('/newsroom')}
                         color="#8b5cf6"
                         delay={100}
                       />
@@ -556,7 +556,7 @@ export default function Account() {
                         iconLibrary="Ionicons"
                         title="Make a Donation"
                         description="Support our ongoing campaigns and initiatives with a contribution"
-                        onPress={() => router.push('/donate')}
+                        onPress={() => router.replace('/donate')}
                         color="#10b981"
                         delay={200}
                       />
@@ -566,7 +566,7 @@ export default function Account() {
                         iconLibrary="MaterialIcons"
                         title="Upcoming Votes"
                         description="View and participate in upcoming party votes and policy decisions"
-                        onPress={() => router.push('/votes')}
+                        onPress={() => router.replace('/votes')}
                         color="#f59e0b"
                         delay={300}
                       />
@@ -576,7 +576,7 @@ export default function Account() {
                         iconLibrary="Ionicons"
                         title="Local Events"
                         description="Find and register for political events, rallies, and meetings in your area"
-                        onPress={() => router.push('/events')}
+                        onPress={() => router.replace('/events')}
                         color="#ef4444"
                         delay={400}
                       />
@@ -603,7 +603,7 @@ export default function Account() {
                         iconLibrary="Ionicons"
                         title="Volunteer Opportunities"
                         description="Sign up to help with campaigns, phone banking, and community outreach"
-                        onPress={() => router.push('/volunteer')}
+                        onPress={() => router.replace('/volunteer')}
                         color="#10b981"
                         delay={500}
                       />

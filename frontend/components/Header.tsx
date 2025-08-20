@@ -94,7 +94,7 @@ export default function Header() {
     if (onPress) {
       onPress();
     } else if (href) {
-      router.push(href as any);
+      router.replace(href as any);
     }
   };
 
@@ -298,7 +298,7 @@ export default function Header() {
           }}>
             {/* Progress brand name */}
             <TouchableOpacity 
-              onPress={() => router.push('/')} 
+              onPress={() => router.replace('/')} 
               style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
             >
               <Text style={{ 

@@ -1114,7 +1114,7 @@ export default function Join() {
                             <TouchableOpacity
                               onPress={() => {
                                 saveFormData(); // Save form data before navigating
-                                router.push('/nda');
+                                router.replace('/nda');
                               }}
                               style={{ marginTop: 4 }}
                             >
