@@ -17,13 +17,15 @@ import Header from '../components/Header';
 import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
+import useResponsive from '../util/useResponsive';
 
 export default function Join() {
   const { isDark } = useTheme();
   const colors = getColors(isDark);
   const gradients = getGradients(isDark);
   const commonStyles = getCommonStyles(isDark);
-  const styles = getStyles(colors);
+  const { isMobile, width } = useResponsive();
+  const styles = getStyles(colors, isMobile, width);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -515,11 +517,23 @@ export default function Join() {
                   </LinearGradient>
                 </View>
                 
-                <Text style={[commonStyles.title, { fontSize: 48, marginBottom: 20 }]}>
+                <Text style={[commonStyles.title, { 
+                  fontSize: isMobile ? 32 : 48, 
+                  marginBottom: 20,
+                  textAlign: 'center',
+                  paddingHorizontal: isMobile ? 16 : 0
+                }]}>
                   Help Unleash Britain's Potential
                 </Text>
                 
-                <Text style={[commonStyles.text, { fontSize: 18, marginBottom: 32, lineHeight: 28, maxWidth: 600 }]}>
+                <Text style={[commonStyles.text, { 
+                  fontSize: isMobile ? 16 : 18, 
+                  marginBottom: 32, 
+                  lineHeight: isMobile ? 24 : 28, 
+                  maxWidth: isMobile ? width - 32 : 600,
+                  textAlign: 'center',
+                  paddingHorizontal: isMobile ? 16 : 0
+                }]}>
                   Join thousands of progressives building the innovation economy, creating prosperity zones, and making Britain work for everyone, everywhere.
                 </Text>
 
@@ -720,7 +734,7 @@ export default function Join() {
                 </View>
 
                 {/* Personal Information */}
-                <View style={{ flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 16, marginBottom: 20 }}>
+                <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 16, marginBottom: 20 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inputLabel}>
                       First Name *
@@ -762,7 +776,7 @@ export default function Join() {
                   />
                 </View>
 
-                <View style={{ flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 16, marginBottom: 24 }}>
+                <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 16, marginBottom: 24 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inputLabel}>
                       Phone Number
@@ -1386,13 +1400,13 @@ export default function Join() {
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
+const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.create({
   successContainer: {
     backgroundColor: colors.surface,
-    marginHorizontal: 20,
+    marginHorizontal: isMobile ? 16 : 20,
     marginTop: 20,
-    borderRadius: 20,
-    padding: 32,
+    borderRadius: isMobile ? 16 : 20,
+    padding: isMobile ? 24 : 32,
     borderLeftWidth: 4,
     borderLeftColor: colors.success,
     position: 'relative',
@@ -1444,10 +1458,10 @@ const getStyles = (colors: any) => StyleSheet.create({
   textInput: {
     borderWidth: 2,
     borderColor: colors.background === '#ffffff' ? `${colors.text}40` : `${colors.text}30`,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
+    borderRadius: isMobile ? 8 : 12,
+    paddingHorizontal: isMobile ? 12 : 16,
+    paddingVertical: isMobile ? 12 : 14,
+    fontSize: isMobile ? 14 : 16,
     backgroundColor: colors.background === '#ffffff' ? `${colors.surface}80` : `${colors.surface}60`,
     color: colors.text,
     ...(Platform.OS === 'web' && {
@@ -1457,16 +1471,17 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   heroContainer: {
     alignItems: 'center',
-    marginBottom: 60,
-    paddingVertical: 40,
+    marginBottom: isMobile ? 40 : 60,
+    paddingVertical: isMobile ? 20 : 40,
+    paddingHorizontal: isMobile ? 16 : 0,
   },
   highlightContainer: {
     marginBottom: 16,
   },
   statsContainer: {
-    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+    flexDirection: isMobile ? 'column' : 'row',
     alignItems: 'center',
-    gap: 24,
+    gap: isMobile ? 16 : 24,
     marginBottom: 32,
   },
   statItem: {
@@ -1494,11 +1509,12 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   formContainer: {
     backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
-    borderRadius: 24,
-    padding: 40,
-    maxWidth: 700,
+    borderRadius: isMobile ? 16 : 24,
+    padding: isMobile ? 20 : 40,
+    maxWidth: isMobile ? width - 32 : 700,
     alignSelf: 'center',
     width: '100%',
+    marginHorizontal: isMobile ? 16 : 0,
     borderWidth: 1,
     borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
     position: 'relative',
@@ -1513,8 +1529,8 @@ const getStyles = (colors: any) => StyleSheet.create({
     paddingVertical: 40,
   },
   benefitsGrid: {
-    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
-    gap: 24,
+    flexDirection: isMobile ? 'column' : 'row',
+    gap: isMobile ? 16 : 24,
     marginBottom: 40,
     flexWrap: 'wrap',
     justifyContent: 'center',
@@ -1523,8 +1539,9 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   benefitCard: {
     flex: 1,
-    minWidth: 280,
-    borderRadius: 20,
+    minWidth: isMobile ? width - 64 : 280,
+    maxWidth: isMobile ? width - 64 : undefined,
+    borderRadius: isMobile ? 16 : 20,
     borderWidth: 1,
     borderColor: `${colors.text}20`,
     overflow: 'hidden',
@@ -1534,9 +1551,9 @@ const getStyles = (colors: any) => StyleSheet.create({
     } as any),
   },
   benefitGradient: {
-    padding: 32,
+    padding: isMobile ? 24 : 32,
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: isMobile ? 16 : 20,
   },
   benefitIconContainer: {
     borderRadius: 16,
@@ -1544,7 +1561,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     marginBottom: 20,
   },
   benefitTitle: {
-    fontSize: 20,
+    fontSize: isMobile ? 18 : 20,
     fontWeight: 'bold',
     color: colors.text,
     marginBottom: 12,
@@ -1556,8 +1573,8 @@ const getStyles = (colors: any) => StyleSheet.create({
   benefitDescription: {
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
-    fontSize: 16,
+    lineHeight: isMobile ? 20 : 24,
+    fontSize: isMobile ? 14 : 16,
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
@@ -1568,7 +1585,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     paddingVertical: 40,
   },
   ctaFeatures: {
-    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+    flexDirection: isMobile ? 'column' : 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     justifyContent: 'center',
@@ -1731,9 +1748,9 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   volunteerSection: {
     marginBottom: 32,
-    padding: 20,
+    padding: isMobile ? 16 : 20,
     backgroundColor: `${colors.secondary}20`,
-    borderRadius: 16,
+    borderRadius: isMobile ? 12 : 16,
     borderLeftWidth: 4,
     borderLeftColor: colors.secondary,
     borderWidth: 1,

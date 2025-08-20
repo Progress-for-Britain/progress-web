@@ -442,7 +442,7 @@ export default function Header() {
             elevation: 8,
             maxHeight: slideAnim.interpolate({
               inputRange: [0, 1],
-              outputRange: [0, 300], // Adjust based on your menu content
+              outputRange: [0, 1000], // Adjust based on your menu content
             }),
             opacity: fadeAnim,
             paddingBottom: slideAnim.interpolate({
@@ -475,41 +475,6 @@ export default function Header() {
               }}
             />
             
-            {/* Theme Toggle for Mobile */}
-            <TouchableOpacity
-              onPress={toggleTheme}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 16,
-                paddingHorizontal: 20,
-                marginHorizontal: -16,
-                marginBottom: 8,
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                borderRadius: 12,
-              }}
-            >
-              <Ionicons 
-                name={isDark ? "moon" : "sunny"} 
-                size={20} 
-                color={colors.text}
-                style={{ marginRight: 16 }}
-              />
-              <Text style={{
-                fontSize: 16,
-                fontWeight: '500',
-                color: colors.text,
-                flex: 1,
-              }}>
-                {isDark ? 'Dark Mode' : 'Light Mode'}
-              </Text>
-              <Ionicons 
-                name="chevron-forward" 
-                size={16} 
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
-            
             {!isAuthenticated ? (
               // Unauthenticated mobile navigation with staggered animations
               <>
@@ -534,6 +499,62 @@ export default function Header() {
                 </NavButton>
               </>
             )}
+
+            {/* Theme Toggle for Mobile - Improved UI */}
+            <TouchableOpacity
+              onPress={toggleTheme}
+              activeOpacity={0.85}
+              style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: 14,
+              paddingHorizontal: 18,
+              marginHorizontal: -12,
+              marginBottom: 10,
+              backgroundColor: isDark ? 'rgba(177, 0, 36, 0.08)' : 'rgba(177, 0, 36, 0.04)',
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(177,0,36,0.12)',
+              shadowColor: '#B10024',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 4,
+              elevation: 2,
+              }}
+            >
+              <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(177,0,36,0.08)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 14,
+              }}
+              >
+              <Ionicons
+                name={isDark ? "moon" : "sunny"}
+                size={20}
+                color={isDark ? "#FFD700" : "#B10024"}
+              />
+              </View>
+              <Text style={{
+              fontSize: 16,
+              fontWeight: '600',
+              color: colors.text,
+              flex: 1,
+              letterSpacing: 0.2,
+              }}>
+              {isDark ? 'Dark Mode' : 'Light Mode'}
+              </Text>
+              <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={colors.textSecondary}
+              style={{ marginLeft: 8 }}
+              />
+            </TouchableOpacity>
           </Animated.View>
         </Animated.View>
       )}
