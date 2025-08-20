@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Plat
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
 import { api, PendingUser, User } from '../util/api';
 import Header from '../components/Header';
@@ -383,6 +384,10 @@ export default function UserManagement() {
 
   return (
     <>
+      <Head>
+        <title>User Management - Progress UK</title>
+        <meta name="description" content="Admin panel for managing Progress UK members, pending users, and member verification" />
+      </Head>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="dark" />
       <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>

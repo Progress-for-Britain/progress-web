@@ -25,7 +25,6 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "name": "Progress UK - Unleashing Potential",
       "shortName": "Progress UK",
       "description": "Progress UK - A progressive political movement unleashing potential across the UK",
       "themeColor": "transparent",

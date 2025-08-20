@@ -12,6 +12,7 @@ import Animated, {
   withRepeat,
   withSequence,
 } from "react-native-reanimated";
+import Head from 'expo-router/head';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { AuroraBackground } from '../util/auroraComponents';
@@ -160,6 +161,10 @@ export default function NotFound() {
 
   return (
     <View style={commonStyles.appContainer}>
+      <Head>
+        <title>Page Not Found - Progress UK</title>
+        <meta name="description" content="The page you're looking for doesn't exist. Return to Progress UK's homepage to continue exploring" />
+      </Head>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
 

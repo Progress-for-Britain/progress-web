@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import Head from 'expo-router/head';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import Animated, { 
   useSharedValue, 
@@ -143,6 +144,10 @@ export default function NDA() {
 
   return (
     <View style={commonStyles.appContainer}>
+      <Head>
+        <title>NDA - Progress UK</title>
+        <meta name="description" content="Confidentiality agreement for Progress UK members. Secure your participation in building Britain's future" />
+      </Head>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
       

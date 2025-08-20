@@ -11,6 +11,7 @@ import Animated, {
   withSpring,
   withRepeat
 } from "react-native-reanimated";
+import Head from 'expo-router/head';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { AuroraBackground } from '../util/auroraComponents';
@@ -157,6 +158,10 @@ export default function Donate() {
 
   return (
     <>
+      <Head>
+        <title>Donate - Progress UK</title>
+        <meta name="description" content="Support Progress UK's mission to transform British politics. Your donation helps build the future of governance" />
+      </Head>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={commonStyles.appContainer}>

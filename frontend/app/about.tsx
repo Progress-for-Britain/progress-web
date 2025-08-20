@@ -3,7 +3,7 @@ import { View, Text, Platform, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import Header from '../components/Header';
-import Footer from '../components/Footer';
+import SEOHead from '../components/SEOHead';
 import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
@@ -19,6 +19,7 @@ export default function About() {
   
   return (
     <>
+      <SEOHead pageKey="about" />
       <View style={commonStyles.appContainer}>
         {/* Header Component */}
         <Header />
@@ -179,7 +180,7 @@ export default function About() {
 const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.create({
   heroSection: {
     marginBottom: 40,
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   heroSubtext: {
     fontSize: isMobile ? 16 : 18,

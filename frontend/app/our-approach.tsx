@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text, Platform, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Platform, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { useRouter } from 'expo-router';
+import Header from '../components/Header';  
+import SEOHead from '../components/SEOHead';
 import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
@@ -12,6 +13,7 @@ import { useResponsive } from '../util/useResponsive';
 export default function OurApproach() {
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
+  const router = useRouter();
   const commonStyles = getCommonStyles(isDark, isMobile, width);
   const gradients = getGradients(isDark);
   const colors = getColors(isDark);
@@ -19,6 +21,7 @@ export default function OurApproach() {
   
   return (
     <>
+      <SEOHead pageKey="our-approach" />
       <View style={commonStyles.appContainer}>
         {/* Header Component */}
         <Header />
@@ -73,14 +76,13 @@ export default function OurApproach() {
           </View>
 
           {/* Call to Action */}
-          <View style={styles.urgencySection}>
-            <Text style={[commonStyles.text, styles.urgencyText]}>
+          <View style={styles.section}>
+            <Text style={[commonStyles.text, styles.bodyText]}>
               We need to win to avoid another five years of instability and turmoil. We need to win so Reform can't 
-              discredit the notion of new parties. We need to win to turn this ship around.
+              discredit the notion of new parties. We need to win to turn this ship around.{'\n\n'}
+              
+              It can be done.
             </Text>
-            <View style={styles.canBeDeone}>
-              <Text style={[commonStyles.text, styles.emphasisText]}>It can be done.</Text>
-            </View>
           </View>
 
           {/* The People Section */}
@@ -118,8 +120,8 @@ export default function OurApproach() {
           </View>
 
           {/* Culture Section */}
-          <View style={styles.cultureSection}>
-            <View style={styles.cultureHeader}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
               <MaterialIcons 
                 name="psychology" 
                 size={24} 
@@ -161,16 +163,22 @@ export default function OurApproach() {
 
           {/* Final Call to Action */}
           <View style={styles.closingSection}>
-            <LinearGradient
-              colors={gradients.primary}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.closingGradient}
+            <TouchableOpacity 
+              onPress={() => router.push('/join')}
+              style={styles.joinButton}
+              activeOpacity={0.8}
             >
-              <Text style={styles.closingText}>
-                If you want to work with the most serious and high leverage team in the country, join us.
-              </Text>
-            </LinearGradient>
+              <LinearGradient
+                colors={gradients.primary}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.closingGradient}
+              >
+                <Text style={styles.closingText}>
+                  If you want to work with the most serious and high leverage team in the country, join us.
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
 
           {/* Add extra space at the bottom for mobile scroll */}
@@ -184,7 +192,7 @@ export default function OurApproach() {
 const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.create({
   heroSection: {
     marginBottom: 40,
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   section: {
     marginBottom: 40,
@@ -207,57 +215,20 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     lineHeight: isMobile ? 24 : 28,
     textAlign: 'justify',
   },
-  urgencySection: {
-    marginBottom: 40,
-    paddingHorizontal: isMobile ? 20 : 40,
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  urgencyText: {
-    fontSize: isMobile ? 16 : 18,
-    lineHeight: isMobile ? 24 : 28,
-    textAlign: 'justify',
-    fontWeight: '500',
-  },
-  canBeDeone: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  emphasisText: {
-    fontSize: isMobile ? 18 : 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: colors.accent,
-  },
-  cultureSection: {
-    marginBottom: 40,
-    paddingHorizontal: isMobile ? 20 : 40,
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    borderLeftWidth: 4,
-  },
-  cultureHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
   closingSection: {
     marginBottom: 40,
     alignItems: 'center',
     paddingHorizontal: isMobile ? 20 : 40,
+  },
+  joinButton: {
+    minWidth: isMobile ? '90%' : '60%',
   },
   closingGradient: {
     paddingVertical: 24,
     paddingHorizontal: 32,
     borderRadius: 16,
     alignItems: 'center',
-    minWidth: isMobile ? '90%' : '60%',
+    width: '100%',
   },
   closingText: {
     color: '#FFFFFF',

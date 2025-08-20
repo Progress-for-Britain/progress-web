@@ -11,7 +11,7 @@ import Animated, {
   withRepeat
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../util/auth-context';
+import SEOHead from '../components/SEOHead';
 import { api } from '../util/api';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -445,6 +445,7 @@ export default function Join() {
 
   return (
     <View style={commonStyles.appContainer}>
+      <SEOHead pageKey="join" />
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
 

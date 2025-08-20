@@ -11,6 +11,7 @@ import Animated, {
   interpolate,
   Extrapolate
 } from 'react-native-reanimated';
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
 import api, { Event, EventsResponse } from '../util/api';
@@ -533,6 +534,10 @@ export default function Events() {
 
   return (
     <>
+      <Head>
+        <title>Events - Progress UK</title>
+        <meta name="description" content="Discover Progress UK events, meetings, and activities in your area. Join us in building the future of British politics" />
+      </Head>
       {/* Show loading screen while auth is being determined */}
       {isLoading ? (
         <View style={{ 

@@ -11,6 +11,7 @@ import Animated, {
   interpolate,
   Extrapolate
 } from 'react-native-reanimated';
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
 import { api, Post, PostsResponse } from '../util/api';
@@ -622,6 +623,10 @@ export default function Newsroom() {
 
   return (
     <>
+      <Head>
+        <title>Newsroom - Progress UK</title>
+        <meta name="description" content="Stay updated with Progress UK news, press releases, and latest developments in our political movement" />
+      </Head>
       {/* Show loading screen while auth is being determined */}
       {isLoading ? (
         <View style={{ 

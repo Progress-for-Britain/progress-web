@@ -2,17 +2,22 @@ import React from "react";
 import { View, Text, Platform, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
+import SEOHead from '../components/SEOHead';
 import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
+import { useResponsive } from '../util/useResponsive';
 
 export default function Home() {
   const { isDark } = useTheme();
-  const commonStyles = getCommonStyles(isDark);
+  const { isMobile, width } = useResponsive();
+  const commonStyles = getCommonStyles(isDark, isMobile, width);
   const gradients = getGradients(isDark);
+  const styles = getStyles(isMobile);
   
   return (
     <>
+      <SEOHead pageKey="home" />
       <View style={commonStyles.appContainer}>
         {/* Header Component */}
         <Header />
@@ -53,7 +58,7 @@ export default function Home() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (isMobile: boolean) => StyleSheet.create({
   heroHighlightContainer: {
     position: 'relative',
     overflow: 'hidden',
@@ -67,8 +72,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   normalText: {
-    lineHeight: 28,
-    fontSize: 18,
+    lineHeight: isMobile ? 24 : 28,
+    fontSize: isMobile ? 16 : 18,
     textAlign: 'right',
   },
 });

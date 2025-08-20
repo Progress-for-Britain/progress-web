@@ -195,7 +195,7 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
       }),
     },
     title: {
-      fontSize: 32,
+      fontSize: isMobile ? 32 : 48,
       fontWeight: '700',
       marginBottom: 20,
       color: themeColors.text,

@@ -4,6 +4,7 @@ import { Stack, useRouter, Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
 import { AuroraBackground } from '../util/auroraComponents';
@@ -78,6 +79,10 @@ export default function Login() {
 
   return (
     <>
+      <Head>
+        <title>Login - Progress UK</title>
+        <meta name="description" content="Login to your Progress UK account to access member resources and participate in building Britain's future" />
+      </Head>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={commonStyles.appContainer}>

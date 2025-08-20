@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, Platform, ScrollView, S
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
 import Header from '../components/Header';
 import api, { NotificationPreferences, PrivacySettings } from '../util/api';
@@ -278,6 +279,10 @@ export default function Settings() {
 
   return (
     <>
+      <Head>
+        <title>Settings - Progress UK</title>
+        <meta name="description" content="Configure your Progress UK account settings, notifications, and privacy preferences" />
+      </Head>
       {/* Show loading screen while auth is being determined */}
       {authLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' }}>

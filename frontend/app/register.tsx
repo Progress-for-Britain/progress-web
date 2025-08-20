@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoid
 import { Stack, useRouter, Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
 import { api } from '../util/api';
 import Header from '../components/Header';
@@ -147,6 +148,10 @@ export default function Register() {
 
   return (
     <>
+      <Head>
+        <title>Register - Progress UK</title>
+        <meta name="description" content="Register for Progress UK and join thousands building the future of British politics" />
+      </Head>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={commonStyles.appContainer}>
