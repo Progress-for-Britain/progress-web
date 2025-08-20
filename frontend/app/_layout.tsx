@@ -41,6 +41,13 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen 
+        name="about" 
+        options={{ 
+          title: "About Us - Progress UK",
+          headerTitle: "About Us"
+        }} 
+      />
+      <Stack.Screen 
         name="nda" 
         options={{ 
           title: "NDA - Progress UK",
