@@ -13,7 +13,7 @@ const SITE_NAME = 'Progress UK';
 
 export const SEO_DATA: Record<string, SEOData> = {
   home: {
-    title: 'Progress UK - Unleashing Britain\'s Potential',
+    title: 'Progress UK',
     description: 'A progressive political movement unleashing potential across the UK. Join ordinary people doing extraordinary things to build Britain\'s future.',
     url: `${BASE_URL}/`,
     image: `${BASE_URL}/public/assets/favicon.png`,
