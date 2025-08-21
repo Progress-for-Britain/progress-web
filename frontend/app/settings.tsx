@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Platform, ScrollView, Switch } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import Header from '../components/Header';
-import api, { NotificationPreferences, PrivacySettings } from '../util/api';
+import api from '../util/api';
 
 export default function Settings() {
   const { user, isAuthenticated, isLoading: authLoading, logout, refreshUser } = useAuth();
@@ -304,7 +303,6 @@ export default function Settings() {
           <Stack.Screen options={{ headerShown: false }} />
           <StatusBar style="light" />
           <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-            <Header />
         
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               {/* Hero Section */}

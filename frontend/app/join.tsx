@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Alert, KeyboardAvoidingView, StyleSheet, Linking } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,9 +13,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import SEOHead from '../components/SEOHead';
 import { api } from '../util/api';
-import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import useResponsive from '../util/useResponsive';
@@ -448,12 +446,6 @@ export default function Join() {
       <SEOHead pageKey="join" />
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
-
-      {/* Header */}
-      <Header />
-
-      {/* Background aurora effect */}
-      <AuroraBackground />
 
       {/* Success State */}
       {isSuccess && (

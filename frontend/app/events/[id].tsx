@@ -20,7 +20,6 @@ import Animated, {
   interpolate,
   Extrapolate,
 } from 'react-native-reanimated';
-import Header from '../../components/Header';
 import { getEvent, registerForEvent, unregisterFromEvent } from '../../util/api';
 import { useAuth } from '../../util/auth-context';
 import type { Event, EventType } from '../../util/api';
@@ -226,7 +225,6 @@ export default function EventDetail() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Header />
         <View style={styles.titleContainer}>
           <Pressable
             style={styles.backButton}
@@ -249,7 +247,6 @@ export default function EventDetail() {
   if (!event) {
     return (
       <View style={styles.container}>
-        <Header />
         <View style={styles.titleContainer}>
           <Pressable
             style={styles.backButton}
@@ -278,7 +275,6 @@ export default function EventDetail() {
 
   return (
     <View style={styles.container}>
-      <Header />
       <View style={styles.titleContainer}>
         <Pressable
           style={styles.backButton}

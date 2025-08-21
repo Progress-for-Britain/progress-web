@@ -11,10 +11,8 @@ import Animated, {
   withSpring,
   withRepeat
 } from "react-native-reanimated";
-import Head from 'expo-router/head';
-import Header from '../components/Header';
+import Head from 'expo-router/head';;
 import Footer from '../components/Footer';
-import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import useResponsive from '../util/useResponsive';
@@ -165,12 +163,7 @@ export default function Donate() {
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={commonStyles.appContainer}>
-        {/* Header Component */}
-        <Header />
-
-        {/* Background aurora effect */}
-        <AuroraBackground />
-
+        
         {/* Donate Page Content */}
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <View style={commonStyles.content}>

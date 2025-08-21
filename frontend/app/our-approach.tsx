@@ -2,10 +2,8 @@ import React from "react";
 import { View, Text, Platform, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import { useRouter } from 'expo-router';
-import Header from '../components/Header';  
+import { useRouter } from 'expo-router';  
 import SEOHead from '../components/SEOHead';
-import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -23,11 +21,6 @@ export default function OurApproach() {
     <>
       <SEOHead pageKey="our-approach" />
       <View style={commonStyles.appContainer}>
-        {/* Header Component */}
-        <Header />
-        
-        {/* Background aurora effect */}
-        <AuroraBackground />
 
         {/* Our Approach Page Content */}
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>

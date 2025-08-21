@@ -1,9 +1,7 @@
 import React from "react";
 import { View, Text, Platform, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
-import Header from '../components/Header';
 import SEOHead from '../components/SEOHead';
-import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -19,12 +17,6 @@ export default function Home() {
     <>
       <SEOHead pageKey="home" />
       <View style={commonStyles.appContainer}>
-        {/* Header Component */}
-        <Header />
-        
-        {/* Background aurora effect */}
-        <AuroraBackground />
-
         {/* Home Page Content */}
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.heroHighlightContainer}>

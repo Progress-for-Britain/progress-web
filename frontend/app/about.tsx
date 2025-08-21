@@ -1,10 +1,8 @@
 import React from "react";
-import { View, Text, Platform, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import Header from '../components/Header';
+import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import SEOHead from '../components/SEOHead';
-import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -21,11 +19,6 @@ export default function About() {
     <>
       <SEOHead pageKey="about" />
       <View style={commonStyles.appContainer}>
-        {/* Header Component */}
-        <Header />
-        
-        {/* Background aurora effect */}
-        <AuroraBackground />
 
         {/* About Page Content */}
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>

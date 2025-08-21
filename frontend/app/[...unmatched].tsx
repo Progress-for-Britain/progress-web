@@ -3,20 +3,16 @@ import { View, Text, TouchableOpacity, Platform, ScrollView } from "react-native
 import { Link, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withSpring,
-  withRepeat,
-  withSequence,
+  withRepeat
 } from "react-native-reanimated";
 import Head from 'expo-router/head';
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import { AuroraBackground } from '../util/auroraComponents';
-import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
+import Footer from "../components/Footer";;
+import { getCommonStyles, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
 
@@ -24,7 +20,6 @@ export default function NotFound() {
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
   const colors = getColors(isDark);
-  const gradients = getGradients(isDark);
   const commonStyles = getCommonStyles(isDark, isMobile, width);
 
   const fadeAnim = useSharedValue(0);
@@ -167,12 +162,6 @@ export default function NotFound() {
       </Head>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
-
-      {/* Header */}
-      <Header />
-
-      {/* Background aurora effect */}
-      <AuroraBackground />
 
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Main Content */}

@@ -13,7 +13,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import Header from '../components/Header';
 import api, { UserStats, UserActivity } from '../util/api';
 
 export default function Account() {
@@ -322,7 +321,6 @@ export default function Account() {
           <Stack.Screen options={{ headerShown: false }} />
           <StatusBar style="light" />
           <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-            <Header />
         
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               {/* Hero Section */}

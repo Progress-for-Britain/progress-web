@@ -2,19 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, ScrollView, Alert, TextInput } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
   withTiming, 
-  withSpring,
-  interpolate,
-  Extrapolate
+  withSpring
 } from 'react-native-reanimated';
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import Header from '../components/Header';
-import api, { Event, EventsResponse } from '../util/api';
+import api, { Event } from '../util/api';
 import { CreateEventModal } from '../components/createEventModal';
 import { EditEventModal } from '../components/editEventModal';
 
@@ -563,7 +560,6 @@ export default function Events() {
           <Stack.Screen options={{ headerShown: false }} />
           <StatusBar style="light" />
           <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-            <Header />
         
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               {/* Hero Section */}

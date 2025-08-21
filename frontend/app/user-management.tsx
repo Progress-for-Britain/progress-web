@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Platform } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
 import { api, PendingUser, User } from '../util/api';
-import Header from '../components/Header';
 import { format } from 'date-fns';
 
 interface EventAssignment {
@@ -358,7 +357,6 @@ export default function UserManagement() {
         <Stack.Screen options={{ headerShown: false }} />
         <StatusBar style="dark" />
         <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-          <Header />
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ fontSize: 18, color: '#6b7280' }}>Loading...</Text>
           </View>
@@ -373,7 +371,6 @@ export default function UserManagement() {
         <Stack.Screen options={{ headerShown: false }} />
         <StatusBar style="dark" />
         <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-          <Header />
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ fontSize: 18, color: '#6b7280' }}>Loading...</Text>
           </View>
@@ -391,7 +388,6 @@ export default function UserManagement() {
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="dark" />
       <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-        <Header />
         
         <ScrollView style={{ flex: 1 }}>
           {/* Header */}
