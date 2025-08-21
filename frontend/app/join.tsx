@@ -507,17 +507,6 @@ export default function Join() {
             <View style={commonStyles.content}>
               {/* Hero Section */}
               <View style={commonStyles.heroContainer}>
-                <View style={styles.highlightContainer}>
-                  <LinearGradient
-                    colors={gradients.primary}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={commonStyles.highlightBackground}
-                  >
-                    <Text style={commonStyles.highlightText}>Join Progress UK</Text>
-                  </LinearGradient>
-                </View>
-
                 <Text style={[commonStyles.title, {
                   fontSize: isMobile ? 32 : 48,
                   marginBottom: 20,
