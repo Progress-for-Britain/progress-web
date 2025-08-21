@@ -1,19 +1,24 @@
-# Progress Web
+# Progress UK Web Platform
 
-A full-stack Progressive Web Application built with React Native, Expo Router, and Node.js. This platform features user authentication, donation functionality, newsroom, and account management capabilities.
+A full-stack Progressive Web Application for Progress UK, built with React Native, Expo Router, and Node.js. This platform serves as the main web presence for Progress UK, featuring user registration, event management, newsroom, user management, and comprehensive member onboarding capabilities.
 
 ## 🏗️ Project Structure
 
 ```
 progressweb/
-├── frontend/          # React Native frontend with Expo
-│   ├── app/          # App Router pages
-│   ├── components/   # Reusable UI components
-│   ├── util/         # Utilities and API helpers
-│   └── assets/       # Static assets
-└── backend/          # Node.js Express server
-    ├── prisma/       # Database schema and migrations
-    └── server.js     # Main server file
+├── frontend/             # React Native frontend with Expo
+│   ├── app/             # App Router pages (index, join, events, newsroom, etc.)
+│   ├── components/      # Reusable UI components (Header, Footer, Modals)
+│   ├── util/           # Utilities, API helpers, auth context, themes
+│   └── assets/         # Static assets (icons, animations, PDFs)
+└── backend/            # Node.js Express server
+    ├── controllers/    # Route controllers (user, event, news, pendingUser)
+    ├── middleware/     # Authentication middleware
+    ├── routes/         # API routes
+    ├── prisma/         # Database schema and migrations
+    ├── scripts/        # Database seeding scripts
+    ├── utils/          # Server utilities
+    └── public/         # Static files and assets
 ```
 
 ## 🚀 Tech Stack
@@ -21,32 +26,39 @@ progressweb/
 ### Frontend
 - **React Native** with **Expo Router** for navigation
 - **TypeScript** for type safety
-- **NativeWind** (Tailwind CSS for React Native)
-- **React Native Reanimated** for animations
-- **Expo Vector Icons** for iconography
+- **React Native Reanimated** for smooth animations
+- **Linear Gradient** for beautiful UI effects
+- **Expo Vector Icons** for comprehensive iconography
+- **Expo Notifications** for push notifications
 
 ### Backend
 - **Node.js** with **Express.js**
 - **Prisma ORM** for database management
 - **PostgreSQL** database
+- **JWT** for authentication
 - **CORS** enabled for cross-origin requests
+- **RESTful API** architecture
 
 ## 📱 Features
 
-- **Authentication System** - User login and registration
-- **Account Management** - User profile and settings
-- **Donation Platform** - Integrated donation functionality
-- **Newsroom** - Content management and display
-- **Progressive Web App** - Works on mobile, tablet, and desktop
-- **Responsive Design** - Optimized for all screen sizes
+- **User Registration & Authentication** - Secure member onboarding with JWT
+- **Event Management** - Create, view, and manage political events and campaigns
+- **User Management** - Admin tools for managing members and pending users
+- **Newsroom** - Dynamic content management for news and updates
+- **Progressive Web App** - Optimized for mobile, tablet, and desktop
+- **Responsive Design** - Consistent experience across all devices
+- **Dark/Light Theme** - User preference theming system
+- **Member Onboarding** - Comprehensive join process with document acceptance
+- **Account Settings** - Profile management and preferences
+- **Donation Integration** - Support for campaign funding
 
 ## 🛠️ Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
+- Node.js (v18 or higher)
 - npm or yarn
 - PostgreSQL database
-- Expo CLI (optional, for mobile development)
+- Expo CLI (for mobile development)
 
 ### Installation
 
@@ -65,8 +77,12 @@ progressweb/
    cp .env.example .env
    # Edit .env with your database URL and other configurations
    
-   # Run Prisma migrations
+   # Run Prisma migrations and generate client
+   npx prisma generate
    npx prisma migrate dev
+   
+   # Optional: Seed test data
+   npm run seed
    
    # Start the server
    npm start
@@ -89,6 +105,7 @@ progressweb/
 ### Backend
 - `npm start` - Start the production server
 - `npm run dev` - Start development server with nodemon
+- `npm run seed` - Seed database with test data
 
 ### Frontend
 - `npm start` - Start Expo development server
@@ -104,7 +121,8 @@ Create a `.env` file in the backend directory:
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5432/progressweb"
 PORT=3000
-JWT_SECRET="your-jwt-secret"
+JWT_SECRET="your-secure-jwt-secret-key"
+NODE_ENV="development"
 ```
 
 ## 📱 Deployment
@@ -134,8 +152,12 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## 📞 Support
 
-For support and questions, please open an issue in the GitHub repository.
+For support and questions regarding Progress UK's web platform, please open an issue in the GitHub repository or contact the development team.
+
+## 🏛️ About Progress UK
+
+This platform serves Progress UK, a political movement focused on unleashing Britain's potential through progressive policies and grassroots organizing.
 
 ---
 
-Built with ❤️ using React Native, Expo, and Node.js
+Built with ❤️ for Progress UK using React Native, Expo, and Node.js

@@ -20,7 +20,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryAddUsageDescription": "Progress UK needs access to save photos and PDFs to your photo library.",
         "NSPhotoLibraryUsageDescription": "Progress UK needs access to your photo library to save and share content."
-      }
+      },
+      "bundleIdentifier": "com.longtimenoc.progressuk"
     },
     "android": {
       "adaptiveIcon": {
