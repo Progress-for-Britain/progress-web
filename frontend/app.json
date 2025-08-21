@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -38,7 +38,6 @@
       "bundler": "metro",
       "shortName": "Progress UK",
       "description": "Progress UK - A progressive political movement unleashing potential across the UK",
-      "themeColor": "transparent",
       "backgroundColor": "#ffffff"
     },
     "plugins": [
@@ -52,7 +51,8 @@
           "defaultChannel": "default",
           "sounds": []
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "privacyPolicyUrl": "https://www.advancedtutoring.uk/privacy-policy",
