@@ -8,6 +8,8 @@ import { AuroraBackground } from "../util/auroraComponents";
 import { getCommonStyles } from "../util/commonStyles";
 import { useResponsive } from "../util/useResponsive";
 import Header from "../components/Header";
+import { useFonts } from "expo-font";
+import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 
 function RootLayoutNav() {
   const { isDark } = useTheme();
@@ -37,6 +39,16 @@ function RootLayoutNav() {
 }
 
 export default function Layout() {
+    const [fontsLoaded] = useFonts({
+    ...Ionicons.font,
+    ...MaterialIcons.font,
+    ...FontAwesome5.font,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <ThemeProvider>
       <AuthProvider>
