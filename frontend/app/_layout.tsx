@@ -43,8 +43,6 @@ function RootLayoutNav() {
 
 Curious? Join us at ${websiteUrl}
       `);
-      console.log('');
-      console.log('Built by Oakforge Studios LTD.');
     }
   }, []); // Empty dependency array ensures this runs only once
   
