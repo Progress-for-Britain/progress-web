@@ -10,6 +10,7 @@ import { useResponsive } from "../util/useResponsive";
 import Header from "../components/Header";
 import { useFonts } from "expo-font";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { useEffect } from "react";
 
 function RootLayoutNav() {
   const { isDark } = useTheme();
@@ -17,6 +18,35 @@ function RootLayoutNav() {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
   const commonStyles = getCommonStyles(isDark, isMobile, width);
+  
+  // Display ASCII art console log for web platform - only once
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3005';
+      const websiteUrl = API_BASE_URL.replace(':3005', '').replace('http://', '').replace('https://', '');
+      
+      console.log(`
+█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓
+░                                        ░
+░              ████████                  ░
+░              ██     ██                 ░
+░              ██     ██                 ░
+░              ████████                  ░
+░              ██                        ░
+░              ██                        ░
+░              ██                        ░
+░                                        ░
+░             PROGRESS UK                ░
+░        Building a Better Future        ░
+░                                        ░
+█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓
+
+Curious? Join us at ${websiteUrl}
+      `);
+      console.log('');
+      console.log('Built by Oakforge Studios LTD.');
+    }
+  }, []); // Empty dependency array ensures this runs only once
   
   // Determine if this is a mobile platform (iOS or Android)
   const isMobilePlatform = Platform.OS === 'ios' || Platform.OS === 'android';

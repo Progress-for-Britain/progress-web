@@ -58,7 +58,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
           toValue: 1,
           duration: 400,
           easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ]).start();
     } else {
@@ -80,7 +80,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
           toValue: 0,
           duration: 350,
           easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ]).start();
     }
@@ -235,14 +235,14 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
           duration: 300,
           delay: animationDelay,
           easing: Easing.out(Easing.back(1.1)),
-          useNativeDriver: false,
+          useNativeDriver: Platform.OS !== 'web',
         }).start();
       } else if (isMobileMenu && !isMobileMenuOpen) {
         Animated.timing(itemAnim, {
           toValue: 0,
           duration: 200,
           easing: Easing.in(Easing.quad),
-          useNativeDriver: false,
+          useNativeDriver: Platform.OS !== 'web',
         }).start();
       }
     }, [isMobileMenuOpen, isMobileMenu, animationDelay]);
