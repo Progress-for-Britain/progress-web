@@ -14,7 +14,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import Head from 'expo-router/head';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -23,8 +23,6 @@ import Animated, {
   withRepeat
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import Header from '../components/Header';
-import { AuroraBackground } from '../util/auroraComponents';
 import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import useResponsive from '../util/useResponsive';
@@ -150,12 +148,6 @@ export default function NDA() {
       </Head>
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
-      
-      {/* Header */}
-      <Header />
-      
-      {/* Background aurora effect */}
-      <AuroraBackground />
       
       {/* Success State */}
       {isSuccess && (

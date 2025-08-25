@@ -5,11 +5,10 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Head from 'expo-router/head';
-import { useAuth } from '../util/auth-context';
-import Header from '../components/Header';
-import { AuroraBackground } from '../util/auroraComponents';
+import { useAuth } from '../util/auth-context';;
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
+import useResponsive from '../util/useResponsive';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -20,22 +19,27 @@ export default function Login() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const { login, isStorageReady } = useAuth();
   const { isDark } = useTheme();
+  const { isMobile, width } = useResponsive();
   const router = useRouter();
 
-  const commonStyles = getCommonStyles(isDark);
+  const commonStyles = getCommonStyles(isDark, isMobile, width);
   const gradients = getGradients(isDark);
   const colors = getColors(isDark);
 
+  // Only use animations on web to avoid mobile callback issues
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const fadeAnim = React.useRef(new Animated.Value(1)).current;
 
   React.useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
+    if (Platform.OS === 'web') {
+      fadeAnim.setValue(0);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: Platform.OS !== 'web',
+      }).start();
+    }
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -86,11 +90,6 @@ export default function Login() {
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={commonStyles.appContainer}>
-        {/* Header Component */}
-        <Header />
-        
-        {/* Background aurora effect */}
-        <AuroraBackground />
 
         {/* Login Page Content */}
         <ScrollView contentContainerStyle={[commonStyles.content, { justifyContent: 'center', minHeight: '80%' }]} showsVerticalScrollIndicator={false}>
@@ -101,8 +100,8 @@ export default function Login() {
             <Animated.View 
               style={{ 
                 backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 20,
-                padding: 40,
+                borderRadius: isMobile ? 16 : 20,
+                padding: isMobile ? 24 : 40,
                 width: '100%',
                 maxWidth: 500,
                 shadowColor: isDark ? colors.accent : '#000',
@@ -110,29 +109,20 @@ export default function Login() {
                 shadowOpacity: isDark ? 0.3 : 0.1,
                 shadowRadius: 12,
                 elevation: 8,
-                opacity: fadeAnim,
+                opacity: Platform.OS === 'web' ? fadeAnim : 1,
                 borderWidth: isDark ? 1 : 0,
                 borderColor: isDark ? 'rgba(217, 70, 239, 0.3)' : 'transparent',
-                transform: [
-                  { scale: scaleAnim },
-                  {
-                    translateY: fadeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [20, 0],
-                    }),
-                  }
-                ]
               }}
             >
-              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: 32 }]}>
+              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: isMobile ? 24 : 32 }]}>
                 Welcome Back
               </Text>
               <Text 
                 style={{ 
-                  fontSize: 18,
+                  fontSize: isMobile ? 16 : 18,
                   color: colors.textSecondary,
                   textAlign: 'center',
-                  marginBottom: 40,
+                  marginBottom: isMobile ? 32 : 40,
                   ...(Platform.OS === 'web' && {
                     fontFamily: "'Montserrat', sans-serif",
                   }),
@@ -141,8 +131,8 @@ export default function Login() {
                 Sign in to your Progress account
               </Text>
 
-            <View style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 18, fontWeight: '500', color: colors.text, marginBottom: 10, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+            <View style={{ marginBottom: isMobile ? 16 : 20 }}>
+              <Text style={{ fontSize: isMobile ? 16 : 18, fontWeight: '500', color: colors.text, marginBottom: 10, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Email
               </Text>
               <TextInput
@@ -156,27 +146,24 @@ export default function Login() {
                 textContentType="emailAddress"
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
-                style={{
-                  borderWidth: 1,
-                  borderColor: emailFocused || email ? colors.accent : colors.border,
-                  borderRadius: 10,
-                  paddingHorizontal: 18,
-                  paddingVertical: 16,
-                  fontSize: 18,
-                  backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
-                  color: colors.text,
-                  ...(Platform.OS === 'web' && { 
-                    outline: 'none',
-                    transition: 'all 0.2s ease',
-                    boxShadow: emailFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
-                    fontFamily: "'Montserrat', sans-serif"
-                  } as any)
-                }}
+                style={[
+                  commonStyles.textInput,
+                  {
+                    borderColor: emailFocused || email ? colors.accent : colors.border,
+                    fontSize: isMobile ? 16 : 18,
+                    paddingVertical: isMobile ? 14 : 16,
+                    ...(Platform.OS === 'web' && { 
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                      boxShadow: emailFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                    } as any)
+                  }
+                ]}
               />
             </View>
 
-            <View style={{ marginBottom: 28 }}>
-              <Text style={{ fontSize: 18, fontWeight: '500', color: colors.text, marginBottom: 10, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+            <View style={{ marginBottom: isMobile ? 20 : 28 }}>
+              <Text style={{ fontSize: isMobile ? 16 : 18, fontWeight: '500', color: colors.text, marginBottom: 10, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Password
               </Text>
               <View style={{ position: 'relative' }}>
@@ -190,23 +177,20 @@ export default function Login() {
                   textContentType="password"
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: passwordFocused || password ? colors.accent : colors.border,
-                    borderRadius: 10,
-                    paddingHorizontal: 18,
-                    paddingVertical: 16,
-                    paddingRight: 55,
-                    fontSize: 18,
-                    backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
-                    color: colors.text,
-                    ...(Platform.OS === 'web' && { 
-                      outline: 'none',
-                      transition: 'all 0.2s ease',
-                      boxShadow: passwordFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
-                      fontFamily: "'Montserrat', sans-serif"
-                    } as any)
-                  }}
+                  style={[
+                    commonStyles.textInput,
+                    {
+                      borderColor: passwordFocused || password ? colors.accent : colors.border,
+                      fontSize: isMobile ? 16 : 18,
+                      paddingVertical: isMobile ? 14 : 16,
+                      paddingRight: 55,
+                      ...(Platform.OS === 'web' && { 
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                        boxShadow: passwordFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                      } as any)
+                    }
+                  ]}
                 />
                 <TouchableOpacity
                   onPress={() => setIsPasswordVisible(!isPasswordVisible)}
@@ -230,9 +214,9 @@ export default function Login() {
             </View>
 
             <TouchableOpacity
-              style={{ alignSelf: 'flex-end', marginBottom: 28 }}
+              style={{ alignSelf: 'flex-end', marginBottom: isMobile ? 20 : 28 }}
             >
-              <Text style={{ color: colors.accent, fontSize: 16, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              <Text style={{ color: colors.accent, fontSize: isMobile ? 14 : 16, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Forgot Password?
               </Text>
             </TouchableOpacity>
@@ -240,7 +224,7 @@ export default function Login() {
             <View
               style={{
                 marginBottom: 20,
-                borderRadius: 10,
+                borderRadius: isMobile ? 8 : 10,
                 ...(Platform.OS === 'ios' && !isLoading && {
                   shadowColor: colors.accent,
                   shadowOffset: { width: 0, height: 4 },
@@ -262,7 +246,7 @@ export default function Login() {
                 }}
                 disabled={isLoading}
                 style={{
-                  borderRadius: 10,
+                  borderRadius: isMobile ? 8 : 10,
                   overflow: 'hidden',
                   ...(Platform.OS === 'web' && { 
                     cursor: isLoading ? 'not-allowed' : 'pointer',
@@ -275,14 +259,14 @@ export default function Login() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{
-                    paddingVertical: 18,
+                    paddingVertical: isMobile ? 16 : 18,
                     alignItems: 'center',
                   }}
                 >
                   <Text 
                     style={{ 
                       color: '#ffffff',
-                      fontSize: 18,
+                      fontSize: isMobile ? 16 : 18,
                       fontWeight: '600',
                       textAlign: 'center',
                       ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
@@ -295,10 +279,10 @@ export default function Login() {
             </View>
 
             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: colors.textSecondary, fontSize: 18, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              <Text style={{ color: colors.textSecondary, fontSize: isMobile ? 14 : 18, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Don't have an account?{' '}
               </Text>
-              <Link href="/register" style={{ color: colors.accent, fontSize: 18, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              <Link href="/register" style={{ color: colors.accent, fontSize: isMobile ? 14 : 18, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Sign up
               </Link>
             </View>

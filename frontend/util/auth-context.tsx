@@ -18,8 +18,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = '@progress_auth_token';
-const USER_DATA_KEY = '@progress_user_data';
+const TOKEN_KEY = 'progress-auth-token';
+const USER_DATA_KEY = 'progress-user-data';
 
 // Hybrid storage helper that uses SecureStore on mobile, AsyncStorage on web
 const isSecureStoreSupported = Platform.OS !== 'web';

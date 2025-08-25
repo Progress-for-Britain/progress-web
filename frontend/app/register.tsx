@@ -5,9 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import { api } from '../util/api';
-import Header from '../components/Header';
-import { AuroraBackground } from '../util/auroraComponents';
+import { api } from '../util/api';;
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 
@@ -155,11 +153,6 @@ export default function Register() {
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={commonStyles.appContainer}>
-        {/* Header Component */}
-        <Header />
-        
-        {/* Background aurora effect */}
-        <AuroraBackground />
 
         {/* Register Page Content */}
         <ScrollView contentContainerStyle={[commonStyles.content, { justifyContent: 'center', minHeight: '80%' }]} showsVerticalScrollIndicator={false}>

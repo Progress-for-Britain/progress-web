@@ -2,7 +2,7 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [ "main", "progress-UI" ]
+    branches: [ "main", "progress-UI", "Mobile-Builds" ]
 
 jobs:
   build-and-deploy:

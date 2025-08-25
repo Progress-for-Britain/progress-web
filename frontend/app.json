@@ -4,9 +4,10 @@
     "slug": "progress-uk",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/favicon.png",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": false,
+    "scheme": "progressuk",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -25,7 +26,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/favicon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -42,7 +43,12 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "origin": "https://progress.tristans.club"
+        }
+      ],
       [
         "expo-notifications",
         {

@@ -291,11 +291,7 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
     // Primary action button
     primaryButton: {
       borderRadius: isMobile ? 12 : 16,
-      shadowColor: themeColors.accent,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
+      ...getOptimizedShadow('heavy', isDark, themeColors.primary),
       ...(Platform.OS === 'web' && { 
         cursor: 'pointer',
         transition: 'all 0.2s ease',
@@ -407,6 +403,57 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
       }),
     },
   });
+};
+
+// Shadow optimization utilities
+export const getOptimizedShadow = (
+  shadowIntensity: 'light' | 'medium' | 'heavy' = 'medium',
+  isDark: boolean = false,
+  backgroundColor?: string
+) => {
+  const shadowConfigs = {
+    light: {
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isDark ? 0.6 : 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    medium: {
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.7 : 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    heavy: {
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isDark ? 0.8 : 0.15,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+  };
+
+  const config = shadowConfigs[shadowIntensity];
+  
+  // Ensure solid background color for shadow optimization
+  const solidBackgroundColor = backgroundColor || (isDark ? '#000000' : '#ffffff');
+  
+  if (Platform.OS === 'web') {
+    // For web, use boxShadow instead of deprecated shadow properties
+    return {
+      backgroundColor: solidBackgroundColor,
+      boxShadow: `0 ${config.shadowOffset.height}px ${config.shadowRadius * 2}px rgba(0, 0, 0, ${config.shadowOpacity})`,
+    };
+  }
+  
+  // For native platforms, use the traditional shadow properties
+  return {
+    backgroundColor: solidBackgroundColor,
+    shadowColor: '#000000',
+    shadowOffset: config.shadowOffset,
+    shadowOpacity: config.shadowOpacity,
+    shadowRadius: config.shadowRadius,
+    elevation: config.elevation,
+  };
 };
 
 // Common styles (backward compatibility - dark theme)
