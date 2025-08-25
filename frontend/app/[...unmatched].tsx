@@ -1,25 +1,32 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, Platform, ImageBackground } from "react-native";
+import { View, Text, TouchableOpacity, Platform, ScrollView } from "react-native";
 import { Link, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
   withSpring,
-  withRepeat,
-  withSequence,
-  interpolate,
-  Extrapolate
+  withRepeat
 } from "react-native-reanimated";
-import Header from "../components/Header";
+import Head from 'expo-router/head';
+import Footer from "../components/Footer";;
+import { getCommonStyles, getColors } from '../util/commonStyles';
+import { useTheme } from '../util/theme-context';
+import { useResponsive } from '../util/useResponsive';
+import { AuroraBackground } from "../util/auroraComponents";
 
 export default function NotFound() {
+  const { isDark } = useTheme();
+  const { isMobile, width } = useResponsive();
+  const colors = getColors(isDark);
+  const commonStyles = getCommonStyles(isDark, isMobile, width);
+
   const fadeAnim = useSharedValue(0);
   const slideAnim = useSharedValue(50);
   const rotateAnim = useSharedValue(0);
-  const bounceAnim = useSharedValue(0);
+  const bounceAnim = useSharedValue(1);
 
   useEffect(() => {
     // Animate elements on mount
@@ -32,14 +39,11 @@ export default function NotFound() {
       -1
     );
 
-    // Bounce animation for the 404 number
+    // Subtle bounce animation for the 404 number
     bounceAnim.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 1000 }),
-        withTiming(0.95, { duration: 500 }),
-        withTiming(1, { duration: 500 })
-      ),
-      -1
+      withTiming(1.05, { duration: 2000 }),
+      -1,
+      true
     );
   }, []);
 
@@ -56,27 +60,29 @@ export default function NotFound() {
     transform: [{ scale: bounceAnim.value }],
   }));
 
-  const ActionButton = ({ 
-    href, 
-    children, 
+  const ActionButton = ({
+    href,
+    children,
     variant = 'primary',
     icon,
-    iconLibrary = 'Ionicons'
-  }: { 
-    href: string; 
-    children: React.ReactNode; 
+    iconLibrary = 'Ionicons',
+    fullWidth = false
+  }: {
+    href: string;
+    children: React.ReactNode;
     variant?: 'primary' | 'secondary' | 'accent';
     icon?: string;
     iconLibrary?: 'Ionicons' | 'MaterialIcons' | 'FontAwesome5';
+    fullWidth?: boolean;
   }) => {
     const buttonAnim = useSharedValue(1);
-    
+
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [{ scale: buttonAnim.value }],
     }));
 
     const handlePressIn = () => {
-      buttonAnim.value = withSpring(0.95);
+      buttonAnim.value = withSpring(0.96);
     };
 
     const handlePressOut = () => {
@@ -84,37 +90,53 @@ export default function NotFound() {
     };
 
     const getButtonStyles = () => {
+      const baseStyles = {
+        shadowColor: colors.accent,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
+      };
+
       switch (variant) {
         case 'primary':
           return {
-            backgroundColor: '#d946ef',
+            ...baseStyles,
+            backgroundColor: colors.accent,
             borderWidth: 0,
           };
         case 'secondary':
           return {
-            backgroundColor: 'transparent',
+            backgroundColor: `${colors.surface}95`,
             borderWidth: 2,
-            borderColor: '#d946ef',
+            borderColor: colors.accent,
+            shadowColor: colors.accent,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 3,
           };
         case 'accent':
           return {
-            backgroundColor: '#0ea5e9',
+            ...baseStyles,
+            backgroundColor: colors.primary,
             borderWidth: 0,
           };
         default:
           return {
-            backgroundColor: '#d946ef',
+            ...baseStyles,
+            backgroundColor: colors.accent,
             borderWidth: 0,
           };
       }
     };
 
     const getTextColor = () => {
-      return variant === 'secondary' ? '#d946ef' : '#ffffff';
+      return variant === 'secondary' ? colors.accent : '#ffffff';
     };
 
-    const IconComponent = iconLibrary === 'MaterialIcons' ? MaterialIcons : 
-                         iconLibrary === 'FontAwesome5' ? FontAwesome5 : Ionicons;
+    const IconComponent = iconLibrary === 'MaterialIcons' ? MaterialIcons :
+      iconLibrary === 'FontAwesome5' ? FontAwesome5 : Ionicons;
 
     return (
       <Link href={href} asChild>
@@ -123,33 +145,38 @@ export default function NotFound() {
           onPressOut={handlePressOut}
           style={{
             ...getButtonStyles(),
-            borderRadius: 16,
-            paddingHorizontal: 32,
-            paddingVertical: 18,
-            marginHorizontal: 8,
-            marginBottom: 16,
+            borderRadius: 20,
+            paddingHorizontal: isMobile ? 24 : 32,
+            paddingVertical: isMobile ? 16 : 18,
+            marginHorizontal: isMobile ? 0 : 8,
+            marginBottom: isMobile ? 12 : 16,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            minWidth: 200,
-            ...(Platform.OS === 'web' && { cursor: 'pointer' })
+            minHeight: 56, // Better touch target
+            width: fullWidth ? '100%' : (isMobile ? '100%' : 'auto'),
+            minWidth: isMobile ? undefined : 200,
+            ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
           }}
         >
           <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }, animatedStyle]}>
             {icon && (
-              <IconComponent 
-                name={icon as any} 
-                size={20} 
-                color={getTextColor()} 
-                style={{ marginRight: 8 }} 
+              <IconComponent
+                name={icon as any}
+                size={isMobile ? 18 : 20}
+                color={getTextColor()}
+                style={{ marginRight: 10 }}
               />
             )}
-            <Text 
-              style={{ 
+            <Text
+              style={{
                 color: getTextColor(),
-                fontSize: 18,
+                fontSize: isMobile ? 16 : 18,
                 fontWeight: '700',
-                textAlign: 'center'
+                textAlign: 'center',
+                ...(Platform.OS === 'web' && {
+                  fontFamily: "'Montserrat', sans-serif",
+                } as any),
               }}
             >
               {children}
@@ -161,275 +188,341 @@ export default function NotFound() {
   };
 
   return (
-    <>
+    <View style={commonStyles.appContainer}>
+      <Head>
+        <title>Page Not Found - Progress UK</title>
+        <meta name="description" content="The page you're looking for doesn't exist. Return to Progress UK's homepage to continue exploring" />
+      </Head>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar style="light" />
-      <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-        <Header />
-        
-        {/* 404 Hero Section with Background Image */}
-        <ImageBackground
-          source={{ 
-            uri: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'
-          }}
-          style={{ 
-            flex: 1,
-            paddingVertical: 100,
-            paddingHorizontal: 20,
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-          resizeMode="cover"
-        >
-          {/* Dark overlay for better text readability */}
-          <View 
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(30, 41, 59, 0.8)', // Darker overlay for 404 page
-            }}
-          />
-
-          {/* Animated Background Elements */}
-          <Animated.View 
-            style={[
-              {
-                position: 'absolute',
-                top: 100,
-                right: 50,
-                width: 120,
-                height: 120,
-                backgroundColor: 'rgba(217, 70, 239, 0.2)',
-                borderRadius: 60,
-              },
-              rotateStyle
-            ]}
-          />
-          <Animated.View 
-            style={[
-              {
-                position: 'absolute',
-                bottom: 80,
-                left: 30,
-                width: 80,
-                height: 80,
-                backgroundColor: 'rgba(14, 165, 233, 0.15)',
-                borderRadius: 40,
-              },
-              rotateStyle
-            ]}
-          />
-          <Animated.View 
-            style={[
-              {
-                position: 'absolute',
-                top: 200,
-                left: 50,
-                width: 60,
-                height: 60,
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                borderRadius: 30,
-              },
-              rotateStyle
-            ]}
-          />
-
-          <Animated.View style={fadeInStyle}>
-            <View style={{ alignItems: 'center', maxWidth: 800 }}>
-              {/* 404 Number with Animation */}
-              <Animated.View style={[bounceStyle, { marginBottom: 30 }]}>
-                <Text 
-                  style={{ 
-                    fontSize: Platform.OS === 'web' ? 120 : 80,
-                    fontWeight: 'bold',
-                    color: '#d946ef',
-                    textAlign: 'center',
-                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                    textShadowOffset: { width: 0, height: 4 },
-                    textShadowRadius: 8,
-                  }}
-                >
-                  404
-                </Text>
-              </Animated.View>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <AuroraBackground />
+      <ScrollView 
+        style={{ flex: 1 }} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ 
+          paddingBottom: isMobile ? 40 : 60,
+          minHeight: isMobile ? undefined : '100%',
+        }}
+        bounces={true}
+        alwaysBounceVertical={false}
+      >
+        {/* Main Content */}
+        <View style={[commonStyles.content, {
+          paddingHorizontal: isMobile ? 20 : commonStyles.content.paddingHorizontal,
+          paddingTop: isMobile ? 40 : 60,
+        }]}>
+          {/* Hero Section */}
+          <View style={[commonStyles.heroContainer, {
+            paddingBottom: isMobile ? 40 : 60,
+          }]}>
+            <Animated.View style={fadeInStyle}>
+              {/* 404 Number */}
+              <View style={{ 
+                marginBottom: isMobile ? 20 : 30, 
+                alignItems: 'center',
+                position: 'relative',
+              }}>
+                <Animated.View style={[rotateStyle, {
+                  position: 'absolute',
+                  width: isMobile ? 120 : 180,
+                  height: isMobile ? 120 : 180,
+                  borderRadius: isMobile ? 60 : 90,
+                  borderWidth: 2,
+                  borderColor: `${colors.accent}30`,
+                  borderStyle: 'dashed',
+                }]} />
+                <Animated.View style={[bounceStyle]}>
+                  <Text
+                    style={{
+                      fontSize: isMobile ? 72 : 120,
+                      fontWeight: 'bold',
+                      color: colors.accent,
+                      textAlign: 'center',
+                      ...(Platform.OS === 'web' && {
+                        fontFamily: "'Montserrat', sans-serif",
+                      } as any),
+                    }}
+                  >
+                    404
+                  </Text>
+                </Animated.View>
+              </View>
 
               {/* Error Icon */}
-              <View 
+              <View
                 style={{
-                  backgroundColor: 'rgba(217, 70, 239, 0.2)',
-                  borderRadius: 25,
-                  padding: 20,
-                  marginBottom: 30,
+                  backgroundColor: `${colors.accent}15`,
+                  borderRadius: 30,
+                  padding: isMobile ? 16 : 20,
+                  marginBottom: isMobile ? 24 : 30,
+                  alignSelf: 'center',
+                  borderWidth: 1,
+                  borderColor: `${colors.accent}25`,
                 }}
               >
-                <MaterialIcons name="error-outline" size={50} color="#d946ef" />
+                <MaterialIcons 
+                  name="error-outline" 
+                  size={isMobile ? 40 : 50} 
+                  color={colors.accent} 
+                />
               </View>
-              
-              <Text 
-                style={{ 
-                  fontSize: Platform.OS === 'web' ? 42 : 32,
-                  fontWeight: 'bold',
-                  color: '#ffffff',
-                  textAlign: 'center',
-                  marginBottom: 20,
-                  lineHeight: Platform.OS === 'web' ? 50 : 40,
-                  textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                  textShadowOffset: { width: 0, height: 2 },
-                  textShadowRadius: 4,
-                }}
-              >
+
+              <Text style={[commonStyles.title, {
+                fontSize: isMobile ? 28 : 42,
+                marginBottom: isMobile ? 16 : 20,
+                textAlign: 'center',
+                lineHeight: isMobile ? 34 : 50,
+              }]}>
                 Page Not Found
               </Text>
-              
-              <Text 
-                style={{ 
-                  fontSize: 20,
-                  color: '#e0f2fe',
-                  textAlign: 'center',
-                  marginBottom: 40,
-                  lineHeight: 30,
-                  maxWidth: 600,
-                  fontWeight: '400'
-                }}
-              >
+
+              <Text style={[commonStyles.text, {
+                fontSize: isMobile ? 16 : 20,
+                lineHeight: isMobile ? 24 : 30,
+                marginBottom: isMobile ? 32 : 40,
+                maxWidth: isMobile ? '100%' : 600,
+                textAlign: 'center',
+                alignSelf: 'center',
+                paddingHorizontal: isMobile ? 0 : 20,
+              }]}>
                 Looks like this page has taken a detour on the road to British prosperity! Don't worry, we'll get you back on track.
               </Text>
+            </Animated.View>
+          </View>
 
-              {/* Quick Stats to maintain brand consistency */}
-              <View 
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: 16,
-                  padding: 20,
-                  marginBottom: 40,
-                  borderLeftWidth: 5,
-                  borderLeftColor: '#d946ef',
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                  <Ionicons name="information-circle" size={24} color="#ffffff" style={{ marginRight: 10 }} />
-                  <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: '600' }}>
-                    Quick Navigation Tips
-                  </Text>
-                </View>
-                <Text style={{ color: '#cbd5e1', fontSize: 16, lineHeight: 24 }}>
-                  Use the navigation above or the buttons below to explore our policies, join our movement, or learn about upcoming events.
-                </Text>
-              </View>
-              
-              <View style={{ 
-                flexDirection: Platform.OS === 'web' ? 'row' : 'column', 
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                justifyContent: 'center'
-              }}>
-                <ActionButton href="/" icon="home" iconLibrary="Ionicons">
-                  Back to Home
-                </ActionButton>
-                <ActionButton href="/events" variant="accent" icon="calendar" iconLibrary="Ionicons">
-                  Upcoming Events
-                </ActionButton>
-                <ActionButton href="/join" variant="secondary" icon="person-add" iconLibrary="Ionicons">
-                  Join Movement
-                </ActionButton>
-              </View>
-
-              {/* Additional helpful links */}
-              <View style={{ marginTop: 40, alignItems: 'center' }}>
-                <Text style={{ color: '#94a3b8', fontSize: 16, marginBottom: 20 }}>
-                  Or explore these popular sections:
-                </Text>
-                <View style={{ 
-                  flexDirection: 'row', 
-                  flexWrap: 'wrap',
-                  justifyContent: 'center',
-                  gap: 20
-                }}>
-                  <Link href="/newsroom" asChild>
-                    <TouchableOpacity 
-                      style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        paddingHorizontal: 16,
-                        paddingVertical: 8,
-                        borderRadius: 20,
-                      }}
-                    >
-                      <FontAwesome5 name="newspaper" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
-                      <Text style={{ color: '#94a3b8', fontSize: 14 }}>Newsroom</Text>
-                    </TouchableOpacity>
-                  </Link>
-                  
-                  <Link href="/donate" asChild>
-                    <TouchableOpacity 
-                      style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        paddingHorizontal: 16,
-                        paddingVertical: 8,
-                        borderRadius: 20,
-                      }}
-                    >
-                      <Ionicons name="heart" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
-                      <Text style={{ color: '#94a3b8', fontSize: 14 }}>Donate</Text>
-                    </TouchableOpacity>
-                  </Link>
-                  
-                  <Link href="/account" asChild>
-                    <TouchableOpacity 
-                      style={{ 
-                        flexDirection: 'row', 
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        paddingHorizontal: 16,
-                        paddingVertical: 8,
-                        borderRadius: 20,
-                      }}
-                    >
-                      <Ionicons name="person" size={16} color="#94a3b8" style={{ marginRight: 8 }} />
-                      <Text style={{ color: '#94a3b8', fontSize: 14 }}>Account</Text>
-                    </TouchableOpacity>
-                  </Link>
-                </View>
-              </View>
-
-              {/* Social Links (matching index page) */}
+          {/* Quick Navigation Card */}
+          <View style={[commonStyles.cardContainer, { 
+            marginBottom: isMobile ? 24 : 40,
+            marginHorizontal: isMobile ? 0 : 20,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: `${colors.accent}20`,
+            backgroundColor: `${colors.surface}95`,
+          }]}>
+            <Animated.View style={fadeInStyle}>
               <View style={{ 
                 flexDirection: 'row', 
                 alignItems: 'center', 
-                marginTop: 50,
-                flexWrap: 'wrap',
-                justifyContent: 'center'
+                marginBottom: 16 
               }}>
-                <Text style={{ color: '#94a3b8', fontSize: 16, marginRight: 20 }}>
-                  Stay connected:
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 15 }}>
-                  <TouchableOpacity style={{ padding: 10 }}>
-                    <FontAwesome5 name="twitter" size={24} color="#1da1f2" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ padding: 10 }}>
-                    <FontAwesome5 name="facebook" size={24} color="#4267b2" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ padding: 10 }}>
-                    <FontAwesome5 name="instagram" size={24} color="#e4405f" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ padding: 10 }}>
-                    <FontAwesome5 name="youtube" size={24} color="#ff0000" />
-                  </TouchableOpacity>
+                <View style={{
+                  backgroundColor: `${colors.accent}20`,
+                  borderRadius: 12,
+                  padding: 8,
+                  marginRight: 12,
+                }}>
+                  <Ionicons name="information-circle" size={20} color={colors.accent} />
                 </View>
+                <Text style={[commonStyles.text, {
+                  fontSize: isMobile ? 16 : 18,
+                  fontWeight: '600',
+                  color: colors.text,
+                  textAlign: 'left',
+                  flex: 1,
+                }]}>
+                  Quick Navigation Tips
+                </Text>
               </View>
+              <Text style={[commonStyles.text, {
+                color: colors.textSecondary,
+                lineHeight: isMobile ? 22 : 24,
+                textAlign: 'left',
+                fontSize: isMobile ? 14 : 16,
+              }]}>
+                Use the navigation above or the buttons below to explore our policies, join our movement, or learn about upcoming events.
+              </Text>
+            </Animated.View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={{
+            marginBottom: isMobile ? 32 : 40,
+            paddingHorizontal: isMobile ? 0 : 20,
+          }}>
+            <View style={{
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: 'stretch',
+              gap: isMobile ? 0 : 16,
+              justifyContent: 'center',
+            }}>
+              <ActionButton 
+                href="/" 
+                icon="home" 
+                iconLibrary="Ionicons"
+                fullWidth={isMobile}
+              >
+                Back to Home
+              </ActionButton>
+              <ActionButton 
+                href="/join" 
+                variant="secondary" 
+                icon="person-add" 
+                iconLibrary="Ionicons"
+                fullWidth={isMobile}
+              >
+                Join Movement
+              </ActionButton>
             </View>
-          </Animated.View>
-        </ImageBackground>
-      </View>
-    </>
+          </View>
+
+          {/* Popular Sections */}
+          <View style={[commonStyles.cardContainer, { 
+            marginBottom: isMobile ? 32 : 40,
+            marginHorizontal: isMobile ? 0 : 20,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: `${colors.accent}15`,
+            backgroundColor: `${colors.surface}90`,
+          }]}>
+            <Animated.View style={fadeInStyle}>
+              <Text style={[commonStyles.text, {
+                color: colors.textSecondary,
+                fontSize: isMobile ? 14 : 16,
+                marginBottom: isMobile ? 16 : 20,
+                textAlign: 'center',
+                fontWeight: '500',
+              }]}>
+                Or explore these popular sections:
+              </Text>
+              <View style={{
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? 12 : 16,
+                alignItems: 'stretch',
+              }}>
+
+                <Link href="/donate" asChild>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: isMobile ? 'flex-start' : 'center',
+                      backgroundColor: `${colors.surface}80`,
+                      paddingHorizontal: isMobile ? 16 : 20,
+                      paddingVertical: isMobile ? 14 : 16,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: `${colors.accent}25`,
+                      flex: isMobile ? undefined : 1,
+                      minHeight: 48,
+                      shadowColor: colors.accent,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                    }}
+                  >
+                    <View style={{
+                      backgroundColor: `${colors.accent}20`,
+                      borderRadius: 8,
+                      padding: 6,
+                      marginRight: 12,
+                    }}>
+                      <Ionicons name="heart" size={16} color={colors.accent} />
+                    </View>
+                    <Text style={{
+                      color: colors.text,
+                      fontSize: isMobile ? 14 : 15,
+                      fontWeight: '600',
+                      flex: 1,
+                      ...(Platform.OS === 'web' && {
+                        fontFamily: "'Montserrat', sans-serif",
+                      } as any),
+                    }}>Support Progress</Text>
+                  </TouchableOpacity>
+                </Link>
+
+                <Link href="/events" asChild>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: isMobile ? 'flex-start' : 'center',
+                      backgroundColor: `${colors.surface}80`,
+                      paddingHorizontal: isMobile ? 16 : 20,
+                      paddingVertical: isMobile ? 14 : 16,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: `${colors.accent}25`,
+                      flex: isMobile ? undefined : 1,
+                      minHeight: 48,
+                      shadowColor: colors.accent,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                    }}
+                  >
+                    <View style={{
+                      backgroundColor: `${colors.accent}20`,
+                      borderRadius: 8,
+                      padding: 6,
+                      marginRight: 12,
+                    }}>
+                      <Ionicons name="calendar" size={16} color={colors.accent} />
+                    </View>
+                    <Text style={{
+                      color: colors.text,
+                      fontSize: isMobile ? 14 : 15,
+                      fontWeight: '600',
+                      flex: 1,
+                      ...(Platform.OS === 'web' && {
+                        fontFamily: "'Montserrat', sans-serif",
+                      } as any),
+                    }}>Upcoming Events</Text>
+                  </TouchableOpacity>
+                </Link>
+
+                <Link href="/our-approach" asChild>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: isMobile ? 'flex-start' : 'center',
+                      backgroundColor: `${colors.surface}80`,
+                      paddingHorizontal: isMobile ? 16 : 20,
+                      paddingVertical: isMobile ? 14 : 16,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: `${colors.accent}25`,
+                      flex: isMobile ? undefined : 1,
+                      minHeight: 48,
+                      shadowColor: colors.accent,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 4,
+                      elevation: 2,
+                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                    }}
+                  >
+                    <View style={{
+                      backgroundColor: `${colors.accent}20`,
+                      borderRadius: 8,
+                      padding: 6,
+                      marginRight: 12,
+                    }}>
+                      <Ionicons name="compass" size={16} color={colors.accent} />
+                    </View>
+                    <Text style={{
+                      color: colors.text,
+                      fontSize: isMobile ? 14 : 15,
+                      fontWeight: '600',
+                      flex: 1,
+                      ...(Platform.OS === 'web' && {
+                        fontFamily: "'Montserrat', sans-serif",
+                      } as any),
+                    }}>Our Approach</Text>
+                  </TouchableOpacity>
+                </Link>
+              </View>
+            </Animated.View>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <Footer />
+      </ScrollView>
+    </View>
   );
 }

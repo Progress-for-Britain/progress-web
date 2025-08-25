@@ -11,16 +11,13 @@ import Animated, {
   interpolate,
   Extrapolate
 } from 'react-native-reanimated';
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import Header from '../components/Header';
 import api, { UserStats, UserActivity } from '../util/api';
 
 export default function Account() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
   const [showQuickActions, setShowQuickActions] = useState(true);
 
   // API data state
@@ -293,229 +290,12 @@ export default function Account() {
     );
   };
 
-  const SettingsModal = () => {
-    const [firstName, setFirstName] = useState(user?.firstName || '');
-    const [lastName, setLastName] = useState(user?.lastName || '');
-    const [email, setEmail] = useState(user?.email || '');
-
-    const handleSaveSettings = () => {
-      Alert.alert('Settings Saved', 'Your settings have been updated successfully!');
-      setShowSettingsModal(false);
-    };
-
-    return (
-      <Modal
-        visible={showSettingsModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-          <View style={{ 
-            backgroundColor: '#ffffff',
-            paddingTop: Platform.OS === 'ios' ? 60 : 40,
-            paddingHorizontal: 20,
-            paddingBottom: 20,
-            borderBottomWidth: 1,
-            borderBottomColor: '#e5e7eb'
-          }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <TouchableOpacity
-                onPress={() => setShowSettingsModal(false)}
-                style={{ padding: 8 }}
-              >
-                <Ionicons name="close" size={24} color="#6B7280" />
-              </TouchableOpacity>
-              
-              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827' }}>
-                Account Settings
-              </Text>
-              
-              <TouchableOpacity
-                onPress={handleSaveSettings}
-                style={{
-                  backgroundColor: '#d946ef',
-                  borderRadius: 8,
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                }}
-              >
-                <Text style={{ color: '#ffffff', fontWeight: '600' }}>
-                  Save
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <ScrollView style={{ flex: 1, padding: 20 }}>
-            <View style={{ marginBottom: 24 }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 }}>
-                Personal Information
-              </Text>
-              
-              <View style={{ marginBottom: 16 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
-                  First Name
-                </Text>
-                <TextInput
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  style={{
-                    borderWidth: 2,
-                    borderColor: '#e5e7eb',
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    fontSize: 16,
-                    backgroundColor: '#ffffff'
-                  }}
-                />
-              </View>
-
-              <View style={{ marginBottom: 16 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
-                  Last Name
-                </Text>
-                <TextInput
-                  value={lastName}
-                  onChangeText={setLastName}
-                  style={{
-                    borderWidth: 2,
-                    borderColor: '#e5e7eb',
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    fontSize: 16,
-                    backgroundColor: '#ffffff'
-                  }}
-                />
-              </View>
-
-              <View style={{ marginBottom: 16 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
-                  Email Address
-                </Text>
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  style={{
-                    borderWidth: 2,
-                    borderColor: '#e5e7eb',
-                    borderRadius: 12,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    fontSize: 16,
-                    backgroundColor: '#ffffff'
-                  }}
-                />
-              </View>
-            </View>
-
-            <View style={{ marginBottom: 24 }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 }}>
-                Notification Preferences
-              </Text>
-              
-              <View style={{ 
-                backgroundColor: '#ffffff', 
-                borderRadius: 12, 
-                padding: 16,
-                marginBottom: 12,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 8,
-                elevation: 4,
-              }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
-                      Email Notifications
-                    </Text>
-                    <Text style={{ fontSize: 14, color: '#6B7280' }}>
-                      Receive updates via email
-                    </Text>
-                  </View>
-                  <Switch
-                    value={emailNotifications}
-                    onValueChange={setEmailNotifications}
-                    trackColor={{ false: '#e5e7eb', true: '#d946ef' }}
-                    thumbColor={emailNotifications ? '#ffffff' : '#f3f4f6'}
-                  />
-                </View>
-              </View>
-
-              <View style={{ 
-                backgroundColor: '#ffffff', 
-                borderRadius: 12, 
-                padding: 16,
-                marginBottom: 12,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 8,
-                elevation: 4,
-              }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
-                      Push Notifications
-                    </Text>
-                    <Text style={{ fontSize: 14, color: '#6B7280' }}>
-                      Receive mobile notifications
-                    </Text>
-                  </View>
-                  <Switch
-                    value={pushNotifications}
-                    onValueChange={setPushNotifications}
-                    trackColor={{ false: '#e5e7eb', true: '#d946ef' }}
-                    thumbColor={pushNotifications ? '#ffffff' : '#f3f4f6'}
-                  />
-                </View>
-              </View>
-            </View>
-
-            <View style={{ marginBottom: 24 }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 16 }}>
-                Dashboard Preferences
-              </Text>
-              
-              <View style={{ 
-                backgroundColor: '#ffffff', 
-                borderRadius: 12, 
-                padding: 16,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 8,
-                elevation: 4,
-              }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
-                      Show Quick Actions
-                    </Text>
-                    <Text style={{ fontSize: 14, color: '#6B7280' }}>
-                      Display quick action cards on dashboard
-                    </Text>
-                  </View>
-                  <Switch
-                    value={showQuickActions}
-                    onValueChange={setShowQuickActions}
-                    trackColor={{ false: '#e5e7eb', true: '#d946ef' }}
-                    thumbColor={showQuickActions ? '#ffffff' : '#f3f4f6'}
-                  />
-                </View>
-              </View>
-            </View>
-          </ScrollView>
-        </View>
-      </Modal>
-    );
-  };
-
   return (
     <>
+      <Head>
+        <title>Account - Progress UK</title>
+        <meta name="description" content="Manage your Progress UK account, update your profile, and access member resources" />
+      </Head>
       {/* Show loading screen while auth is being determined */}
       {isLoading ? (
         <View style={{ 
@@ -541,7 +321,6 @@ export default function Account() {
           <Stack.Screen options={{ headerShown: false }} />
           <StatusBar style="light" />
           <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-            <Header />
         
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               {/* Hero Section */}
@@ -765,7 +544,7 @@ export default function Account() {
                         iconLibrary="Ionicons"
                         title="Latest News & Updates"
                         description="Stay informed with the latest party news, policy updates, and campaign progress"
-                        onPress={() => router.push('/newsroom')}
+                        onPress={() => router.replace('/newsroom')}
                         color="#8b5cf6"
                         delay={100}
                       />
@@ -775,7 +554,7 @@ export default function Account() {
                         iconLibrary="Ionicons"
                         title="Make a Donation"
                         description="Support our ongoing campaigns and initiatives with a contribution"
-                        onPress={() => router.push('/donate')}
+                        onPress={() => router.replace('/donate')}
                         color="#10b981"
                         delay={200}
                       />
@@ -785,7 +564,7 @@ export default function Account() {
                         iconLibrary="MaterialIcons"
                         title="Upcoming Votes"
                         description="View and participate in upcoming party votes and policy decisions"
-                        onPress={() => router.push('/votes')}
+                        onPress={() => router.replace('/votes')}
                         color="#f59e0b"
                         delay={300}
                       />
@@ -795,7 +574,7 @@ export default function Account() {
                         iconLibrary="Ionicons"
                         title="Local Events"
                         description="Find and register for political events, rallies, and meetings in your area"
-                        onPress={() => router.push('/events')}
+                        onPress={() => router.replace('/events')}
                         color="#ef4444"
                         delay={400}
                       />
@@ -822,19 +601,9 @@ export default function Account() {
                         iconLibrary="Ionicons"
                         title="Volunteer Opportunities"
                         description="Sign up to help with campaigns, phone banking, and community outreach"
-                        onPress={() => router.push('/volunteer')}
+                        onPress={() => router.replace('/volunteer')}
                         color="#10b981"
                         delay={500}
-                      />
-
-                      <QuickActionCard
-                        icon="settings"
-                        iconLibrary="Ionicons"
-                        title="Account Settings"
-                        description="Update your profile, preferences, and notification settings"
-                        onPress={() => setShowSettingsModal(true)}
-                        color="#6b7280"
-                        delay={550}
                       />
                     </View>
                   </View>
@@ -971,8 +740,6 @@ export default function Account() {
               </View>
             </ScrollView>
           </View>
-          
-          <SettingsModal />
         </>
       )}
     </>

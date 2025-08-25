@@ -2,7 +2,7 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "progress-UI", "Mobile-Builds" ]
 
 jobs:
   build-and-deploy:
@@ -67,6 +67,6 @@ jobs:
             git pull
             # Assuming your PM2 process serves from the reactapp/dist directory or similar
             # Adjust the PM2 command if your server setup is different
-            pm2 restart 7 || pm2 start npm --name "progressweb" -- start
+            pm2 restart 11 || pm2 start npm --name "progressweb" -- start
           EOF
           echo "✅ Deploy complete!!"

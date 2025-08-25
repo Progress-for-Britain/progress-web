@@ -2,18 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Platform, ScrollView, Alert, TextInput } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
   withTiming, 
-  withSpring,
-  interpolate,
-  Extrapolate
+  withSpring
 } from 'react-native-reanimated';
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import Header from '../components/Header';
-import api, { Event, EventsResponse } from '../util/api';
+import api, { Event } from '../util/api';
 import { CreateEventModal } from '../components/createEventModal';
 import { EditEventModal } from '../components/editEventModal';
 
@@ -30,7 +28,6 @@ export default function Events() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [registering, setRegistering] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
 
   // Animation values
   const fadeAnim = useSharedValue(0);
@@ -181,39 +178,6 @@ export default function Events() {
     loadEvents(); // Reload events after update
   };
 
-  const handleDeleteEvent = (eventId: string, eventTitle: string) => {
-    Alert.alert(
-      'Delete Event',
-      `Are you sure you want to delete "${eventTitle}"? This action cannot be undone and will affect all registered participants.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => performDeleteEvent(eventId),
-        },
-      ]
-    );
-  };
-
-  const performDeleteEvent = async (eventId: string) => {
-    try {
-      setDeleting(eventId);
-      await api.deleteEvent(eventId);
-      Alert.alert('Success', 'Event deleted successfully!');
-      
-      // Remove the event from the list
-      setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId));
-    } catch (error: any) {
-      console.error('Error deleting event:', error);
-      Alert.alert('Error', error.message || 'Failed to delete event. Please try again.');
-    } finally {
-      setDeleting(null);
-    }
-  };
 
   const canCreateEvent = user?.role === 'ADMIN' || user?.role === 'WRITER';
 
@@ -567,6 +531,10 @@ export default function Events() {
 
   return (
     <>
+      <Head>
+        <title>Events - Progress UK</title>
+        <meta name="description" content="Discover Progress UK events, meetings, and activities in your area. Join us in building the future of British politics" />
+      </Head>
       {/* Show loading screen while auth is being determined */}
       {isLoading ? (
         <View style={{ 
@@ -592,7 +560,6 @@ export default function Events() {
           <Stack.Screen options={{ headerShown: false }} />
           <StatusBar style="light" />
           <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-            <Header />
         
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               {/* Hero Section */}

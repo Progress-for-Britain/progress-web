@@ -406,12 +406,31 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
+      // Improved timeout settings for mobile
+      timeout: 30000, // 30 seconds for mobile networks
+      timeoutErrorMessage: 'Request timed out - please check your connection',
     });
 
-    // Add response interceptor for error handling
+    // Add request interceptor for mobile optimizations
+    this.client.interceptors.request.use(
+      (config) => {
+        // Add cache headers for mobile efficiency
+        if (config.method === 'get') {
+          config.headers['Cache-Control'] = 'public, max-age=300'; // 5 minutes cache
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Add response interceptor for error handling with mobile-specific handling
     this.client.interceptors.response.use(
       (response: AxiosResponse) => response,
       (error) => {
+        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+          throw new Error('Connection timeout - please check your network and try again');
+        }
+        
         if (error.response) {
           // Server responded with error status
           const errorMessage = error.response.data?.message || 
@@ -420,8 +439,8 @@ class ApiClient {
                               `HTTP ${error.response.status}`;
           throw new Error(errorMessage);
         } else if (error.request) {
-          // Request was made but no response received
-          throw new Error('Network error - no response from server');
+          // Request was made but no response received - common on mobile
+          throw new Error('Network error - please check your connection and try again');
         } else {
           // Something else happened
           throw new Error(error.message || 'An unexpected error occurred');
@@ -438,15 +457,52 @@ class ApiClient {
     }
   }
 
-  // Auth endpoints
+  // Retry mechanism for mobile networks
+  private async retryRequest<T>(
+    requestFn: () => Promise<T>, 
+    maxRetries: number = 3,
+    delay: number = 1000
+  ): Promise<T> {
+    let lastError: Error;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await requestFn();
+      } catch (error) {
+        lastError = error as Error;
+        
+        // Don't retry on authentication errors or client errors (4xx)
+        if (error instanceof Error && 
+            (error.message.includes('401') || 
+             error.message.includes('403') ||
+             error.message.includes('400'))) {
+          throw error;
+        }
+        
+        if (attempt < maxRetries) {
+          // Exponential backoff with jitter for mobile networks
+          const backoffDelay = delay * Math.pow(2, attempt) + Math.random() * 1000;
+          await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        }
+      }
+    }
+    
+    throw lastError!;
+  }
+
+  // Auth endpoints with mobile retry support
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/api/users/login', credentials);
-    return response.data;
+    return this.retryRequest(async () => {
+      const response = await this.client.post<AuthResponse>('/api/users/login', credentials);
+      return response.data;
+    });
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/api/users/register', userData);
-    return response.data;
+    return this.retryRequest(async () => {
+      const response = await this.client.post<AuthResponse>('/api/users/register', userData);
+      return response.data;
+    });
   }
 
   async logout(): Promise<void> {
@@ -460,15 +516,19 @@ class ApiClient {
     throw new Error('getProfile not implemented - use getUserById instead');
   }
 
-  // User management endpoints
+  // User management endpoints with mobile optimization
   async getAllUsers(): Promise<User[]> {
-    const response = await this.client.get<{success: boolean; data: User[]}>('/api/users');
-    return response.data.data;
+    return this.retryRequest(async () => {
+      const response = await this.client.get<{success: boolean; data: User[]}>('/api/users');
+      return response.data.data;
+    });
   }
 
   async getUserById(id: string): Promise<User> {
-    const response = await this.client.get<{success: boolean; data: User}>(`/api/users/${id}`);
-    return response.data.data;
+    return this.retryRequest(async () => {
+      const response = await this.client.get<{success: boolean; data: User}>(`/api/users/${id}`);
+      return response.data.data;
+    });
   }
 
   async updateUser(id: string, userData: UpdateUserRequest): Promise<User> {
@@ -502,10 +562,12 @@ class ApiClient {
     return response.data.data;
   }
 
-  // Health check endpoint
+  // Health check endpoint with mobile optimization
   async healthCheck(): Promise<{success: boolean; message: string; timestamp: string}> {
-    const response = await this.client.get<{success: boolean; message: string; timestamp: string}>('/api/health');
-    return response.data;
+    return this.retryRequest(async () => {
+      const response = await this.client.get<{success: boolean; message: string; timestamp: string}>('/api/health');
+      return response.data;
+    }, 2, 500); // Reduced retries for health check
   }
 
   // Donation endpoints
@@ -520,7 +582,7 @@ class ApiClient {
     return response.data;
   }
 
-  // News/Posts endpoints
+  // News/Posts endpoints with mobile retry support
   async getAllPosts(params?: {
     page?: number;
     limit?: number;
@@ -528,22 +590,26 @@ class ApiClient {
     search?: string;
     featured?: boolean;
   }): Promise<PostsResponse> {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.category) queryParams.append('category', params.category);
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.featured !== undefined) queryParams.append('featured', params.featured.toString());
+    return this.retryRequest(async () => {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.category) queryParams.append('category', params.category);
+      if (params?.search) queryParams.append('search', params.search);
+      if (params?.featured !== undefined) queryParams.append('featured', params.featured.toString());
 
-    const response = await this.client.get<{success: boolean; data: PostsResponse}>(
-      `/api/news?${queryParams.toString()}`
-    );
-    return response.data.data;
+      const response = await this.client.get<{success: boolean; data: PostsResponse}>(
+        `/api/news?${queryParams.toString()}`
+      );
+      return response.data.data;
+    });
   }
 
   async getPostById(id: string): Promise<Post> {
-    const response = await this.client.get<{success: boolean; data: Post}>(`/api/news/${id}`);
-    return response.data.data;
+    return this.retryRequest(async () => {
+      const response = await this.client.get<{success: boolean; data: Post}>(`/api/news/${id}`);
+      return response.data.data;
+    });
   }
 
   async createPost(postData: CreatePostRequest): Promise<Post> {
@@ -637,7 +703,7 @@ class ApiClient {
     return response.data.data;
   }
 
-  // Events endpoints
+  // Events endpoints with mobile optimization
   async getAllEvents(params?: {
     page?: number;
     limit?: number;
@@ -647,24 +713,28 @@ class ApiClient {
     startDate?: string;
     endDate?: string;
   }): Promise<EventsResponse> {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.eventType) queryParams.append('eventType', params.eventType);
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.startDate) queryParams.append('startDate', params.startDate);
-    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    return this.retryRequest(async () => {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.eventType) queryParams.append('eventType', params.eventType);
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.search) queryParams.append('search', params.search);
+      if (params?.startDate) queryParams.append('startDate', params.startDate);
+      if (params?.endDate) queryParams.append('endDate', params.endDate);
 
-    const response = await this.client.get<{success: boolean; data: EventsResponse}>(
-      `/api/events?${queryParams.toString()}`
-    );
-    return response.data.data;
+      const response = await this.client.get<{success: boolean; data: EventsResponse}>(
+        `/api/events?${queryParams.toString()}`
+      );
+      return response.data.data;
+    });
   }
 
   async getEventById(id: string): Promise<Event> {
-    const response = await this.client.get<{success: boolean; data: Event}>(`/api/events/${id}`);
-    return response.data.data;
+    return this.retryRequest(async () => {
+      const response = await this.client.get<{success: boolean; data: Event}>(`/api/events/${id}`);
+      return response.data.data;
+    });
   }
 
   async createEvent(eventData: CreateEventRequest): Promise<Event> {

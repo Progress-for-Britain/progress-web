@@ -1,17 +1,36 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Platform, Animated, Modal } from 'react-native';
-import { Link, useRouter, usePathname } from 'expo-router';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { View, Text, TouchableOpacity, Platform, Animated, Modal, Easing } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link, useRouter, usePathname, useFocusEffect } from 'expo-router';
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useAuth } from '../util/auth-context';
+import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
+import { getColors, getOptimizedShadow } from '../util/commonStyles';
 
-export default function Header() {
-  const { isAuthenticated, user, logout } = useAuth();
-  const router = useRouter();
+// Custom hook for optimized active route detection
+const useActiveRoute = (href?: string) => {
   const pathname = usePathname();
+  
+  return useMemo(() => {
+    if (!href) return false;
+    return (
+      pathname === href || 
+      (href === '/events' && pathname.startsWith('/events/')) ||
+      (href === '/newsroom' && pathname.startsWith('/news/')) ||
+      (href === '/account' && pathname.startsWith('/account'))
+    );
+  }, [pathname, href]);
+};
+
+const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (isOpen: boolean) => void }) {
+  const { isAuthenticated, user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { isMobile } = useResponsive();
+  const colors = getColors(isDark);
   
   // Animation values
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -21,41 +40,47 @@ export default function Header() {
   // Animation effect
   useEffect(() => {
     if (isMobileMenuOpen) {
-      // Open animation
+      // Open animation with smooth easing
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 400,
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: false,
         }),
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
+          duration: 350,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: false,
         }),
         Animated.timing(rotateAnim, {
           toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
+          duration: 400,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ]).start();
     } else {
-      // Close animation
+      // Close animation with smooth easing
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: 0,
-          duration: 250,
+          duration: 350,
+          easing: Easing.in(Easing.cubic),
           useNativeDriver: false,
         }),
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
+          duration: 300,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: false,
         }),
         Animated.timing(rotateAnim, {
           toValue: 0,
-          duration: 250,
-          useNativeDriver: true,
+          duration: 350,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ]).start();
     }
@@ -65,6 +90,7 @@ export default function Header() {
     setShowLogoutConfirm(true);
     if (isMobile) {
       setIsMobileMenuOpen(false);
+      onMenuToggle?.(false);
     }
   };
 
@@ -86,15 +112,99 @@ export default function Header() {
   const handleNavigation = (href?: string, onPress?: () => void) => {
     if (isMobile) {
       setIsMobileMenuOpen(false); // Close mobile menu on navigation
+      onMenuToggle?.(false);
     }
     if (onPress) {
       onPress();
     } else if (href) {
-      router.push(href as any);
+      router.replace(href as any);
     }
   };
 
-  const NavButton = ({ 
+  const handleMenuToggle = () => {
+    const newState = !isMobileMenuOpen;
+    setIsMobileMenuOpen(newState);
+    onMenuToggle?.(newState);
+  };
+
+  // Memoized Mobile Menu Button Component
+  const MobileMenuButton = React.memo(({ 
+    isMobileMenuOpen, 
+    handleMenuToggle, 
+    rotateAnim, 
+    isDark, 
+    colors 
+  }: {
+    isMobileMenuOpen: boolean;
+    handleMenuToggle: () => void;
+    rotateAnim: Animated.Value;
+    isDark: boolean;
+    colors: any;
+  }) => (
+    <TouchableOpacity
+      onPress={handleMenuToggle}
+      style={{
+        padding: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: isMobileMenuOpen ? 'rgba(255, 255, 255, 0.25)' : 'transparent',
+        ...(isMobileMenuOpen ? getOptimizedShadow('light', isDark, isMobileMenuOpen ? (isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.15)') : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)')) : {
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+        }),
+      }}
+    >
+      <Animated.View
+        style={{
+          transform: [
+            {
+              rotate: rotateAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0deg', '180deg'],
+              }),
+            },
+            {
+              scale: rotateAnim.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [1, 1.1, 1],
+              }),
+            },
+          ],
+        }}
+      >
+        <Ionicons 
+          name={isMobileMenuOpen ? "close" : "menu"} 
+          size={24} 
+          color={isMobileMenuOpen ? colors.text : colors.textSecondary}
+        />
+      </Animated.View>
+    </TouchableOpacity>
+  ));
+
+  // Memoized Theme Toggle Component
+  const ThemeToggle = React.memo(({ isDark, toggleTheme, colors }: { 
+    isDark: boolean; 
+    toggleTheme: () => void; 
+    colors: any;
+  }) => (
+    <TouchableOpacity
+      onPress={toggleTheme}
+      style={{
+        marginRight: 16,
+        padding: 8,
+        borderRadius: 20,
+        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+        ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
+      }}
+    >
+      <Ionicons 
+        name={isDark ? "moon" : "sunny"} 
+        size={20} 
+        color={colors.text} 
+      />
+    </TouchableOpacity>
+  ));
+
+  const NavButton = React.memo(({ 
     href, 
     children, 
     onPress, 
@@ -115,43 +225,44 @@ export default function Header() {
   }) => {
     
     const itemAnim = useRef(new Animated.Value(0)).current;
-
-    // Check if this nav item is active
-    const isActive = href ? (
-      pathname === href || 
-      (href === '/events' && pathname.startsWith('/events/')) ||
-      (href === '/newsroom' && pathname.startsWith('/news/')) ||
-      (href === '/account' && pathname.startsWith('/account'))
-    ) : false;
+    // Use optimized hook instead of usePathname directly
+    const isActive = useActiveRoute(href);
 
     useEffect(() => {
       if (isMobileMenu && isMobileMenuOpen) {
         Animated.timing(itemAnim, {
           toValue: 1,
-          duration: 200,
+          duration: 300,
           delay: animationDelay,
-          useNativeDriver: true,
+          easing: Easing.out(Easing.back(1.1)),
+          useNativeDriver: Platform.OS !== 'web',
         }).start();
       } else if (isMobileMenu && !isMobileMenuOpen) {
-        itemAnim.setValue(0);
+        Animated.timing(itemAnim, {
+          toValue: 0,
+          duration: 200,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: Platform.OS !== 'web',
+        }).start();
       }
     }, [isMobileMenuOpen, isMobileMenu, animationDelay]);
 
     const getButtonStyles = () => {
       const baseStyles = {
         backgroundColor: 'transparent',
-        paddingHorizontal: isMobileMenu ? 16 : 16,
-        paddingVertical: isMobileMenu ? 14 : 10,
-        borderRadius: isMobileMenu ? 10 : 10,
+        paddingHorizontal: isMobile ? 16 : 16,
+        paddingVertical: isMobile ? 14 : 10,
+        borderRadius: isMobile ? 10 : 20,
         ...(isMobileMenu && { width: '100%' as const }),
       };
 
-      // Handle active state - just add bottom border for underline
+      // Handle active state - add subtle glow effect
       if (isActive && variant === 'default') {
         return {
           ...baseStyles,
-          borderBottomWidth: 2,
-          borderBottomColor: '#d946ef',
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+          borderWidth: 1,
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)',
         };
       }
 
@@ -159,19 +270,19 @@ export default function Header() {
         case 'primary':
           return {
             ...baseStyles,
-            backgroundColor: '#d946ef',
-            paddingHorizontal: isMobileMenu ? 16 : 20,
-            paddingVertical: isMobileMenu ? 14 : 12,
+            backgroundColor: '#660033', // Updated Join Us button color
+            paddingHorizontal: isMobile ? 16 : 20,
+            paddingVertical: isMobile ? 14 : 12,
             borderRadius: 12,
           };
         case 'secondary':
           return {
             ...baseStyles,
             backgroundColor: 'transparent',
-            borderWidth: 2,
-            borderColor: '#d946ef',
-            paddingHorizontal: isMobileMenu ? 16 : 16,
-            paddingVertical: isMobileMenu ? 14 : 10,
+            borderWidth: 1,
+            borderColor: 'rgba(177, 0, 36, 0.6)',
+            paddingHorizontal: isMobile ? 16 : 16,
+            paddingVertical: isMobile ? 14 : 10,
             borderRadius: 12,
           };
         default:
@@ -180,23 +291,37 @@ export default function Header() {
     };
 
     const getTextColor = () => {
-      // Handle active state - keep normal text color but make it bolder
+      // Handle active state - always ensure good contrast
       if (isActive && variant === 'default') {
-        return '#374151'; // Keep the same color, just make it bold
+        return colors.text;
       }
 
       switch (variant) {
         case 'primary':
-          return '#ffffff';
+          return '#ffffff'; // Keep white for primary buttons (colored background)
         case 'secondary':
-          return '#d946ef';
+          return colors.text; // Use theme text color for secondary buttons
         default:
-          return '#374151';
+          return colors.text; // Use theme text color for default buttons
       }
     };
 
-    const IconComponent = iconLibrary === 'MaterialIcons' ? MaterialIcons : 
-                         iconLibrary === 'FontAwesome5' ? FontAwesome5 : Ionicons;
+    const IconComponent = useMemo(() => {
+      return iconLibrary === 'MaterialIcons' ? MaterialIcons : 
+             iconLibrary === 'FontAwesome5' ? FontAwesome5 : Ionicons;
+    }, [iconLibrary]);
+
+    const MemoizedIcon = useMemo(() => {
+      if (!icon) return null;
+      return (
+        <IconComponent 
+          name={icon as any} 
+          size={isMobileMenu ? 20 : 16} 
+          color={getTextColor()} 
+          style={{ marginRight: children ? (isMobileMenu ? 12 : 6) : 0 }} 
+        />
+      );
+    }, [icon, isMobileMenu, children, IconComponent, getTextColor]);
 
     const ButtonComponent = isMobileMenu ? Animated.View : View;
     const TouchableComponent = TouchableOpacity;
@@ -213,15 +338,11 @@ export default function Header() {
             marginVertical: isMobileMenu ? 6 : 0,
             ...(Platform.OS === 'web' && { cursor: 'pointer' }),
             ...(isMobileMenu && {
-              backgroundColor: variant === 'default' ? '#f9fafb' : undefined,
+              backgroundColor: variant === 'default' ? 'rgba(255, 255, 255, 0.05)' : undefined,
             }),
           },
           (variant !== 'default') && {
-            shadowColor: variant === 'primary' ? '#d946ef' : '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: variant === 'primary' ? 0.2 : 0.1,
-            shadowRadius: 4,
-            elevation: 3,
+            ...getOptimizedShadow('medium', isDark, variant === 'primary' ? '#660033' : (isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)')),
           }
         ]}
       >
@@ -229,33 +350,36 @@ export default function Header() {
           style={[
             { flexDirection: 'row', alignItems: 'center' },
             isMobileMenu && {
-              opacity: itemAnim,
+              opacity: itemAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 1],
+              }),
               transform: [
                 {
                   translateX: itemAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [-20, 0],
+                    outputRange: [-30, 0],
+                  }),
+                },
+                {
+                  scale: itemAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.9, 1],
                   }),
                 },
               ],
             },
           ]}
         >
-          {icon && (
-            <IconComponent 
-              name={icon as any} 
-              size={isMobileMenu ? 20 : 16} 
-              color={getTextColor()} 
-              style={{ marginRight: children ? (isMobileMenu ? 12 : 6) : 0 }} 
-            />
-          )}
+          {MemoizedIcon}
           {children && (
             <Text 
               style={{ 
                 color: getTextColor(), 
                 fontWeight: isActive && variant === 'default' ? '700' : 
                            variant === 'default' ? '500' : '600',
-                fontSize: isMobileMenu ? 16 : 15
+                fontSize: isMobileMenu ? 16 : 15,
+                fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
               }}
             >
               {children}
@@ -264,85 +388,75 @@ export default function Header() {
         </ButtonComponent>
       </TouchableComponent>
     );
-  };
+  }, (prevProps, nextProps) => {
+    // Custom comparison function for React.memo
+    // Only re-render if these specific props change
+    return (
+      prevProps.href === nextProps.href &&
+      prevProps.children === nextProps.children &&
+      prevProps.onPress === nextProps.onPress &&
+      prevProps.icon === nextProps.icon &&
+      prevProps.iconLibrary === nextProps.iconLibrary &&
+      prevProps.variant === nextProps.variant &&
+      prevProps.isMobileMenu === nextProps.isMobileMenu &&
+      prevProps.animationDelay === nextProps.animationDelay
+    );
+  });
 
   return (
-    <>
-      <View 
+    <View>
+      <SafeAreaView 
         style={{
-          backgroundColor: '#ffffff',
-          borderBottomWidth: 1,
-          borderBottomColor: '#e5e7eb',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 4,
-          width: '100%',
+          backgroundColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.2)',
         }}
+        edges={['top']}
       >
-        <View style={{ width: '100%', paddingHorizontal: isMobile ? 16 : 20 }}>
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            height: isMobile ? 64 : 72,
-            paddingVertical: 8,
-            width: '100%'
-          }}>
-            {/* Enhanced Logo */}
+        <View 
+          style={{
+            borderBottomWidth: 1,
+            borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            ...getOptimizedShadow('medium', isDark, isDark ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)'),
+            width: '100%',
+          }}
+        >
+          <View style={{ width: '100%', paddingHorizontal: isMobile ? 16 : 20 }}>
+            <View style={{ 
+              flexDirection: 'row', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              height: isMobile ? 64 : 72,
+              paddingVertical: 8,
+              width: '100%'
+            }}>
+            {/* Progress brand name */}
             <TouchableOpacity 
-              onPress={() => router.push('/')} 
+              onPress={() => router.replace('/')} 
               style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
             >
-              <View 
-                style={{ 
-                  width: isMobile ? 36 : 40, 
-                  height: isMobile ? 36 : 40, 
-                  backgroundColor: '#d946ef', 
-                  borderRadius: 12, 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  marginRight: isMobile ? 8 : 12,
-                  shadowColor: '#d946ef',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-              >
-                <FontAwesome5 name="flag" size={isMobile ? 16 : 18} color="#ffffff" />
-              </View>
-              <View>
-                <Text style={{ 
-                  fontSize: isMobile ? 18 : 22, 
-                  fontWeight: 'bold', 
-                  color: '#111827',
-                  lineHeight: isMobile ? 22 : 26
-                }}>
-                  Progress UK
-                </Text>
-                <Text style={{ 
-                  fontSize: isMobile ? 10 : 11, 
-                  color: '#6B7280',
-                  fontWeight: '500',
-                  letterSpacing: 0.5,
-                  textTransform: 'uppercase'
-                }}>
-                  Unleashing Potential
-                </Text>
-              </View>
+              <Text style={{ 
+                fontSize: isMobile ? 18 : 22, 
+                fontWeight: '700', 
+                color: colors.text,
+                lineHeight: isMobile ? 22 : 26,
+                fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
+                letterSpacing: 1,
+              }}>
+                PROGRESS
+              </Text>
             </TouchableOpacity>
 
             {/* Desktop Navigation */}
             {!isMobile && (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                
                 {!isAuthenticated ? (
                   // Unauthenticated navigation
                   <>
                   <NavButton href="/" icon="home">Home</NavButton>
-                  <NavButton href="/donate" icon="heart" variant="secondary">Donate</NavButton>
-                  <NavButton href="/join" icon="people" variant="primary">Join Us</NavButton>
+                  <NavButton href="/about" icon="information-circle">About</NavButton>
+                  <NavButton href="/our-approach" icon="analytics">Our Approach</NavButton>
+                  {/* <NavButton href="/donate" icon="heart" variant="secondary">Donate</NavButton> */}
+                  <NavButton href="/join" icon="people">Join Us</NavButton>
                   <NavButton href="/login" icon="log-in">Login</NavButton>
                   </>
                 ) : (
@@ -360,89 +474,58 @@ export default function Header() {
                   </NavButton>
                   </>
                 )}
+                {/* Theme Toggle */}
+                <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} colors={colors} />
                 </View>
             )}
 
-            {/* Mobile Menu Button with Animation */}
+            {/* Mobile Menu Button with Enhanced Animation */}
             {isMobile && (
-              <TouchableOpacity
-                onPress={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                style={{
-                  padding: 10,
-                  borderRadius: 10,
-                  backgroundColor: isMobileMenuOpen ? '#f3f4f6' : 'transparent',
-                  borderWidth: 1,
-                  borderColor: isMobileMenuOpen ? '#d1d5db' : 'transparent',
-                }}
-              >
-                <Animated.View
-                  style={{
-                    transform: [
-                      {
-                        rotate: rotateAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0deg', '180deg'],
-                        }),
-                      },
-                    ],
-                  }}
-                >
-                  <Ionicons 
-                    name={isMobileMenuOpen ? "close" : "menu"} 
-                    size={24} 
-                    color={isMobileMenuOpen ? '#d946ef' : '#374151'} 
-                  />
-                </Animated.View>
-              </TouchableOpacity>
+              <MobileMenuButton 
+                isMobileMenuOpen={isMobileMenuOpen}
+                handleMenuToggle={handleMenuToggle}
+                rotateAnim={rotateAnim}
+                isDark={isDark}
+                colors={colors}
+              />
             )}
+            </View>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
 
-      {/* Animated Mobile Menu Dropdown */}
+      {/* Mobile Menu Dropdown - smoothly pushes content down */}
       {isMobile && (
         <Animated.View
           style={{
-            backgroundColor: '#ffffff',
             borderBottomWidth: 1,
-            borderBottomColor: '#e5e7eb',
+            borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
             paddingHorizontal: 16,
-            paddingTop: 8,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 12,
-            elevation: 8,
-            maxHeight: slideAnim.interpolate({
+            ...getOptimizedShadow('heavy', isDark, Platform.OS === 'web' && isMobile ? 
+              (isDark ? 'rgba(0, 0, 0, 0.98)' : 'rgba(255, 255, 255, 0.98)') : 
+              (isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.95)')),
+            height: slideAnim.interpolate({
               inputRange: [0, 1],
-              outputRange: [0, 300], // Adjust based on your menu content
+              outputRange: [0, 480], // Smooth height transition
             }),
             opacity: fadeAnim,
+            overflow: 'hidden',
+            paddingTop: slideAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 8],
+            }),
             paddingBottom: slideAnim.interpolate({
               inputRange: [0, 1],
               outputRange: [0, 20],
             }),
-            overflow: 'hidden',
           }}
         >
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [
-                {
-                  translateY: slideAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-20, 0],
-                  }),
-                },
-              ],
-            }}
-          >
+          <View>
             {/* Separator line */}
             <View 
               style={{
                 height: 1,
-                backgroundColor: '#f3f4f6',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 marginBottom: 16,
                 marginHorizontal: -16,
               }}
@@ -451,28 +534,105 @@ export default function Header() {
             {!isAuthenticated ? (
               // Unauthenticated mobile navigation with staggered animations
               <>
-                <NavButton href="/" icon="home" isMobileMenu animationDelay={0}>Home</NavButton>
-                <NavButton href="/donate" icon="heart" variant="secondary" isMobileMenu animationDelay={100}>Donate</NavButton>
+                <NavButton href="/" icon="home" isMobileMenu animationDelay={50}>Home</NavButton>
+                <NavButton href="/about" icon="information-circle" isMobileMenu animationDelay={100}>About</NavButton>
+                <NavButton href="/our-approach" icon="analytics" isMobileMenu animationDelay={150}>Our Approach</NavButton>
+                {/* <NavButton href="/donate" icon="heart" variant="secondary" isMobileMenu animationDelay={100}>Donate</NavButton> */}
                 <NavButton href="/join" icon="people" variant="primary" isMobileMenu animationDelay={200}>Join Us</NavButton>
-                <NavButton href="/login" icon="log-in" isMobileMenu animationDelay={300}>Login</NavButton>
+                <NavButton href="/login" icon="log-in" isMobileMenu animationDelay={250}>Login</NavButton>
               </>
             ) : (
               // Authenticated mobile navigation with staggered animations
               <>
-                <NavButton href="/account" icon="person" isMobileMenu animationDelay={0}>Account</NavButton>
+                <NavButton href="/account" icon="person" isMobileMenu animationDelay={50}>Account</NavButton>
                 <NavButton href="/newsroom" icon="newspaper" isMobileMenu animationDelay={100}>Newsroom</NavButton>
-                <NavButton href="/events" icon="calendar">Events</NavButton>
+                <NavButton href="/events" icon="calendar" isMobileMenu animationDelay={150}>Events</NavButton>
                 {user?.role === 'ADMIN' && (
-                    <NavButton href="/user-management" icon="people">User Management</NavButton>
+                    <NavButton href="/user-management" icon="people" isMobileMenu animationDelay={200}>User Management</NavButton>
                   )}
-                <NavButton href="/settings" icon="settings" isMobileMenu animationDelay={200}>Settings</NavButton>
+                <NavButton href="/settings" icon="settings" isMobileMenu animationDelay={250}>Settings</NavButton>
                 <View style={{ height: 8 }} />
                 <NavButton onPress={handleLogoutRequest} icon="log-out" variant="secondary" isMobileMenu animationDelay={300}>
                   Logout
                 </NavButton>
               </>
             )}
-          </Animated.View>
+
+            {/* Theme Toggle for Mobile - Improved UI with animation */}
+            <Animated.View
+              style={{
+                opacity: slideAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 1],
+                }),
+                transform: [
+                  {
+                    translateX: slideAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-30, 0],
+                    }),
+                  },
+                  {
+                    scale: slideAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.9, 1],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <TouchableOpacity
+                onPress={toggleTheme}
+                activeOpacity={0.85}
+                style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 14,
+                paddingHorizontal: 18,
+                marginHorizontal: -12,
+                marginBottom: 10,
+                marginTop: 8,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(177,0,36,0.12)',
+                ...getOptimizedShadow('light', isDark, isDark ? 'rgba(177, 0, 36, 0.08)' : 'rgba(177, 0, 36, 0.04)'),
+                }}
+              >
+                <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(177,0,36,0.08)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 14,
+                }}
+                >
+                <Ionicons
+                  name={isDark ? "moon" : "sunny"}
+                  size={20}
+                  color={isDark ? "#FFD700" : "#B10024"}
+                />
+                </View>
+                <Text style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: colors.text,
+                flex: 1,
+                letterSpacing: 0.2,
+                }}>
+                {isDark ? 'Dark Mode' : 'Light Mode'}
+                </Text>
+                <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={colors.textSecondary}
+                style={{ marginLeft: 8 }}
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
         </Animated.View>
       )}
 
@@ -486,7 +646,7 @@ export default function Header() {
         <View
           style={{
             flex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
             justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: 20,
@@ -494,16 +654,13 @@ export default function Header() {
         >
           <View
             style={{
-              backgroundColor: '#ffffff',
               borderRadius: 16,
               padding: 24,
               width: '100%',
               maxWidth: 400,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 12,
-              elevation: 10,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              ...getOptimizedShadow('heavy', true, '#111111'),
             }}
           >
             <View style={{ alignItems: 'center', marginBottom: 20 }}>
@@ -511,22 +668,25 @@ export default function Header() {
                 style={{
                   width: 64,
                   height: 64,
-                  backgroundColor: '#fee2e2',
+                  backgroundColor: 'rgba(177, 0, 36, 0.2)',
                   borderRadius: 32,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 16,
+                  borderWidth: 1,
+                  borderColor: 'rgba(177, 0, 36, 0.3)',
                 }}
               >
-                <Ionicons name="log-out" size={28} color="#dc2626" />
+                <Ionicons name="log-out" size={28} color="#B10024" />
               </View>
               <Text
                 style={{
                   fontSize: 20,
                   fontWeight: 'bold',
-                  color: '#111827',
+                  color: '#ffffff',
                   textAlign: 'center',
                   marginBottom: 8,
+                  fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                 }}
               >
                 Confirm Logout
@@ -534,9 +694,10 @@ export default function Header() {
               <Text
                 style={{
                   fontSize: 16,
-                  color: '#6B7280',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   textAlign: 'center',
                   lineHeight: 24,
+                  fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                 }}
               >
                 Are you sure you want to log out of your account?
@@ -548,18 +709,21 @@ export default function Header() {
                 onPress={handleLogoutCancel}
                 style={{
                   flex: 1,
-                  backgroundColor: '#f3f4f6',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
                   borderRadius: 8,
                   paddingVertical: 14,
                   alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
                   ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
                 }}
               >
                 <Text
                   style={{
-                    color: '#374151',
+                    color: '#ffffff',
                     fontSize: 16,
                     fontWeight: '600',
+                    fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                   }}
                 >
                   Cancel
@@ -569,15 +733,10 @@ export default function Header() {
                 onPress={handleLogoutConfirm}
                 style={{
                   flex: 1,
-                  backgroundColor: '#dc2626',
                   borderRadius: 8,
                   paddingVertical: 14,
                   alignItems: 'center',
-                  shadowColor: '#dc2626',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 4,
-                  elevation: 4,
+                  ...getOptimizedShadow('medium', false, 'rgba(177, 0, 36, 0.8)'),
                   ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
                 }}
               >
@@ -586,6 +745,7 @@ export default function Header() {
                     color: '#ffffff',
                     fontSize: 16,
                     fontWeight: '600',
+                    fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
                   }}
                 >
                   Yes, Logout
@@ -595,6 +755,8 @@ export default function Header() {
           </View>
         </View>
       </Modal>
-    </>
+    </View>
   );
-}
+});
+
+export default Header;

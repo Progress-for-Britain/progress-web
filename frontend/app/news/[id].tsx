@@ -10,7 +10,6 @@ import Animated, {
   withSpring
 } from 'react-native-reanimated';
 import { useAuth } from '../../util/auth-context';
-import Header from '../../components/Header';
 import { api, Post } from '../../util/api';
 
 export default function ArticlePage() {
@@ -98,7 +97,6 @@ export default function ArticlePage() {
         <Stack.Screen options={{ headerShown: false }} />
         <StatusBar style="light" />
         <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-          <Header />
           <View style={{ 
             flex: 1, 
             justifyContent: 'center', 
@@ -118,7 +116,6 @@ export default function ArticlePage() {
         <Stack.Screen options={{ headerShown: false }} />
         <StatusBar style="light" />
         <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-          <Header />
           <View style={{ 
             flex: 1, 
             justifyContent: 'center', 
@@ -180,7 +177,6 @@ export default function ArticlePage() {
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style="light" />
       <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-        <Header />
         
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           {/* Header with back button */}

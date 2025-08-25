@@ -11,9 +11,9 @@ import Animated, {
   interpolate,
   Extrapolate
 } from 'react-native-reanimated';
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import Header from '../components/Header';
-import { api, Post, PostsResponse } from '../util/api';
+import { api, Post } from '../util/api';
 
 export default function Newsroom() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -622,6 +622,10 @@ export default function Newsroom() {
 
   return (
     <>
+      <Head>
+        <title>Newsroom - Progress UK</title>
+        <meta name="description" content="Stay updated with Progress UK news, press releases, and latest developments in our political movement" />
+      </Head>
       {/* Show loading screen while auth is being determined */}
       {isLoading ? (
         <View style={{ 
@@ -647,7 +651,6 @@ export default function Newsroom() {
           <Stack.Screen options={{ headerShown: false }} />
           <StatusBar style="light" />
           <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-            <Header />
         
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               {/* Hero Section */}
