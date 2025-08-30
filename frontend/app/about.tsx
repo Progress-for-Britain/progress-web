@@ -184,7 +184,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
   foundationText: {
     fontSize: isMobile ? 16 : 18,
     lineHeight: isMobile ? 24 : 28,
-    textAlign: 'justify',
+    textAlign: isMobile ? 'left' : 'justify',
   },
   centeredSection: {
     marginBottom: 40,
@@ -201,7 +201,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
   bodyText: {
     fontSize: isMobile ? 16 : 18,
     lineHeight: isMobile ? 24 : 28,
-    textAlign: 'justify',
+    textAlign: isMobile ? 'left' : 'justify',
   },
   section: {
     marginBottom: 40,

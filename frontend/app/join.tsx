@@ -512,7 +512,7 @@ export default function Join() {
                   marginBottom: 32,
                   lineHeight: isMobile ? 24 : 28,
                   maxWidth: isMobile ? width - 32 : 800,
-                  textAlign: 'justify'
+                  textAlign: isMobile ? 'left' : 'justify'
                 }]}>
                   2029 will be the biggest opportunity for regime change in a century. The vote share required to win a majority has never been smaller - in 2024 it only took a 1.6% increase in votes to double Labour's seats.{'\n\n'}
                   
