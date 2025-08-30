@@ -8,7 +8,16 @@ import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
 import { getColors, getOptimizedShadow } from '../util/commonStyles';
 
-// Custom hook for optimized active route detection
+// Type definition for navigation items
+type NavigationItem = {
+  href?: string;
+  onPress?: () => void;
+  icon: string;
+  label: string;
+  variant?: 'default' | 'primary' | 'secondary';
+};
+
+// Optimized active route detection with caching
 const useActiveRoute = (href?: string) => {
   const pathname = usePathname();
   
@@ -32,86 +41,44 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
   const { isMobile } = useResponsive();
   const colors = getColors(isDark);
   
-  // Animation values
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
+  // Single animation value for mobile menu - much more performant
+  const menuAnim = useRef(new Animated.Value(0)).current;
 
-  // Animation effect
+  // Optimized animation effect with reduced complexity
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      // Open animation with smooth easing
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 1,
-          duration: 400,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: false,
-        }),
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 350,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: false,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: 400,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-      ]).start();
-    } else {
-      // Close animation with smooth easing
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 350,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: false,
-        }),
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: false,
-        }),
-        Animated.timing(rotateAnim, {
-          toValue: 0,
-          duration: 350,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-      ]).start();
-    }
+    Animated.timing(menuAnim, {
+      toValue: isMobileMenuOpen ? 1 : 0,
+      duration: isMobileMenuOpen ? 300 : 200,
+      easing: isMobileMenuOpen ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
+      useNativeDriver: Platform.OS !== 'web', // Use native driver on native platforms
+    }).start();
   }, [isMobileMenuOpen]);
 
-  const handleLogoutRequest = () => {
+  const handleLogoutRequest = useCallback(() => {
     setShowLogoutConfirm(true);
     if (isMobile) {
       setIsMobileMenuOpen(false);
       onMenuToggle?.(false);
     }
-  };
+  }, [isMobile, onMenuToggle]);
 
-  const handleLogoutConfirm = async () => {
+  const handleLogoutConfirm = useCallback(async () => {
     setShowLogoutConfirm(false);
     
     try {
       await logout();
-      // Don't manually navigate - let the auth state change handle the redirect
     } catch (error) {
       console.error('Logout failed:', error);
     }
-  };
+  }, [logout]);
 
-  const handleLogoutCancel = () => {
+  const handleLogoutCancel = useCallback(() => {
     setShowLogoutConfirm(false);
-  };
+  }, []);
 
-  const handleNavigation = (href?: string, onPress?: () => void) => {
+  const handleNavigation = useCallback((href?: string, onPress?: () => void) => {
     if (isMobile) {
-      setIsMobileMenuOpen(false); // Close mobile menu on navigation
+      setIsMobileMenuOpen(false);
       onMenuToggle?.(false);
     }
     if (onPress) {
@@ -119,66 +86,54 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
     } else if (href) {
       router.replace(href as any);
     }
-  };
+  }, [isMobile, onMenuToggle, router]);
 
-  const handleMenuToggle = () => {
+  const handleMenuToggle = useCallback(() => {
     const newState = !isMobileMenuOpen;
     setIsMobileMenuOpen(newState);
     onMenuToggle?.(newState);
-  };
+  }, [isMobileMenuOpen, onMenuToggle]);
 
-  // Memoized Mobile Menu Button Component
+  // Memoized Mobile Menu Button Component - simplified
   const MobileMenuButton = React.memo(({ 
     isMobileMenuOpen, 
     handleMenuToggle, 
-    rotateAnim, 
-    isDark, 
-    colors 
+    menuAnim, 
+    colors,
+    isDark
   }: {
     isMobileMenuOpen: boolean;
     handleMenuToggle: () => void;
-    rotateAnim: Animated.Value;
-    isDark: boolean;
+    menuAnim: Animated.Value;
     colors: any;
-  }) => (
-    <TouchableOpacity
-      onPress={handleMenuToggle}
-      style={{
-        padding: 10,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: isMobileMenuOpen ? 'rgba(255, 255, 255, 0.25)' : 'transparent',
-        ...(isMobileMenuOpen ? getOptimizedShadow('light', isDark, isMobileMenuOpen ? (isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.15)') : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)')) : {
-          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-        }),
-      }}
-    >
-      <Animated.View
+    isDark: boolean;
+  }) => {
+    const rotate = menuAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '180deg'],
+    });
+
+    return (
+      <TouchableOpacity
+        onPress={handleMenuToggle}
         style={{
-          transform: [
-            {
-              rotate: rotateAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0deg', '180deg'],
-              }),
-            },
-            {
-              scale: rotateAnim.interpolate({
-                inputRange: [0, 0.5, 1],
-                outputRange: [1, 1.1, 1],
-              }),
-            },
-          ],
+          padding: 10,
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: isMobileMenuOpen ? 'rgba(255, 255, 255, 0.25)' : 'transparent',
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
         }}
       >
-        <Ionicons 
-          name={isMobileMenuOpen ? "close" : "menu"} 
-          size={24} 
-          color={isMobileMenuOpen ? colors.text : colors.textSecondary}
-        />
-      </Animated.View>
-    </TouchableOpacity>
-  ));
+        <Animated.View style={{ transform: [{ rotate }] }}>
+          <Ionicons 
+            name={isMobileMenuOpen ? "close" : "menu"} 
+            size={24} 
+            color={isMobileMenuOpen ? colors.text : colors.textSecondary}
+          />
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  });
 
   // Memoized Theme Toggle Component
   const ThemeToggle = React.memo(({ isDark, toggleTheme, colors }: { 
@@ -204,6 +159,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
     </TouchableOpacity>
   ));
 
+  // Optimized NavButton with better memoization
   const NavButton = React.memo(({ 
     href, 
     children, 
@@ -224,15 +180,14 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
     animationDelay?: number;
   }) => {
     
-    const itemAnim = useRef(new Animated.Value(0)).current;
-    // Use optimized hook instead of usePathname directly
     const isActive = useActiveRoute(href);
+    const itemAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
       if (isMobileMenu && isMobileMenuOpen) {
         Animated.timing(itemAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 250,
           delay: animationDelay,
           easing: Easing.out(Easing.back(1.1)),
           useNativeDriver: Platform.OS !== 'web',
@@ -240,14 +195,15 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
       } else if (isMobileMenu && !isMobileMenuOpen) {
         Animated.timing(itemAnim, {
           toValue: 0,
-          duration: 200,
+          duration: 150,
           easing: Easing.in(Easing.quad),
           useNativeDriver: Platform.OS !== 'web',
         }).start();
       }
-    }, [isMobileMenuOpen, isMobileMenu, animationDelay]);
+    }, [isMobileMenu, isMobileMenuOpen, animationDelay]);
 
-    const getButtonStyles = () => {
+    // Memoized styles to prevent recalculation
+    const buttonStyles = useMemo(() => {
       const baseStyles = {
         backgroundColor: 'transparent',
         paddingHorizontal: isMobile ? 16 : 16,
@@ -256,7 +212,6 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         ...(isMobileMenu && { width: '100%' as const }),
       };
 
-      // Handle active state - add subtle glow effect
       if (isActive && variant === 'default') {
         return {
           ...baseStyles,
@@ -270,7 +225,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         case 'primary':
           return {
             ...baseStyles,
-            backgroundColor: '#660033', // Updated Join Us button color
+            backgroundColor: '#660033',
             paddingHorizontal: isMobile ? 16 : 20,
             paddingVertical: isMobile ? 14 : 12,
             borderRadius: 12,
@@ -288,23 +243,22 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         default:
           return baseStyles;
       }
-    };
+    }, [isActive, variant, isMobile, isMobileMenu, isDark]);
 
-    const getTextColor = () => {
-      // Handle active state - always ensure good contrast
+    const textColor = useMemo(() => {
       if (isActive && variant === 'default') {
         return colors.text;
       }
 
       switch (variant) {
         case 'primary':
-          return '#ffffff'; // Keep white for primary buttons (colored background)
+          return '#ffffff';
         case 'secondary':
-          return colors.text; // Use theme text color for secondary buttons
+          return colors.text;
         default:
-          return colors.text; // Use theme text color for default buttons
+          return colors.text;
       }
-    };
+    }, [isActive, variant, colors.text]);
 
     const IconComponent = useMemo(() => {
       return iconLibrary === 'MaterialIcons' ? MaterialIcons : 
@@ -317,11 +271,11 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         <IconComponent 
           name={icon as any} 
           size={isMobileMenu ? 20 : 16} 
-          color={getTextColor()} 
+          color={textColor} 
           style={{ marginRight: children ? (isMobileMenu ? 12 : 6) : 0 }} 
         />
       );
-    }, [icon, isMobileMenu, children, IconComponent, getTextColor]);
+    }, [icon, isMobileMenu, children, IconComponent, textColor]);
 
     const ButtonComponent = isMobileMenu ? Animated.View : View;
     const TouchableComponent = TouchableOpacity;
@@ -330,7 +284,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
       <TouchableComponent
         onPress={() => handleNavigation(href, onPress)}
         style={[
-          getButtonStyles(),
+          buttonStyles,
           {
             flexDirection: 'row',
             alignItems: 'center',
@@ -358,13 +312,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
                 {
                   translateX: itemAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [-30, 0],
-                  }),
-                },
-                {
-                  scale: itemAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.9, 1],
+                    outputRange: [-20, 0],
                   }),
                 },
               ],
@@ -375,7 +323,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
           {children && (
             <Text 
               style={{ 
-                color: getTextColor(), 
+                color: textColor, 
                 fontWeight: isActive && variant === 'default' ? '700' : 
                            variant === 'default' ? '500' : '600',
                 fontSize: isMobileMenu ? 16 : 15,
@@ -388,20 +336,40 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         </ButtonComponent>
       </TouchableComponent>
     );
-  }, (prevProps, nextProps) => {
-    // Custom comparison function for React.memo
-    // Only re-render if these specific props change
-    return (
-      prevProps.href === nextProps.href &&
-      prevProps.children === nextProps.children &&
-      prevProps.onPress === nextProps.onPress &&
-      prevProps.icon === nextProps.icon &&
-      prevProps.iconLibrary === nextProps.iconLibrary &&
-      prevProps.variant === nextProps.variant &&
-      prevProps.isMobileMenu === nextProps.isMobileMenu &&
-      prevProps.animationDelay === nextProps.animationDelay
-    );
   });
+
+  // Memoized navigation items to prevent recreation
+  const navigationItems: NavigationItem[] = useMemo(() => {
+    if (!isAuthenticated) {
+      return [
+        { href: "/", icon: "home", label: "Home" },
+        { href: "/about", icon: "information-circle", label: "About" },
+        { href: "/our-approach", icon: "analytics", label: "Our Approach" },
+        { href: "/join", icon: "people", label: "Join Us", variant: "primary" as const },
+        { href: "/login", icon: "log-in", label: "Login" },
+      ];
+    } else {
+      // Build authenticated navigation items conditionally
+      const baseItems: NavigationItem[] = [
+        { href: "/account", icon: "person", label: "Account" },
+        { href: "/newsroom", icon: "newspaper", label: "Newsroom" },
+        { href: "/events", icon: "calendar", label: "Events" },
+      ];
+
+      // Insert admin link after Events if user is admin
+      if (user?.role === 'ADMIN') {
+        baseItems.push({ href: "/user-management", icon: "people", label: "User Management" });
+      }
+
+      // Add remaining items
+      baseItems.push(
+        { href: "/settings", icon: "settings", label: "Settings" },
+        { onPress: handleLogoutRequest, icon: "log-out", label: "Logout", variant: "secondary" as const }
+      );
+
+      return baseItems;
+    }
+  }, [isAuthenticated, user?.role, handleLogoutRequest]);
 
   return (
     <View>
@@ -448,45 +416,29 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
             {/* Desktop Navigation */}
             {!isMobile && (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                
-                {!isAuthenticated ? (
-                  // Unauthenticated navigation
-                  <>
-                  <NavButton href="/" icon="home">Home</NavButton>
-                  <NavButton href="/about" icon="information-circle">About</NavButton>
-                  <NavButton href="/our-approach" icon="analytics">Our Approach</NavButton>
-                  {/* <NavButton href="/donate" icon="heart" variant="secondary">Donate</NavButton> */}
-                  <NavButton href="/join" icon="people">Join Us</NavButton>
-                  <NavButton href="/login" icon="log-in">Login</NavButton>
-                  </>
-                ) : (
-                  // Authenticated navigation
-                  <>
-                  <NavButton href="/account" icon="person">Account</NavButton>
-                  <NavButton href="/newsroom" icon="newspaper">Newsroom</NavButton>
-                  <NavButton href="/events" icon="calendar">Events</NavButton>
-                  {user?.role === 'ADMIN' && (
-                    <NavButton href="/user-management" icon="people">User Management</NavButton>
-                  )}
-                  <NavButton href="/settings" icon="settings">Settings</NavButton>
-                  <NavButton onPress={handleLogoutRequest} icon="log-out" variant="secondary">
-                    Logout
+                {navigationItems.map((item, index) => (
+                  <NavButton 
+                    key={item.href || item.label} 
+                    href={item.href} 
+                    onPress={item.onPress}
+                    icon={item.icon}
+                    variant={item.variant}
+                  >
+                    {item.label}
                   </NavButton>
-                  </>
-                )}
-                {/* Theme Toggle */}
+                ))}
                 <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} colors={colors} />
                 </View>
             )}
 
-            {/* Mobile Menu Button with Enhanced Animation */}
+            {/* Mobile Menu Button */}
             {isMobile && (
               <MobileMenuButton 
                 isMobileMenuOpen={isMobileMenuOpen}
                 handleMenuToggle={handleMenuToggle}
-                rotateAnim={rotateAnim}
-                isDark={isDark}
+                menuAnim={menuAnim}
                 colors={colors}
+                isDark={isDark}
               />
             )}
             </View>
@@ -494,7 +446,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         </View>
       </SafeAreaView>
 
-      {/* Mobile Menu Dropdown - smoothly pushes content down */}
+      {/* Mobile Menu Dropdown - optimized */}
       {isMobile && (
         <Animated.View
           style={{
@@ -504,24 +456,23 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
             ...getOptimizedShadow('heavy', isDark, Platform.OS === 'web' && isMobile ? 
               (isDark ? 'rgba(0, 0, 0, 0.98)' : 'rgba(255, 255, 255, 0.98)') : 
               (isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.95)')),
-            height: slideAnim.interpolate({
+            height: menuAnim.interpolate({
               inputRange: [0, 1],
-              outputRange: [0, 480], // Smooth height transition
+              outputRange: [0, 480],
             }),
-            opacity: fadeAnim,
+            opacity: menuAnim,
             overflow: 'hidden',
-            paddingTop: slideAnim.interpolate({
+            paddingTop: menuAnim.interpolate({
               inputRange: [0, 1],
               outputRange: [0, 8],
             }),
-            paddingBottom: slideAnim.interpolate({
+            paddingBottom: menuAnim.interpolate({
               inputRange: [0, 1],
               outputRange: [0, 20],
             }),
           }}
         >
           <View>
-            {/* Separator line */}
             <View 
               style={{
                 height: 1,
@@ -531,51 +482,29 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
               }}
             />
             
-            {!isAuthenticated ? (
-              // Unauthenticated mobile navigation with staggered animations
-              <>
-                <NavButton href="/" icon="home" isMobileMenu animationDelay={50}>Home</NavButton>
-                <NavButton href="/about" icon="information-circle" isMobileMenu animationDelay={100}>About</NavButton>
-                <NavButton href="/our-approach" icon="analytics" isMobileMenu animationDelay={150}>Our Approach</NavButton>
-                {/* <NavButton href="/donate" icon="heart" variant="secondary" isMobileMenu animationDelay={100}>Donate</NavButton> */}
-                <NavButton href="/join" icon="people" variant="primary" isMobileMenu animationDelay={200}>Join Us</NavButton>
-                <NavButton href="/login" icon="log-in" isMobileMenu animationDelay={250}>Login</NavButton>
-              </>
-            ) : (
-              // Authenticated mobile navigation with staggered animations
-              <>
-                <NavButton href="/account" icon="person" isMobileMenu animationDelay={50}>Account</NavButton>
-                <NavButton href="/newsroom" icon="newspaper" isMobileMenu animationDelay={100}>Newsroom</NavButton>
-                <NavButton href="/events" icon="calendar" isMobileMenu animationDelay={150}>Events</NavButton>
-                {user?.role === 'ADMIN' && (
-                    <NavButton href="/user-management" icon="people" isMobileMenu animationDelay={200}>User Management</NavButton>
-                  )}
-                <NavButton href="/settings" icon="settings" isMobileMenu animationDelay={250}>Settings</NavButton>
-                <View style={{ height: 8 }} />
-                <NavButton onPress={handleLogoutRequest} icon="log-out" variant="secondary" isMobileMenu animationDelay={300}>
-                  Logout
-                </NavButton>
-              </>
-            )}
+            {navigationItems.map((item, index) => (
+              <NavButton 
+                key={item.href || item.label} 
+                href={item.href} 
+                onPress={item.onPress}
+                icon={item.icon}
+                variant={item.variant}
+                isMobileMenu
+                animationDelay={index * 50}
+              >
+                {item.label}
+              </NavButton>
+            ))}
 
-            {/* Theme Toggle for Mobile - Improved UI with animation */}
+            {/* Theme Toggle for Mobile */}
             <Animated.View
               style={{
-                opacity: slideAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 1],
-                }),
+                opacity: menuAnim,
                 transform: [
                   {
-                    translateX: slideAnim.interpolate({
+                    translateX: menuAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [-30, 0],
-                    }),
-                  },
-                  {
-                    scale: slideAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.9, 1],
+                      outputRange: [-20, 0],
                     }),
                   },
                 ],
