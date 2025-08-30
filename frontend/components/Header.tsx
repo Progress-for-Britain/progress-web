@@ -99,12 +99,14 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
     isMobileMenuOpen, 
     handleMenuToggle, 
     menuAnim, 
-    colors 
+    colors,
+    isDark
   }: {
     isMobileMenuOpen: boolean;
     handleMenuToggle: () => void;
     menuAnim: Animated.Value;
     colors: any;
+    isDark: boolean;
   }) => {
     const rotate = menuAnim.interpolate({
       inputRange: [0, 1],
@@ -347,19 +349,25 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         { href: "/login", icon: "log-in", label: "Login" },
       ];
     } else {
-      const items: NavigationItem[] = [
+      // Build authenticated navigation items conditionally
+      const baseItems: NavigationItem[] = [
         { href: "/account", icon: "person", label: "Account" },
         { href: "/newsroom", icon: "newspaper", label: "Newsroom" },
         { href: "/events", icon: "calendar", label: "Events" },
-        { href: "/settings", icon: "settings", label: "Settings" },
-        { onPress: handleLogoutRequest, icon: "log-out", label: "Logout", variant: "secondary" as const },
       ];
-      
+
+      // Insert admin link after Events if user is admin
       if (user?.role === 'ADMIN') {
-        items.splice(3, 0, { href: "/user-management", icon: "people", label: "User Management" });
+        baseItems.push({ href: "/user-management", icon: "people", label: "User Management" });
       }
-      
-      return items;
+
+      // Add remaining items
+      baseItems.push(
+        { href: "/settings", icon: "settings", label: "Settings" },
+        { onPress: handleLogoutRequest, icon: "log-out", label: "Logout", variant: "secondary" as const }
+      );
+
+      return baseItems;
     }
   }, [isAuthenticated, user?.role, handleLogoutRequest]);
 
@@ -430,6 +438,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
                 handleMenuToggle={handleMenuToggle}
                 menuAnim={menuAnim}
                 colors={colors}
+                isDark={isDark}
               />
             )}
             </View>
