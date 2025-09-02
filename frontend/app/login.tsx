@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Head from 'expo-router/head';
-import { useAuth } from '../util/auth-context';;
+import { useAuth } from '../util/auth-context';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import useResponsive from '../util/useResponsive';

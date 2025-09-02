@@ -1,6 +1,20 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios';
+import { Platform } from 'react-native';
+
+// Detect if running on mobile web
+const isMobileWeb = typeof window !== 'undefined' && 
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3005';
+
+// Mobile web optimizations
+const MOBILE_CONFIG = {
+  timeout: isMobileWeb ? 15000 : 30000, // Shorter timeout for mobile
+  retryDelay: isMobileWeb ? 500 : 1000,
+  maxRetries: isMobileWeb ? 2 : 3,
+  enableCompression: true,
+  enableCaching: true,
+};
 
 export interface User {
   id: string;
@@ -397,27 +411,201 @@ export interface AuthResponse {
   };
 }
 
+// Request deduplication for mobile efficiency
+class RequestDeduplicator {
+  private pendingRequests = new Map<string, Promise<any>>();
+
+  async dedupe<T>(key: string, requestFn: () => Promise<T>): Promise<T> {
+    if (this.pendingRequests.has(key)) {
+      return this.pendingRequests.get(key)!;
+    }
+
+    const promise = requestFn().finally(() => {
+      this.pendingRequests.delete(key);
+    });
+
+    this.pendingRequests.set(key, promise);
+    return promise;
+  }
+}
+
+const requestDeduplicator = new RequestDeduplicator();
+
+// Connection quality detection for mobile
+const getConnectionQuality = (): 'slow' | 'fast' | 'unknown' => {
+  if (typeof navigator !== 'undefined' && 'connection' in navigator) {
+    const connection = (navigator as any).connection;
+    if (connection) {
+      const effectiveType = connection.effectiveType;
+      if (effectiveType === 'slow-2g' || effectiveType === '2g') return 'slow';
+      if (effectiveType === '3g') return 'slow';
+      if (effectiveType === '4g') return 'fast';
+    }
+  }
+  return 'unknown';
+};
+
+// Offline detection
+const isOnline = (): boolean => {
+  return typeof navigator !== 'undefined' ? navigator.onLine : true;
+};
+
+// Network status monitoring for mobile
+class NetworkMonitor {
+  private listeners: Array<(online: boolean) => void> = [];
+  private isOnline: boolean = navigator.onLine;
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => this.handleOnline());
+      window.addEventListener('offline', () => this.handleOffline());
+    }
+  }
+
+  private handleOnline() {
+    this.isOnline = true;
+    this.listeners.forEach(listener => listener(true));
+  }
+
+  private handleOffline() {
+    this.isOnline = false;
+    this.listeners.forEach(listener => listener(false));
+  }
+
+  getStatus(): boolean {
+    return this.isOnline;
+  }
+
+  addListener(callback: (online: boolean) => void) {
+    this.listeners.push(callback);
+    return () => {
+      this.listeners = this.listeners.filter(listener => listener !== callback);
+    };
+  }
+}
+
+const networkMonitor = new NetworkMonitor();
+
+// Enhanced caching for mobile
+class MobileCache {
+  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+  set(key: string, data: any, ttl: number = 300000): void { // 5 minutes default
+    this.cache.set(key, { data, timestamp: Date.now(), ttl });
+  }
+
+  get<T>(key: string): T | null {
+    const item = this.cache.get(key);
+    if (!item) return null;
+
+    if (Date.now() - item.timestamp > item.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return item.data;
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  // Clean expired entries
+  cleanup(): void {
+    const now = Date.now();
+    for (const [key, item] of this.cache.entries()) {
+      if (now - item.timestamp > item.ttl) {
+        this.cache.delete(key);
+      }
+    }
+  }
+}
+
+const mobileCache = new MobileCache();
+
+// Request batching for mobile efficiency
+class RequestBatcher {
+  private batchQueue: Array<{
+    id: string;
+    request: () => Promise<any>;
+    resolve: (value: any) => void;
+    reject: (error: any) => void;
+  }> = [];
+  private batchTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly BATCH_DELAY = 50; // 50ms batch window
+
+  add<T>(request: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const id = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      this.batchQueue.push({ id, request, resolve, reject });
+
+      if (!this.batchTimeout) {
+        this.batchTimeout = setTimeout(() => this.processBatch(), this.BATCH_DELAY);
+      }
+    });
+  }
+
+  private async processBatch(): Promise<void> {
+    const batch = [...this.batchQueue];
+    this.batchQueue = [];
+    this.batchTimeout = null;
+
+    // Process batch in parallel with concurrency limit
+    const concurrencyLimit = 3;
+    const results = [];
+
+    for (let i = 0; i < batch.length; i += concurrencyLimit) {
+      const chunk = batch.slice(i, i + concurrencyLimit);
+      const chunkPromises = chunk.map(async (item) => {
+        try {
+          const result = await item.request();
+          item.resolve(result);
+          return { success: true, id: item.id };
+        } catch (error) {
+          item.reject(error);
+          return { success: false, id: item.id, error };
+        }
+      });
+
+      results.push(...await Promise.all(chunkPromises));
+    }
+  }
+}
+
+const requestBatcher = new RequestBatcher();
+
 class ApiClient {
-  private client: AxiosInstance;
+  public client: AxiosInstance;
 
   constructor(baseURL: string) {
     this.client = axios.create({
       baseURL,
       headers: {
         'Content-Type': 'application/json',
+        // Enable compression for mobile
       },
       // Improved timeout settings for mobile
-      timeout: 30000, // 30 seconds for mobile networks
+      timeout: MOBILE_CONFIG.timeout,
       timeoutErrorMessage: 'Request timed out - please check your connection',
+      // Enable keep-alive for connection reuse on mobile
+      withCredentials: false,
     });
 
     // Add request interceptor for mobile optimizations
     this.client.interceptors.request.use(
       (config) => {
         // Add cache headers for mobile efficiency
-        if (config.method === 'get') {
+        if (config.method === 'get' && MOBILE_CONFIG.enableCaching) {
           config.headers['Cache-Control'] = 'public, max-age=300'; // 5 minutes cache
         }
+        
+        // Add connection quality hints
+        const connectionQuality = getConnectionQuality();
+        if (connectionQuality === 'slow') {
+          // Reduce payload size for slow connections
+          config.headers['X-Connection-Quality'] = 'slow';
+        }
+        
         return config;
       },
       (error) => Promise.reject(error)
@@ -488,6 +676,133 @@ class ApiClient {
     }
     
     throw lastError!;
+  }
+
+  // Background sync for offline requests
+  private backgroundSyncQueue: Array<{
+    id: string;
+    request: () => Promise<any>;
+    priority: 'high' | 'medium' | 'low';
+    timestamp: number;
+  }> = [];
+
+  // Add request to background sync queue
+  private addToBackgroundSync(
+    request: () => Promise<any>, 
+    priority: 'high' | 'medium' | 'low' = 'medium'
+  ): string {
+    const id = `sync_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.backgroundSyncQueue.push({
+      id,
+      request,
+      priority,
+      timestamp: Date.now()
+    });
+    
+    // Sort by priority (high first, then by timestamp)
+    this.backgroundSyncQueue.sort((a, b) => {
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+      return priorityDiff !== 0 ? priorityDiff : a.timestamp - b.timestamp;
+    });
+    
+    return id;
+  }
+
+  // Process background sync queue when online
+  async processBackgroundSync(): Promise<void> {
+    if (!isOnline() || this.backgroundSyncQueue.length === 0) return;
+
+    const queueCopy = [...this.backgroundSyncQueue];
+    this.backgroundSyncQueue = [];
+
+    for (const item of queueCopy) {
+      try {
+        await item.request();
+      } catch (error) {
+        console.warn(`Background sync failed for ${item.id}:`, error);
+        // Re-queue failed requests with lower priority
+        this.addToBackgroundSync(item.request, 'low');
+      }
+    }
+  }
+
+  // Enhanced request method with mobile optimizations
+  private async makeRequest<T>(
+    method: 'get' | 'post' | 'put' | 'delete',
+    url: string,
+    data?: any,
+    options?: {
+      priority?: 'high' | 'medium' | 'low';
+      dedupeKey?: string;
+      backgroundSync?: boolean;
+      cache?: boolean;
+    }
+  ): Promise<T> {
+    const { priority = 'medium', dedupeKey, backgroundSync = false, cache = true } = options || {};
+
+    // Check if offline and handle accordingly
+    if (!isOnline()) {
+      if (backgroundSync) {
+        return new Promise((resolve, reject) => {
+          this.addToBackgroundSync(async () => {
+            try {
+              const result = await this.makeRequest(method, url, data, { ...options, backgroundSync: false });
+              resolve(result as T);
+            } catch (error) {
+              reject(error);
+            }
+          }, priority);
+        });
+      }
+      throw new Error('You appear to be offline. Please check your connection and try again.');
+    }
+
+    // Request deduplication
+    if (dedupeKey && method === 'get') {
+      return requestDeduplicator.dedupe(dedupeKey, async () => {
+        return this.performRequest<T>(method, url, data, cache);
+      });
+    }
+
+    return this.performRequest<T>(method, url, data, cache);
+  }
+
+  private async performRequest<T>(
+    method: 'get' | 'post' | 'put' | 'delete',
+    url: string,
+    data?: any,
+    cache: boolean = true
+  ): Promise<T> {
+    const connectionQuality = getConnectionQuality();
+    
+    // Adjust request based on connection quality
+    const requestConfig: any = {
+      method,
+      url,
+      headers: {}
+    };
+
+    if (data && (method === 'post' || method === 'put')) {
+      requestConfig.data = data;
+    }
+
+    // Add cache control based on connection quality
+    if (method === 'get' && cache) {
+      if (connectionQuality === 'slow') {
+        requestConfig.headers['Cache-Control'] = 'max-age=3600'; // 1 hour cache for slow connections
+      } else {
+        requestConfig.headers['Cache-Control'] = 'max-age=300'; // 5 minutes cache for fast connections
+      }
+    }
+
+    // Add connection quality hint to server
+    if (connectionQuality !== 'unknown') {
+      requestConfig.headers['X-Connection-Quality'] = connectionQuality;
+    }
+
+    const response = await this.client.request(requestConfig);
+    return response.data.data || response.data;
   }
 
   // Auth endpoints with mobile retry support
@@ -1087,6 +1402,25 @@ class ApiClient {
     }>('/api/users/management/stats');
     return response.data.data;
   }
+
+  async getUserICalUrl(userId: string): Promise<string> {
+    // Generate the iCal URL for the user's events
+    const baseUrl = this.client.defaults.baseURL || API_BASE_URL;
+    // Add /api prefix like all other API endpoints
+    return `${baseUrl}/api/events/ical/${userId}`;
+  }
+
+  async subscribeToCalendar(userId: string): Promise<void> {
+    const icalUrl = await this.getUserICalUrl(userId);
+    
+    if (Platform.OS === 'web') {
+      window.open(icalUrl, '_blank');
+    } else {
+      // For mobile, use expo-linking to open the URL
+      const { openURL } = await import('expo-linking');
+      await openURL(icalUrl);
+    }
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);
@@ -1109,3 +1443,120 @@ export const logVolunteerHours = (hoursData: LogVolunteerHoursRequest) => api.lo
 
 // Export type alias for compatibility
 export type EventType = Event['eventType'];
+
+// Initialize network monitoring and background sync
+if (typeof window !== 'undefined') {
+  // Start background sync processing when coming online
+  networkMonitor.addListener((online) => {
+    if (online) {
+      api.processBackgroundSync();
+    }
+  });
+
+  // Periodic cache cleanup
+  setInterval(() => {
+    mobileCache.cleanup();
+  }, 300000); // Clean every 5 minutes
+}
+
+// Enhanced API methods with mobile optimizations
+export const getEventsOptimized = (params?: {
+  page?: number;
+  limit?: number;
+  eventType?: string;
+  status?: string;
+  search?: string;
+}) => {
+  const cacheKey = `events_${JSON.stringify(params)}`;
+  const cached = mobileCache.get(cacheKey);
+  if (cached) return Promise.resolve(cached);
+
+  return api.getAllEvents(params).then(data => {
+    mobileCache.set(cacheKey, data);
+    return data;
+  });
+};
+
+export const getPostsOptimized = (params?: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+  featured?: boolean;
+}) => {
+  const cacheKey = `posts_${JSON.stringify(params)}`;
+  const cached = mobileCache.get(cacheKey);
+  if (cached) return Promise.resolve(cached);
+
+  return api.getAllPosts(params).then(data => {
+    mobileCache.set(cacheKey, data);
+    return data;
+  });
+};
+
+// Batch multiple API calls for better mobile performance
+export const batchApiCalls = async <T>(
+  calls: Array<() => Promise<T>>
+): Promise<T[]> => {
+  return requestBatcher.add(async () => {
+    return Promise.all(calls.map(call => call()));
+  });
+};
+
+// Service Worker integration hints
+export const registerServiceWorker = async () => {
+  if ('serviceWorker' in navigator && isMobileWeb) {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('Service Worker registered:', registration);
+      
+      // Handle updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New content available, notify user
+              console.log('New content available, please refresh');
+            }
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Service Worker registration failed:', error);
+    }
+  }
+};
+
+// Performance monitoring for mobile
+export const monitorApiPerformance = () => {
+  if (!isMobileWeb) return;
+
+  const originalRequest = api.client.request;
+  api.client.request = async <T = any, R = AxiosResponse<T, any>, D = any>(
+    config: AxiosRequestConfig<D>
+  ): Promise<R> => {
+    const startTime = Date.now();
+    try {
+      const response = await originalRequest(config);
+      const duration = Date.now() - startTime;
+      
+      // Log slow requests (> 3 seconds on mobile)
+      if (duration > 3000) {
+        console.warn(`Slow API request: ${config.method?.toUpperCase()} ${config.url} took ${duration}ms`);
+      }
+      
+      return response as R;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`API request failed: ${config.method?.toUpperCase()} ${config.url} after ${duration}ms`, error);
+      throw error;
+    }
+  };
+};
+
+// Initialize mobile optimizations
+if (isMobileWeb) {
+  monitorApiPerformance();
+  registerServiceWorker();
+}

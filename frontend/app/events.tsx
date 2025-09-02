@@ -687,6 +687,38 @@ export default function Events() {
                       </Text>
                     </TouchableOpacity>
                   )}
+
+                  {/* iCal Calendar Button */}
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (!user) return;
+                      api.subscribeToCalendar(user.id);
+                    }}
+                    style={{
+                      backgroundColor: '#10b981',
+                      borderRadius: 16,
+                      paddingHorizontal: 24,
+                      paddingVertical: 16,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 24,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 12,
+                      elevation: 6,
+                    }}
+                  >
+                    <Ionicons name="calendar-outline" size={24} color="#ffffff" style={{ marginRight: 8 }} />
+                    <Text style={{ 
+                      color: '#ffffff', 
+                      fontSize: 18, 
+                      fontWeight: '700' 
+                    }}>
+                      Subscribe to Calendar
+                    </Text>
+                  </TouchableOpacity>
                   
                   <TextInput
                     value={searchQuery}
