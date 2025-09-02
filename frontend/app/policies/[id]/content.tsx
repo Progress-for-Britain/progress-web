@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Platform, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../../../util/theme-context';
 import { useResponsive } from '../../../util/useResponsive';
 import { getCommonStyles, getColors } from '../../../util/commonStyles';
-import { mockPolicy } from '../mockpolicy';
+import { useAuth } from '../../../util/auth-context';
+import { getPolicyById } from '../mockpolicy';
 import ContentView from '../ContentView';
 
 export default function PolicyContentPage() {
@@ -15,6 +16,39 @@ export default function PolicyContentPage() {
   const router = useRouter();
   const colors = getColors(isDark);
   const commonStyles = getCommonStyles(isDark, isMobile, 0);
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  // Redirect if not authenticated or not authorized (but wait for loading to complete)
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !user || !['ADMIN', 'WRITER', 'MEMBER', 'VOLUNTEER'].includes(user.role))) {
+      Alert.alert('Access Denied', 'You must be an authorized user to access this page.');
+      router.push('/');
+      return;
+    }
+  }, [isAuthenticated, isLoading, user]);
+
+  const policy = getPolicyById(id as string);
+
+  if (!policy) {
+    return (
+      <View style={commonStyles.appContainer}>
+        <View style={[commonStyles.content, { alignItems: 'center', justifyContent: 'center', minHeight: 400 }]}>
+          <Ionicons name="document" size={48} color={colors.textSecondary} />
+          <Text style={{ color: colors.textSecondary, fontSize: 18, marginTop: 16 }}>
+            Policy not found
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.replace('/policies')}
+            style={{ marginTop: 16 }}
+          >
+            <Text style={{ color: colors.primary, fontSize: 16 }}>
+              Back to Policies
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -44,7 +78,7 @@ export default function PolicyContentPage() {
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
         paddingHorizontal: 24,
-        paddingVertical: 12, // Reduced from 20 for thinner header
+        paddingVertical: 20,
         ...(Platform.OS === 'web' && {
           backdropFilter: 'blur(10px)',
           position: 'sticky',
@@ -52,7 +86,7 @@ export default function PolicyContentPage() {
           zIndex: 10,
         } as any),
       }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           {/* Back Button */}
           <TouchableOpacity
             onPress={() => router.back()}
@@ -63,79 +97,6 @@ export default function PolicyContentPage() {
               Back
             </Text>
           </TouchableOpacity>
-
-          {/* Center: Title and Description */}
-          <View style={{ flex: 1, alignItems: 'center', marginHorizontal: 24 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <MaterialIcons name="description" size={24} color={colors.text} />
-              <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>
-                {mockPolicy.name}
-              </Text>
-            </View>
-            <Text style={{ fontSize: 14, color: colors.textSecondary, textAlign: 'center' }}>
-              {mockPolicy.description}
-            </Text>
-          </View>
-
-          {/* Right: Badges and Meta Info */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              backgroundColor: getStatusColor(mockPolicy.status),
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 12,
-            }}>
-              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600', textTransform: 'capitalize' }}>
-                {mockPolicy.status}
-              </Text>
-            </View>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              backgroundColor: colors.border,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 12,
-            }}>
-              <Ionicons name="git-branch" size={14} color={colors.textSecondary} />
-              <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '500' }}>
-                v{mockPolicy.version}
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="person" size={14} color={colors.textSecondary} />
-              <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                {mockPolicy.author}
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="time" size={14} color={colors.textSecondary} />
-              <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                {formatDate(mockPolicy.lastUpdated)}
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => router.push(`/policies/${id}`)}
-              style={{
-                backgroundColor: colors.primary,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 6,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <Ionicons name="document-text" size={14} color="white" />
-              <Text style={{ color: 'white', fontWeight: '600', fontSize: 12 }}>
-                Source
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </View>
 
@@ -144,12 +105,11 @@ export default function PolicyContentPage() {
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingHorizontal: 24,
-          paddingVertical: 48,
         }}
         showsVerticalScrollIndicator={true}
       >
         {/* Formatted Content */}
-        <ContentView content={mockPolicy.content} />
+        <ContentView content={policy.content} />
       </ScrollView>
     </View>
   );

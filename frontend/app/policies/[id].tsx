@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Platform, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Platform, Modal, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../../util/theme-context';
@@ -29,7 +29,7 @@ export default function PolicyDetailPage() {
   const { id } = useLocalSearchParams();
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const colors = getColors(isDark);
   const commonStyles = getCommonStyles(isDark, isMobile, width);
@@ -37,6 +37,15 @@ export default function PolicyDetailPage() {
   const [activeTab, setActiveTab] = useState('source');
   const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null);
   const [showCommitModal, setShowCommitModal] = useState(false);
+
+  // Redirect if not authenticated or not authorized (but wait for loading to complete)
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !user || !['ADMIN', 'WRITER', 'MEMBER', 'VOLUNTEER'].includes(user.role))) {
+      Alert.alert('Access Denied', 'You must be an authorized user to access this page.');
+      router.push('/');
+      return;
+    }
+  }, [isAuthenticated, isLoading, user]);
 
   const policy = getPolicyById(id as string);
 
@@ -358,7 +367,7 @@ export default function PolicyDetailPage() {
                   </Text>
                 </TouchableOpacity>
               )}
-              {user?.role === 'ADMIN' && (
+              {(user?.role === 'ADMIN' || user?.role === 'WRITER') && (
                 <TouchableOpacity
                   style={{
                     backgroundColor: '#10b981',

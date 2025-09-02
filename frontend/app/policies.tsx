@@ -1,70 +1,32 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Platform, Alert } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
 import { getCommonStyles, getColors } from '../util/commonStyles';
 import { useAuth } from '../util/auth-context';
-
-// Mock data for policies
-const mockPolicies = [
-  {
-    id: '1',
-    name: 'Privacy Policy',
-    description: 'Our commitment to protecting user privacy and data rights',
-    lastUpdated: '2024-09-01T10:30:00Z',
-    author: 'Admin User',
-    status: 'published',
-    version: '2.1.0',
-    commits: 15,
-    pullRequests: 3,
-  },
-  {
-    id: '2',
-    name: 'Terms of Service',
-    description: 'Legal terms and conditions for using our platform',
-    lastUpdated: '2024-08-28T14:20:00Z',
-    author: 'Legal Team',
-    status: 'draft',
-    version: '1.0.0',
-    commits: 8,
-    pullRequests: 1,
-  },
-  {
-    id: '3',
-    name: 'Community Guidelines',
-    description: 'Rules and guidelines for community participation',
-    lastUpdated: '2024-08-25T09:15:00Z',
-    author: 'Community Manager',
-    status: 'published',
-    version: '1.2.0',
-    commits: 12,
-    pullRequests: 0,
-  },
-  {
-    id: '4',
-    name: 'Data Retention Policy',
-    description: 'How long we keep user data and deletion procedures',
-    lastUpdated: '2024-08-20T16:45:00Z',
-    author: 'Security Team',
-    status: 'review',
-    version: '1.0.0',
-    commits: 5,
-    pullRequests: 2,
-  },
-];
+import { mockPolicies } from './policies/mockpolicy';
 
 export default function PoliciesPage() {
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const colors = getColors(isDark);
   const commonStyles = getCommonStyles(isDark, isMobile, width);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+
+  // Redirect if not authenticated or not authorized (but wait for loading to complete)
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !user || !['ADMIN', 'WRITER', 'MEMBER', 'VOLUNTEER'].includes(user.role))) {
+      Alert.alert('Access Denied', 'You must be an authorized user to access this page.');
+      router.push('/');
+      return;
+    }
+  }, [isAuthenticated, isLoading, user]);
 
   const filteredPolicies = useMemo(() => {
     return mockPolicies.filter(policy => {
@@ -233,14 +195,14 @@ export default function PoliciesPage() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                       <Ionicons name="git-commit" size={14} color={colors.textSecondary} />
                       <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                        {policy.commits} commits
+                        {policy.commits.length} commits
                       </Text>
                     </View>
-                    {policy.pullRequests > 0 && (
+                    {policy.pullRequests.length > 0 && (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Ionicons name="git-pull-request" size={14} color={colors.textSecondary} />
                         <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                          {policy.pullRequests} PRs
+                          {policy.pullRequests.length} PRs
                         </Text>
                       </View>
                     )}
