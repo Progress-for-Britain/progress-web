@@ -120,6 +120,7 @@ export default function PoliciesPage() {
           {/* New Policy Button */}
           {user?.role === 'ADMIN' && (
             <TouchableOpacity
+              onPress={() => router.push('/policies/new')}
               style={{
                 backgroundColor: colors.primary,
                 paddingHorizontal: 16,

@@ -13,6 +13,7 @@ export interface Commit {
   date: string;
   changes: string;
   diff: DiffChange[];
+  branch: string;
 }
 
 export interface PullRequest {
@@ -23,6 +24,25 @@ export interface PullRequest {
   createdAt: string;
   mergedAt?: string;
   reviewers: string[];
+  branch: string;
+  baseBranch: string;
+  description: string;
+  comments: Comment[];
+}
+
+export interface Comment {
+  id: string;
+  author: string;
+  content: string;
+  createdAt: string;
+  replies?: Comment[];
+}
+
+export interface Branch {
+  name: string;
+  lastCommit: string;
+  author: string;
+  createdAt: string;
 }
 
 export interface Policy {
@@ -36,6 +56,8 @@ export interface Policy {
   content: string;
   commits: Commit[];
   pullRequests: PullRequest[];
+  branches: Branch[];
+  currentBranch: string;
 }
 
 // Mock data for policies
@@ -108,6 +130,7 @@ export const mockPolicies: Policy[] = [
         author: 'Admin User',
         date: '2024-09-01T10:30:00Z',
         changes: '+15 -3 lines',
+        branch: 'main',
         diff: [
           {
             type: 'addition',
@@ -174,6 +197,7 @@ export const mockPolicies: Policy[] = [
         author: 'Legal Team',
         date: '2024-08-28T14:20:00Z',
         changes: '+12 -0 lines',
+        branch: 'gdpr-updates',
         diff: [
           {
             type: 'addition',
@@ -243,6 +267,7 @@ export const mockPolicies: Policy[] = [
         author: 'Security Team',
         date: '2024-08-25T09:15:00Z',
         changes: '+8 -5 lines',
+        branch: 'cookie-updates',
         diff: [
           {
             type: 'modification',
@@ -291,6 +316,7 @@ export const mockPolicies: Policy[] = [
         author: 'Admin User',
         date: '2024-08-20T16:45:00Z',
         changes: '+45 -0 lines',
+        branch: 'main',
         diff: [
           {
             type: 'addition',
@@ -504,6 +530,25 @@ export const mockPolicies: Policy[] = [
         createdAt: '2024-08-30T10:00:00Z',
         mergedAt: '2024-09-01T10:30:00Z',
         reviewers: ['Admin User'],
+        branch: 'gdpr-updates',
+        baseBranch: 'main',
+        description: 'This PR updates the privacy policy to ensure GDPR compliance with the latest regulations.',
+        comments: [
+          {
+            id: 'comment1',
+            author: 'Legal Team',
+            content: 'Please review the GDPR compliance updates.',
+            createdAt: '2024-08-30T10:00:00Z',
+            replies: [
+              {
+                id: 'reply1',
+                author: 'Admin User',
+                content: 'Looks good, approved.',
+                createdAt: '2024-08-31T14:00:00Z',
+              },
+            ],
+          },
+        ],
       },
       {
         id: 'pr2',
@@ -512,8 +557,17 @@ export const mockPolicies: Policy[] = [
         status: 'open',
         createdAt: '2024-09-02T14:00:00Z',
         reviewers: ['Admin User', 'Legal Team'],
+        branch: 'cookie-consent',
+        baseBranch: 'main',
+        description: 'This PR adds a section on cookie consent to the privacy policy.',
+        comments: [],
       },
     ],
+    branches: [
+      { name: 'main', lastCommit: 'c1', author: 'Admin User', createdAt: '2024-08-20T16:45:00Z' },
+      { name: 'gdpr-updates', lastCommit: 'c2', author: 'Legal Team', createdAt: '2024-08-25T09:15:00Z' },
+    ],
+    currentBranch: 'main',
   },
   {
     id: '2',
@@ -565,6 +619,7 @@ export const mockPolicies: Policy[] = [
         author: 'Legal Team',
         date: '2024-08-28T14:20:00Z',
         changes: '+50 -0 lines',
+        branch: 'main',
         diff: [
           // Diff for Terms of Service
         ],
@@ -578,8 +633,16 @@ export const mockPolicies: Policy[] = [
         status: 'open',
         createdAt: '2024-08-28T14:20:00Z',
         reviewers: ['Admin User'],
+        branch: 'tos-review',
+        baseBranch: 'main',
+        description: 'This PR reviews the initial draft of the terms of service.',
+        comments: [],
       },
     ],
+    branches: [
+      { name: 'main', lastCommit: 'c5', author: 'Legal Team', createdAt: '2024-08-28T14:20:00Z' },
+    ],
+    currentBranch: 'main',
   },
   {
     id: '3',
@@ -632,12 +695,17 @@ export const mockPolicies: Policy[] = [
         author: 'Community Manager',
         date: '2024-08-25T09:15:00Z',
         changes: '+10 -5 lines',
+        branch: 'main',
         diff: [
           // Diff for Community Guidelines
         ],
       },
     ],
     pullRequests: [],
+    branches: [
+      { name: 'main', lastCommit: 'c6', author: 'Community Manager', createdAt: '2024-08-25T09:15:00Z' },
+    ],
+    currentBranch: 'main',
   },
   {
     id: '4',
@@ -689,6 +757,7 @@ export const mockPolicies: Policy[] = [
         author: 'Security Team',
         date: '2024-08-20T16:45:00Z',
         changes: '+30 -0 lines',
+        branch: 'main',
         diff: [
           // Diff for Data Retention Policy
         ],
@@ -702,8 +771,16 @@ export const mockPolicies: Policy[] = [
         status: 'open',
         createdAt: '2024-08-20T16:45:00Z',
         reviewers: ['Legal Team'],
+        branch: 'data-retention-review',
+        baseBranch: 'main',
+        description: 'This PR reviews the initial draft of the data retention policy.',
+        comments: [],
       },
     ],
+    branches: [
+      { name: 'main', lastCommit: 'c7', author: 'Security Team', createdAt: '2024-08-20T16:45:00Z' },
+    ],
+    currentBranch: 'main',
   },
 ];
 
@@ -713,4 +790,65 @@ export const mockPolicy = mockPolicies[0];
 // Function to get policy by ID
 export const getPolicyById = (id: string): Policy | undefined => {
   return mockPolicies.find(policy => policy.id === id);
+};
+
+// Function to create a new policy
+export const createPolicy = (policy: Omit<Policy, 'id' | 'commits' | 'pullRequests' | 'branches' | 'currentBranch'>): Policy => {
+  const newPolicy: Policy = {
+    ...policy,
+    id: `policy_${Date.now()}`,
+    commits: [],
+    pullRequests: [],
+    branches: [{ name: 'main', lastCommit: '', author: policy.author, createdAt: new Date().toISOString() }],
+    currentBranch: 'main',
+  };
+  mockPolicies.push(newPolicy);
+  return newPolicy;
+};
+
+// Function to create a branch
+export const createBranch = (policyId: string, branchName: string, author: string): Branch | null => {
+  const policy = mockPolicies.find(p => p.id === policyId);
+  if (!policy) return null;
+  
+  const newBranch: Branch = {
+    name: branchName,
+    lastCommit: policy.commits[0]?.id || '',
+    author,
+    createdAt: new Date().toISOString(),
+  };
+  policy.branches.push(newBranch);
+  return newBranch;
+};
+
+// Function to create a PR
+export const createPullRequest = (policyId: string, pr: Omit<PullRequest, 'id' | 'createdAt' | 'comments'>): PullRequest | null => {
+  const policy = mockPolicies.find(p => p.id === policyId);
+  if (!policy) return null;
+  
+  const newPR: PullRequest = {
+    ...pr,
+    id: `pr_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    comments: [],
+  };
+  policy.pullRequests.push(newPR);
+  return newPR;
+};
+
+// Function to add comment to PR
+export const addCommentToPR = (policyId: string, prId: string, comment: Omit<Comment, 'id' | 'createdAt'>): Comment | null => {
+  const policy = mockPolicies.find(p => p.id === policyId);
+  if (!policy) return null;
+  
+  const pr = policy.pullRequests.find(p => p.id === prId);
+  if (!pr) return null;
+  
+  const newComment: Comment = {
+    ...comment,
+    id: `comment_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  pr.comments.push(newComment);
+  return newComment;
 };

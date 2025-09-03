@@ -6,11 +6,12 @@ import { useTheme } from '../../util/theme-context';
 import { useResponsive } from '../../util/useResponsive';
 import { getCommonStyles, getColors, getOptimizedShadow } from '../../util/commonStyles';
 import { useAuth } from '../../util/auth-context';
-import { getPolicyById, Policy, Commit, PullRequest, DiffChange } from './mockpolicy';
+import { getPolicyById, Policy, Commit, PullRequest, DiffChange, createBranch, createPullRequest, addCommentToPR, Branch, Comment } from './mockpolicy';
 import ContentView from './ContentView';
 
 const tabs = [
   { id: 'source', label: 'Source', icon: 'document-text' },
+  { id: 'branches', label: 'Branches', icon: 'git-branch' },
   { id: 'history', label: 'History', icon: 'git-commit' },
   { id: 'pulls', label: 'Pull Requests', icon: 'git-pull-request' },
 ];
@@ -34,9 +35,12 @@ export default function PolicyDetailPage() {
   const colors = getColors(isDark);
   const commonStyles = getCommonStyles(isDark, isMobile, width);
 
+  const policy = getPolicyById(id as string);
+
   const [activeTab, setActiveTab] = useState('source');
   const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null);
   const [showCommitModal, setShowCommitModal] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState(policy?.currentBranch || 'main');
 
   // Redirect if not authenticated or not authorized (but wait for loading to complete)
   useEffect(() => {
@@ -46,8 +50,6 @@ export default function PolicyDetailPage() {
       return;
     }
   }, [isAuthenticated, isLoading, user]);
-
-  const policy = getPolicyById(id as string);
 
   if (!policy) {
     return (
@@ -126,10 +128,149 @@ export default function PolicyDetailPage() {
           </ScrollView>
         );
 
+      case 'branches':
+        return (
+          <View style={{ marginTop: 24 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>
+                Branches ({policy.branches.length})
+              </Text>
+              {(user?.role === 'ADMIN' || user?.role === 'WRITER') && (
+                <TouchableOpacity
+                  onPress={() => {
+                    Alert.prompt(
+                      'Create New Branch',
+                      'Enter branch name:',
+                      (branchName) => {
+                        if (branchName && branchName.trim()) {
+                          const newBranch = createBranch(policy.id, branchName.trim(), user?.firstName + ' ' + user?.lastName || 'Unknown');
+                          if (newBranch) {
+                            Alert.alert('Success', `Branch "${branchName}" created successfully!`);
+                          } else {
+                            Alert.alert('Error', 'Failed to create branch');
+                          }
+                        }
+                      }
+                    );
+                  }}
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 6,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <Ionicons name="git-branch" size={14} color="white" />
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+                    New Branch
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {policy.branches.map(branch => (
+              <View key={branch.name} style={{
+                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                borderRadius: 8,
+                padding: isMobile ? 16 : 20,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: branch.name === policy.currentBranch ? colors.primary : colors.border,
+              }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <View style={{ flex: 1, marginRight: 16 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <Ionicons name="git-branch" size={18} color={branch.name === policy.currentBranch ? colors.primary : colors.textSecondary} />
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>
+                        {branch.name}
+                      </Text>
+                      {branch.name === policy.currentBranch && (
+                        <View style={{
+                          backgroundColor: colors.primary,
+                          paddingHorizontal: 6,
+                          paddingVertical: 2,
+                          borderRadius: 10,
+                        }}>
+                          <Text style={{ color: 'white', fontSize: 12, fontWeight: '500' }}>
+                            Current
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Ionicons name="person" size={14} color={colors.textSecondary} />
+                        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                          {branch.author}
+                        </Text>
+                      </View>
+                      <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                        Created {formatDate(branch.createdAt)}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 14, fontFamily: 'monospace' }}>
+                      {branch.lastCommit}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        );
+
       case 'history':
         return (
           <View style={{ marginTop: 24 }}>
-            {policy.commits.map(commit => (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>
+                Commit History
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Branch:</Text>
+                <View style={{
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                  borderRadius: 6,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  minWidth: 120,
+                }}>
+                  <TouchableOpacity
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                    onPress={() => {
+                      // Simple branch selection - in a real app, this would be a dropdown
+                      Alert.alert(
+                        'Select Branch',
+                        'Choose a branch to view history:',
+                        policy.branches.map(branch => ({
+                          text: branch.name,
+                          onPress: () => {
+                            setSelectedBranch(branch.name);
+                          }
+                        }))
+                      );
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontSize: 14 }}>
+                      {selectedBranch}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+            {policy.commits
+              .filter(commit => commit.branch === selectedBranch)
+              .map(commit => (
               <TouchableOpacity
                 key={commit.id}
                 onPress={() => handleCommitClick(commit)}
@@ -159,6 +300,12 @@ export default function PolicyDetailPage() {
                         <Ionicons name="time" size={14} color={colors.textSecondary} />
                         <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
                           {formatDate(commit.date)}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Ionicons name="git-branch" size={14} color={colors.textSecondary} />
+                        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                          {commit.branch}
                         </Text>
                       </View>
                     </View>
@@ -200,15 +347,68 @@ export default function PolicyDetailPage() {
       case 'pulls':
         return (
           <View style={{ marginTop: 24 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>
+                Pull Requests ({policy.pullRequests.length})
+              </Text>
+              {(user?.role === 'ADMIN' || user?.role === 'WRITER') && (
+                <TouchableOpacity
+                  onPress={() => {
+                    // Simple PR creation - in a real app, this would be a modal
+                    Alert.prompt(
+                      'Create New Pull Request',
+                      'Enter PR title:',
+                      (title) => {
+                        if (title && title.trim()) {
+                          const newPR = createPullRequest(policy.id, {
+                            title: title.trim(),
+                            author: user?.firstName + ' ' + user?.lastName || 'Unknown',
+                            status: 'open',
+                            reviewers: ['Admin User'],
+                            branch: 'new-feature',
+                            baseBranch: 'main',
+                            description: 'Please review this pull request.',
+                          });
+                          if (newPR) {
+                            Alert.alert('Success', `Pull Request "${title}" created successfully!`);
+                          } else {
+                            Alert.alert('Error', 'Failed to create pull request');
+                          }
+                        }
+                      }
+                    );
+                  }}
+                  style={{
+                    backgroundColor: '#10b981',
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 6,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <Ionicons name="git-pull-request" size={14} color="white" />
+                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+                    New PR
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
             {policy.pullRequests.map((pr: PullRequest) => (
-              <View key={pr.id} style={{
-                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-                borderRadius: 8,
-                padding: isMobile ? 16 : 20,
-                marginBottom: 12,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}>
+              <TouchableOpacity
+                key={pr.id}
+                onPress={() => router.push(`/policies/${id}/prs/${pr.id}`)}
+                style={{
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                  borderRadius: 8,
+                  padding: isMobile ? 16 : 20,
+                  marginBottom: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
+                }}
+              >
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <View style={{ flex: 1, marginRight: 16 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -248,15 +448,121 @@ export default function PolicyDetailPage() {
                     </View>
                   </View>
                 </View>
+                <Text style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 8 }}>
+                  {pr.description}
+                </Text>
                 {pr.reviewers.length > 0 && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
                     <Ionicons name="people" size={14} color={colors.textSecondary} />
                     <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
                       Reviewers: {pr.reviewers.join(', ')}
                     </Text>
                   </View>
                 )}
-              </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+                  <Ionicons name="git-branch" size={14} color={colors.textSecondary} />
+                  <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                    {pr.branch} → {pr.baseBranch}
+                  </Text>
+                </View>
+
+                {/* Comments Section */}
+                <View style={{ marginTop: 16 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 8 }}>
+                    Comments ({pr.comments.length})
+                  </Text>
+                  {pr.comments.map((comment: Comment) => (
+                    <View key={comment.id} style={{
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+                      borderRadius: 6,
+                      padding: 12,
+                      marginBottom: 8,
+                      borderLeftWidth: 3,
+                      borderLeftColor: colors.primary,
+                    }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Ionicons name="person" size={14} color={colors.textSecondary} />
+                          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.text }}>
+                            {comment.author}
+                          </Text>
+                          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                            {formatDate(comment.createdAt)}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={{ color: colors.text, fontSize: 14, lineHeight: 20 }}>
+                        {comment.content}
+                      </Text>
+                      {comment.replies && comment.replies.map((reply: Comment) => (
+                        <View key={reply.id} style={{
+                          backgroundColor: isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.005)',
+                          borderRadius: 4,
+                          padding: 8,
+                          marginTop: 8,
+                          marginLeft: 20,
+                          borderLeftWidth: 2,
+                          borderLeftColor: colors.border,
+                        }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <Ionicons name="person" size={12} color={colors.textSecondary} />
+                            <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }}>
+                              {reply.author}
+                            </Text>
+                            <Text style={{ color: colors.textSecondary, fontSize: 10 }}>
+                              {formatDate(reply.createdAt)}
+                            </Text>
+                          </View>
+                          <Text style={{ color: colors.text, fontSize: 12, lineHeight: 18 }}>
+                            {reply.content}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  ))}
+
+                  {/* Add Comment */}
+                  {(user?.role === 'ADMIN' || user?.role === 'WRITER') && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        Alert.prompt(
+                          'Add Comment',
+                          'Enter your comment:',
+                          (commentText) => {
+                            if (commentText && commentText.trim()) {
+                              const newComment = addCommentToPR(policy.id, pr.id, {
+                                author: user?.firstName + ' ' + user?.lastName || 'Unknown',
+                                content: commentText.trim(),
+                              });
+                              if (newComment) {
+                                Alert.alert('Success', 'Comment added successfully!');
+                              } else {
+                                Alert.alert('Error', 'Failed to add comment');
+                              }
+                            }
+                          }
+                        );
+                      }}
+                      style={{
+                        backgroundColor: colors.primary,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        alignSelf: 'flex-start',
+                        marginTop: 8,
+                      }}
+                    >
+                      <Ionicons name="chatbubble" size={14} color="white" />
+                      <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>
+                        Add Comment
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         );
@@ -351,6 +657,7 @@ export default function PolicyDetailPage() {
               </TouchableOpacity>
               {(user?.role === 'ADMIN' || user?.role === 'WRITER') && (
                 <TouchableOpacity
+                  onPress={() => router.push(`/policies/${id}/edit`)}
                   style={{
                     backgroundColor: colors.primary,
                     paddingHorizontal: 12,
