@@ -15,30 +15,9 @@ const pendingUserRoutes = require('./routes/pendingUserRoutes');
 // Import test user seeding utility
 const { seedAllTestUsers } = require('./utils/seedTestUser');
 
-// CORS Configuration
-const corsOptions = {
-  origin: function(origin, callback) {
-    const allowedOrigins = ['http://localhost:8081', 'https://progress.tristans.club', 'https://progress-web-hazel.vercel.app'];
-    // Allow requests with no origin (like mobile apps, curl requests)
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  maxAge: 86400, // 24 hours
-  optionsSuccessStatus: 200 // Changed from 204 to 200 for better compatibility
-};
-
 // Middleware
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
-
-// Add explicit handler for OPTIONS requests
-app.options('*', cors(corsOptions));
 
 // API Routes
 app.use('/api/users', userRoutes);
