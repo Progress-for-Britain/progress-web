@@ -17,6 +17,7 @@ import Footer from '../components/Footer';
 import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import useResponsive from '../util/useResponsive';
+import * as WebBrowser from 'expo-web-browser';
 
 export default function Join() {
   const { isDark } = useTheme();
@@ -248,10 +249,10 @@ export default function Join() {
 
   // Function to check if form is valid for submission
   const isFormValid = () => {
-    const { firstName, lastName, email, volunteer } = formData;
+    const { firstName, lastName, email, constituency, volunteer } = formData;
 
     // Basic required fields
-    if (!firstName || !lastName || !email) {
+    if (!firstName || !lastName || !email || !constituency) {
       return false;
     }
 
@@ -283,10 +284,10 @@ export default function Join() {
   };
 
   const handleJoin = async () => {
-    const { firstName, lastName, email, volunteer } = formData;
+    const { firstName, lastName, email, constituency, volunteer } = formData;
 
-    if (!firstName || !lastName || !email) {
-      setApiError('Please fill in all required fields: First Name, Last Name, and Email Address.');
+    if (!firstName || !lastName || !email || !constituency) {
+      setApiError('Please fill in all required fields: First Name, Last Name, Email Address, and Constituency.');
       setShowApiError(true);
 
       // Scroll to top to show error
@@ -359,35 +360,58 @@ export default function Join() {
     setShowApiError(false);
 
     try {
-      const response = await api.submitApplication(formData);
+      if (volunteer) {
+        // Submit volunteer application
+        const response = await api.submitApplication(formData);
 
-      if (response.success) {
-        // Clear cached form data and NDA signature since application was successful
-        clearCachedData();
+        if (response.success) {
+          // Clear cached form data and NDA signature since application was successful
+          clearCachedData();
 
-        setSuccessMessage(response.message || 'Your membership application has been submitted successfully. An admin will review your application and you\'ll receive an access code via email if approved.');
-        setIsSuccess(true);
-        // Scroll to top to show success message
-        if (Platform.OS === 'web') {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setSuccessMessage(response.message || 'Your membership application has been submitted successfully. An admin will review your application and you\'ll receive an access code via email if approved.');
+          setIsSuccess(true);
+          // Scroll to top to show success message
+          if (Platform.OS === 'web') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        } else {
+          // Handle API errors with inline display
+          setApiError(response.message || 'Failed to submit application. Please try again.');
+          setShowApiError(true);
+
+          // Scroll to top to show error
+          if (Platform.OS === 'web') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+
+          // Auto-hide error after 10 seconds
+          setTimeout(() => {
+            setShowApiError(false);
+          }, 10000);
         }
       } else {
-        // Handle API errors with inline display
-        setApiError(response.message || 'Failed to submit application. Please try again.');
-        setShowApiError(true);
+        // Start subscription for non-volunteers
+        const response = await api.createSubscriptionCheckout('member', 'monthly', formData);
 
-        // Scroll to top to show error
+        // Clear cached form data
+        clearCachedData();
+
+        // Navigate to Stripe checkout
         if (Platform.OS === 'web') {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.location.href = response.url;
+        } else {
+          const supported = await Linking.canOpenURL(response.url);
+          
+          if (supported) {
+            await Linking.openURL(response.url);
+          } else {
+            // Fallback to WebBrowser if Linking isn't supported
+            await WebBrowser.openBrowserAsync(response.url);
+          }
         }
-
-        // Auto-hide error after 10 seconds
-        setTimeout(() => {
-          setShowApiError(false);
-        }, 10000);
       }
     } catch (error) {
-      console.error('Error submitting application:', error);
+      console.error('Error:', error);
       // Handle network/unexpected errors
       setApiError(error instanceof Error ? error.message : 'Network error. Please check your connection and try again.');
       setShowApiError(true);
@@ -753,7 +777,7 @@ export default function Join() {
                   </View>
                   <View style={commonStyles.formField}>
                     <Text style={styles.inputLabel}>
-                      Constituency
+                      Constituency *
                     </Text>
                     <TextInput
                       value={formData.constituency}
@@ -1177,11 +1201,12 @@ export default function Join() {
                       </Text>
                       {(() => {
                         const missing = [];
-                        const { firstName, lastName, email, volunteer } = formData;
+                        const { firstName, lastName, email, constituency, volunteer } = formData;
 
                         if (!firstName) missing.push('First name');
                         if (!lastName) missing.push('Last name');
                         if (!email) missing.push('Email address');
+                        if (!constituency) missing.push('Constituency');
 
                         if (volunteer) {
                           const {

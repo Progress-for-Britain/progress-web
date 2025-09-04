@@ -44,6 +44,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>({});
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED'>('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Volunteer edit form data
   const [volunteerEditData, setVolunteerEditData] = useState({
@@ -516,7 +517,35 @@ export default function UserManagement() {
                 <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
                   All Users
                 </Text>
-                {users.map((user) => (
+                
+                {/* Search Bar */}
+                <View style={{ marginBottom: 16 }}>
+                  <TextInput
+                    value={searchTerm}
+                    onChangeText={setSearchTerm}
+                    placeholder="Search by name, email, or constituency..."
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#d1d5db',
+                      borderRadius: 8,
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      fontSize: 14,
+                      backgroundColor: '#ffffff',
+                    }}
+                  />
+                </View>
+                
+                {users
+                  .filter(user => {
+                    if (!searchTerm) return true;
+                    const searchLower = searchTerm.toLowerCase();
+                    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
+                    const email = user.email.toLowerCase();
+                    const constituency = (user.constituency || '').toLowerCase();
+                    return fullName.includes(searchLower) || email.includes(searchLower) || constituency.includes(searchLower);
+                  })
+                  .map((user) => (
                   <TouchableOpacity
                     key={user.id}
                     onPress={() => handleUserClick(user)}
@@ -541,18 +570,29 @@ export default function UserManagement() {
                         <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>
                           {user.email}
                         </Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                           <View style={{
                             backgroundColor: getRoleColor(user.role),
                             paddingHorizontal: 8,
                             paddingVertical: 4,
-                            borderRadius: 6,
-                            marginRight: 8
+                            borderRadius: 6
                           }}>
                             <Text style={{ fontSize: 12, fontWeight: '600', color: '#ffffff' }}>
                               {user.role}
                             </Text>
                           </View>
+                          {user.constituency && (
+                            <View style={{
+                              backgroundColor: '#e0f2fe',
+                              paddingHorizontal: 8,
+                              paddingVertical: 4,
+                              borderRadius: 6
+                            }}>
+                              <Text style={{ fontSize: 12, color: '#0ea5e9' }}>
+                                {user.constituency}
+                              </Text>
+                            </View>
+                          )}
                           <Text style={{ fontSize: 12, color: '#6b7280' }}>
                             Joined {format(new Date(user.createdAt), 'MMM d, yyyy')}
                           </Text>
@@ -726,6 +766,12 @@ export default function UserManagement() {
                     <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
                       {selectedUser.email}
                     </Text>
+                    
+                    {selectedUser.constituency && (
+                      <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>
+                        Constituency: {selectedUser.constituency}
+                      </Text>
+                    )}
                     
                     <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
                       <TouchableOpacity
@@ -916,6 +962,13 @@ export default function UserManagement() {
                             <View style={{ marginBottom: 8 }}>
                               <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>Social Media:</Text>
                               <Text style={{ fontSize: 12, color: '#6b7280' }}>{selectedPendingUser.socialMediaHandle}</Text>
+                            </View>
+                          )}
+
+                          {selectedPendingUser.constituency && (
+                            <View style={{ marginBottom: 8 }}>
+                              <Text style={{ fontSize: 12, fontWeight: '600', color: '#374151' }}>Constituency:</Text>
+                              <Text style={{ fontSize: 12, color: '#6b7280' }}>{selectedPendingUser.constituency}</Text>
                             </View>
                           )}
                           

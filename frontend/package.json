@@ -29,6 +29,7 @@
     "expo-secure-store": "~14.2.3",
     "expo-status-bar": "~2.2.3",
     "expo-store-review": "^8.1.5",
+    "expo-web-browser": "^14.2.0",
     "react": "19.0.0",
     "react-datepicker": "^8.5.0",
     "react-dom": "19.0.0",

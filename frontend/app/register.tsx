@@ -13,24 +13,24 @@ import useResponsive from '../util/useResponsive';
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    email: '',
     password: '',
     confirmPassword: '',
-    firstName: '',
-    lastName: '',
     accessCode: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [codeValidated, setCodeValidated] = useState(false);
-  const [suggestedRole, setSuggestedRole] = useState('');
+  const [validatedUserData, setValidatedUserData] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    constituency?: string;
+    role: string;
+  } | null>(null);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
-  const [firstNameFocused, setFirstNameFocused] = useState(false);
-  const [lastNameFocused, setLastNameFocused] = useState(false);
   const [accessCodeFocused, setAccessCodeFocused] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const { register, isStorageReady } = useAuth();
@@ -57,10 +57,18 @@ export default function Register() {
   }, []);
 
   const validateAccessCode = async () => {
-    const { accessCode, email } = formData;
+    const { accessCode } = formData;
     
-    if (!accessCode || !email) {
-      setErrorMessage('Please enter both access code and email address');
+    if (!accessCode) {
+      setErrorMessage('Please enter your access code');
+      return;
+    }
+
+    // For now, we'll need to ask for email temporarily to validate
+    // In a future update, we could modify the backend to validate code without email
+    const email = prompt('Please enter your email address to validate the access code:');
+    if (!email) {
+      setErrorMessage('Email is required to validate access code');
       return;
     }
 
@@ -70,15 +78,13 @@ export default function Register() {
       
       if (response.success) {
         setCodeValidated(true);
-        setSuggestedRole(response.data.role);
-        // Pre-fill form with approved data
-        setFormData(prev => ({
-          ...prev,
+        setValidatedUserData({
           firstName: response.data.firstName,
-          lastName: response.data.lastName
-        }));
+          lastName: response.data.lastName,
+          email: response.data.email,
+          role: response.data.role
+        });
         setErrorMessage(''); // Clear any previous error
-        // Could show success message if needed
       } else {
         setErrorMessage(response.message || 'Invalid access code');
       }
@@ -100,20 +106,20 @@ export default function Register() {
   };
 
   const handleRegister = async () => {
-    const { email, password, confirmPassword, firstName, lastName, accessCode } = formData;
+    const { password, confirmPassword, accessCode } = formData;
     
     if (!accessCode) {
       setErrorMessage('Access code is required to create an account');
       return;
     }
 
-    if (!codeValidated) {
+    if (!codeValidated || !validatedUserData) {
       setErrorMessage('Please validate your access code before proceeding');
       return;
     }
     
-    if (!email || !password || !firstName || !lastName) {
-      setErrorMessage('Please fill in all fields');
+    if (!password || !confirmPassword) {
+      setErrorMessage('Please fill in all password fields');
       return;
     }
 
@@ -136,10 +142,10 @@ export default function Register() {
     setIsLoading(true);
     try {
       await register({ 
-        email, 
+        email: validatedUserData.email, 
         password, 
-        firstName, 
-        lastName,
+        firstName: validatedUserData.firstName, 
+        lastName: validatedUserData.lastName,
         accessCode
       });
       router.replace('/account');
@@ -223,92 +229,6 @@ export default function Register() {
                   {errorMessage}
                 </Text>
               ) : null}
-
-              <View style={commonStyles.formRow}>
-                <View style={commonStyles.formField}>
-                  <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
-                    First Name
-                  </Text>
-                  <TextInput
-                    value={formData.firstName}
-                    onChangeText={(value) => updateField('firstName', value)}
-                    placeholder="First name"
-                    placeholderTextColor={colors.textSecondary}
-                    onFocus={() => setFirstNameFocused(true)}
-                    onBlur={() => setFirstNameFocused(false)}
-                    style={[
-                      commonStyles.textInput,
-                      {
-                        borderColor: firstNameFocused || formData.firstName ? colors.accent : colors.border,
-                        fontSize: isMobile ? 16 : 18,
-                        paddingVertical: isMobile ? 14 : 16,
-                        ...(Platform.OS === 'web' && { 
-                          outline: 'none',
-                          transition: 'all 0.2s ease',
-                          boxShadow: firstNameFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
-                        } as any)
-                      }
-                    ]}
-                  />
-                </View>
-                <View style={commonStyles.formField}>
-                  <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
-                    Last Name
-                  </Text>
-                  <TextInput
-                    value={formData.lastName}
-                    onChangeText={(value) => updateField('lastName', value)}
-                    placeholder="Last name"
-                    placeholderTextColor={colors.textSecondary}
-                    onFocus={() => setLastNameFocused(true)}
-                    onBlur={() => setLastNameFocused(false)}
-                    style={[
-                      commonStyles.textInput,
-                      {
-                        borderColor: lastNameFocused || formData.lastName ? colors.accent : colors.border,
-                        fontSize: isMobile ? 16 : 18,
-                        paddingVertical: isMobile ? 14 : 16,
-                        ...(Platform.OS === 'web' && { 
-                          outline: 'none',
-                          transition: 'all 0.2s ease',
-                          boxShadow: lastNameFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
-                        } as any)
-                      }
-                    ]}
-                  />
-                </View>
-              </View>
-
-              <View style={{ marginBottom: isMobile ? 16 : 20 }}>
-                <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
-                  Email
-                </Text>
-                <TextInput
-                  value={formData.email}
-                  onChangeText={(value) => updateField('email', value)}
-                  placeholder="Enter your email"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  textContentType="emailAddress"
-                  onFocus={() => setEmailFocused(true)}
-                  onBlur={() => setEmailFocused(false)}
-                  style={[
-                    commonStyles.textInput,
-                    {
-                      borderColor: emailFocused || formData.email ? colors.accent : colors.border,
-                      fontSize: isMobile ? 16 : 18,
-                      paddingVertical: isMobile ? 14 : 16,
-                      ...(Platform.OS === 'web' && { 
-                        outline: 'none',
-                        transition: 'all 0.2s ease',
-                        boxShadow: emailFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
-                      } as any)
-                    }
-                  ]}
-                />
-              </View>
 
               <View style={{ marginBottom: isMobile ? 16 : 20 }}>
                 <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
@@ -462,33 +382,33 @@ export default function Register() {
                       marginBottom: 12,
                       borderRadius: 6,
                       overflow: 'hidden',
-                      ...(Platform.OS === 'ios' && !isValidatingCode && !formData.email && {
+                      ...(Platform.OS === 'ios' && !isValidatingCode && {
                         shadowColor: '#f59e0b',
                         shadowOffset: { width: 0, height: 2 },
                         shadowOpacity: 0.3,
                         shadowRadius: 4,
                       }),
-                      ...(Platform.OS === 'android' && !isValidatingCode && !formData.email && {
+                      ...(Platform.OS === 'android' && !isValidatingCode && {
                         elevation: 3,
                       }),
-                      ...(Platform.OS === 'web' && !isValidatingCode && !formData.email && {
+                      ...(Platform.OS === 'web' && !isValidatingCode && {
                         filter: 'drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4))',
                       } as any)
                     }}
                   >
                     <TouchableOpacity
                       onPress={validateAccessCode}
-                      disabled={isValidatingCode || !formData.email}
+                      disabled={isValidatingCode}
                       style={{
                         borderRadius: 6,
                         overflow: 'hidden',
                         ...(Platform.OS === 'web' && { 
-                          cursor: (isValidatingCode || !formData.email) ? 'not-allowed' : 'pointer'
+                          cursor: isValidatingCode ? 'not-allowed' : 'pointer'
                         } as any)
                       }}
                     >
                       <LinearGradient
-                        colors={(!formData.email || isValidatingCode) ? [colors.textSecondary, colors.textSecondary] : ['#f59e0b', '#d97706']}
+                        colors={isValidatingCode ? [colors.textSecondary, colors.textSecondary] : ['#f59e0b', '#d97706']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={{
@@ -519,23 +439,38 @@ export default function Register() {
                   </View>
                 )}
                 
-                {codeValidated && (
+                {codeValidated && validatedUserData && (
                   <View style={{ 
-                    flexDirection: 'row', 
-                    alignItems: 'center',
                     backgroundColor: isDark ? 'rgba(34, 197, 94, 0.15)' : '#dcfce7',
                     padding: 12,
-                    borderRadius: 6
+                    borderRadius: 6,
+                    marginTop: 12
                   }}>
-                    <Text style={{ color: isDark ? '#4ade80' : '#166534', fontSize: 14, fontWeight: '600', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
-                      ✓ Access code validated! Role: {suggestedRole}
+                    <Text style={{ color: isDark ? '#4ade80' : '#166534', fontSize: 14, fontWeight: '600', marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                      ✓ Access code validated!
                     </Text>
+                    <View style={{ marginTop: 8 }}>
+                      <Text style={{ color: colors.text, fontSize: 14, marginBottom: 4, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                        <Text style={{ fontWeight: '600' }}>Name:</Text> {validatedUserData.firstName} {validatedUserData.lastName}
+                      </Text>
+                      <Text style={{ color: colors.text, fontSize: 14, marginBottom: 4, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                        <Text style={{ fontWeight: '600' }}>Email:</Text> {validatedUserData.email}
+                      </Text>
+                      {validatedUserData.constituency && (
+                        <Text style={{ color: colors.text, fontSize: 14, marginBottom: 4, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                          <Text style={{ fontWeight: '600' }}>Constituency:</Text> {validatedUserData.constituency}
+                        </Text>
+                      )}
+                      <Text style={{ color: colors.text, fontSize: 14, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                        <Text style={{ fontWeight: '600' }}>Role:</Text> {validatedUserData.role}
+                      </Text>
+                    </View>
                   </View>
                 )}
                 
                 {!codeValidated && formData.accessCode && (
                   <Text style={{ fontSize: 12, color: isDark ? '#fbbf24' : '#7c2d12', marginTop: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
-                    You need to enter your email address first to validate the access code.
+                    Click "Validate Code" to verify your access code and see your account details.
                   </Text>
                 )}
                 

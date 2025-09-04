@@ -14,6 +14,7 @@ model User {
   email                   String                   @unique
   password                String
   role                    UserRole                 @default(MEMBER)
+  constituency            String?
   address                 String?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
@@ -203,9 +204,13 @@ model PendingUser {
 }
 
 model AccessCode {
-  id        String    @id @default(cuid())
+  id          String    @id @default(cuid())
+  firstName               String?
+  lastName                String?
+  email                   String
+  constituency            String?
+  role                    UserRole                 @default(MEMBER)
   code      String    @unique
-  email     String
   used      Boolean   @default(false)
   usedAt    DateTime?
   expiresAt DateTime

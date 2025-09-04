@@ -289,6 +289,10 @@ const approveApplication = async (req, res) => {
         data: {
           code: accessCode,
           email: pendingUser.email,
+          firstName: pendingUser.firstName,
+          lastName: pendingUser.lastName,
+          constituency: pendingUser.constituency,
+          role: pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER',
           expiresAt
         }
       });
@@ -437,10 +441,11 @@ const validateAccessCode = async (req, res) => {
       message: 'Access code is valid',
       data: {
         email: pendingUser.email,
-        firstName: pendingUser.firstName,
-        lastName: pendingUser.lastName,
+        firstName: accessCodeRecord.firstName || pendingUser.firstName,
+        lastName: accessCodeRecord.lastName || pendingUser.lastName,
+        constituency: accessCodeRecord.constituency || pendingUser.constituency,
         volunteer: pendingUser.volunteer,
-        role: pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER'
+        role: accessCodeRecord.role || (pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER')
       }
     });
   } catch (error) {
@@ -657,6 +662,10 @@ const updateApplicationStatus = async (req, res) => {
           data: {
             code: accessCode,
             email: pendingUser.email,
+            firstName: pendingUser.firstName,
+            lastName: pendingUser.lastName,
+            constituency: pendingUser.constituency,
+            role: pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER',
             expiresAt
           }
         });
