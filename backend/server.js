@@ -17,12 +17,20 @@ const { seedAllTestUsers } = require('./utils/seedTestUser');
 
 // CORS Configuration
 const corsOptions = {
-  //dev host, prod host, vercel host
-  origin: ['http://localhost:8081','https://progress.tristans.club', 'https://progress-web-hazel.vercel.app'],
+  origin: function(origin, callback) {
+    const allowedOrigins = ['http://localhost:8081', 'https://progress.tristans.club', 'https://progress-web-hazel.vercel.app'];
+    // Allow requests with no origin (like mobile apps, curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-  maxAge: 86400 // 24 hours
+  maxAge: 86400, // 24 hours
+  optionsSuccessStatus: 204
 };
 
 // Middleware
