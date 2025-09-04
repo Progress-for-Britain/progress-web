@@ -36,13 +36,19 @@ model Payment {
   subscriptionId String?
   status         SubStatus @default(INACTIVE)
   amount         Decimal   @db.Decimal(10, 2)
-  currency       String    @default("GDP")
+  currency       String    @default("gbp")
   startDate      DateTime
   endDate        DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   userId         String
   totalDonated   Decimal   @default(0) @db.Decimal(10, 2)
+  subPlatform    String
+  planId String?
+  billingInterval BillingInterval?
+  currentPeriodStart DateTime?
+  currentPeriodEnd DateTime?
+  cancelledAt DateTime?
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("payments")
@@ -229,6 +235,9 @@ enum UserRole {
 enum SubStatus {
   ACTIVE
   INACTIVE
+  PAST_DUE
+  CANCELLED
+  CANCELLING
 }
 
 enum PostStatus {
@@ -277,4 +286,9 @@ enum PendingUserStatus {
   CONTACTED
   APPROVED
   REJECTED
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
 }

@@ -391,7 +391,7 @@ export default function Join() {
         }
       } else {
         // Start subscription for non-volunteers
-        const response = await api.createSubscriptionCheckout('member', 'monthly', formData);
+        const response = await api.createSubscriptionCheckout('basic', 'monthly', formData);
 
         // Clear cached form data
         clearCachedData();
