@@ -131,6 +131,7 @@ model Event {
   createdById    String
   participants   EventParticipant[]
   createdBy      User               @relation("EventCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  VolunteerHours VolunteerHours[]
 
   @@map("events")
 }
