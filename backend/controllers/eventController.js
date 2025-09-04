@@ -18,7 +18,6 @@ const getAllEvents = async (req, res) => {
     // Build where clause
     const where = {
       ...(eventType && { eventType }),
-      ...(status && { status }),
       ...(search && {
         OR: [
           { title: { contains: search, mode: 'insensitive' } },
@@ -33,6 +32,17 @@ const getAllEvents = async (req, res) => {
         }
       })
     };
+
+    // Handle status filtering
+    if (status === 'UPCOMING') {
+      where.endDate = { gte: new Date() };
+    } else if (status === 'COMPLETED') {
+      where.endDate = { lt: new Date() };
+    } else if (status) {
+      where.status = status;
+    }
+
+    const orderBy = status === 'COMPLETED' ? { startDate: 'desc' } : { startDate: 'asc' };
 
     const [events, total] = await Promise.all([
       prisma.event.findMany({
@@ -71,9 +81,7 @@ const getAllEvents = async (req, res) => {
         },
         skip,
         take: parseInt(limit),
-        orderBy: {
-          startDate: 'asc'
-        }
+        orderBy
       }),
       prisma.event.count({ where })
     ]);
@@ -385,6 +393,19 @@ const cancelEventRegistration = async (req, res) => {
       });
     }
 
+    // Check if the event has already happened
+    const event = await prisma.event.findUnique({
+      where: { id },
+      select: { endDate: true }
+    });
+
+    if (new Date(event.endDate) < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot cancel registration for a past event'
+      });
+    }
+
     await prisma.eventParticipant.update({
       where: {
         id: participation.id
@@ -592,6 +613,112 @@ const deleteEvent = async (req, res) => {
   }
 };
 
+// Generate iCal feed for user's events
+const generateUserICal = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Fetch events where user is a participant
+    const userEvents = await prisma.eventParticipant.findMany({
+      where: {
+        userId: userId,
+        status: {
+          not: 'CANCELLED'
+        }
+      },
+      include: {
+        event: {
+          include: {
+            createdBy: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        event: {
+          startDate: 'asc'
+        }
+      }
+    });
+
+    // Generate iCal content
+    let icalContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Progress Web//Events Calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Progress Events
+X-WR-TIMEZONE:UTC
+`;
+
+    userEvents.forEach((participation) => {
+      const event = participation.event;
+      const startDate = new Date(event.startDate);
+      const endDate = new Date(event.endDate);
+      
+      // Format dates for iCal (YYYYMMDDTHHMMSS)
+      const formatDate = (date) => {
+        return date.toISOString().replace(/-|:|\.\d+/g, '');
+      };
+
+      const eventLocation = event.isVirtual 
+        ? (event.virtualLink || 'Virtual Event')
+        : (event.location || event.address || 'TBD');
+
+      const organizerName = event.createdBy ? `${event.createdBy.firstName} ${event.createdBy.lastName}` : 'Organizer';
+      const organizerEmail = event.createdBy?.email || 'organizer@example.com';
+
+      icalContent += `BEGIN:VEVENT
+UID:${event.id}@progress-web
+DTSTART:${formatDate(startDate)}
+DTEND:${formatDate(endDate)}
+DTSTAMP:${formatDate(new Date())}
+SUMMARY:${event.title.replace(/[,;\\]/g, '\\$&')}
+DESCRIPTION:${(event.description || '').replace(/[,;\\]/g, '\\$&')}
+LOCATION:${eventLocation.replace(/[,;\\]/g, '\\$&')}
+ORGANIZER;CN=${organizerName}:mailto:${organizerEmail}
+STATUS:CONFIRMED
+BEGIN:VALARM
+TRIGGER:-PT15M
+DESCRIPTION:Reminder - 15 minutes before
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT1H
+DESCRIPTION:Reminder - 1 hour before
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-P1D
+DESCRIPTION:Reminder - 1 day before
+ACTION:DISPLAY
+END:VALARM
+END:VEVENT
+`;
+    });
+
+    icalContent += 'END:VCALENDAR';
+
+    // Set headers for iCal download
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="progress-events-${userId}.ics"`);
+    
+    res.send(icalContent);
+  } catch (error) {
+    console.error('Error generating iCal:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate calendar feed',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllEvents,
   getEventById,
@@ -600,5 +727,6 @@ module.exports = {
   deleteEvent,
   registerForEvent,
   cancelEventRegistration,
-  logVolunteerHours
+  logVolunteerHours,
+  generateUserICal
 };

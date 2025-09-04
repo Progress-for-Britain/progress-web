@@ -3,8 +3,6 @@ import { View, Text, TouchableOpacity, Platform, ScrollView, Alert, TextInput, M
 import { Ionicons } from '@expo/vector-icons';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import TimePicker from 'react-time-picker';
-import 'react-time-picker/dist/TimePicker.css';
 import api from '../util/api';
 
 interface CreateEventModalProps {
@@ -32,6 +30,14 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
     const [startTime, setStartTime] = useState<string>('10:00');
     const [endTime, setEndTime] = useState<string>('12:00');
 
+    // Validation error states
+    const [titleError, setTitleError] = useState('');
+    const [descriptionError, setDescriptionError] = useState('');
+    const [startTimeError, setStartTimeError] = useState('');
+    const [endTimeError, setEndTimeError] = useState('');
+    const [virtualLinkError, setVirtualLinkError] = useState('');
+    const [dateTimeError, setDateTimeError] = useState('');
+
     const eventTypes = [
         { id: 'RALLY', label: 'Rallies', icon: 'megaphone' },
         { id: 'MEETING', label: 'Meetings', icon: 'people' },
@@ -50,6 +56,71 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
         return newDate.toISOString();
     };
 
+    // Validation functions
+    const validateTitle = (value: string) => {
+        if (!value.trim()) {
+            setTitleError('Event title is required');
+            return false;
+        }
+        setTitleError('');
+        return true;
+    };
+
+    const validateDescription = (value: string) => {
+        if (!value.trim()) {
+            setDescriptionError('Event description is required');
+            return false;
+        }
+        setDescriptionError('');
+        return true;
+    };
+
+    const validateTime = (time: string, fieldName: string, setError: (error: string) => void) => {
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!time.trim()) {
+            setError(`${fieldName} time is required`);
+            return false;
+        }
+        if (!timeRegex.test(time)) {
+            setError(`${fieldName} time must be in HH:MM format (e.g., 14:30)`);
+            return false;
+        }
+        setError('');
+        return true;
+    };
+
+    const validateVirtualLink = (value: string) => {
+        if (isVirtual && !value.trim()) {
+            setVirtualLinkError('Virtual link is required for virtual events');
+            return false;
+        }
+        setVirtualLinkError('');
+        return true;
+    };
+
+    const validateDateTime = () => {
+        const startDateTime = formatDateTime(startDate, startTime);
+        const endDateTime = formatDateTime(endDate, endTime);
+        
+        if (new Date(startDateTime) >= new Date(endDateTime)) {
+            setDateTimeError('End date and time must be after start date and time');
+            return false;
+        }
+        setDateTimeError('');
+        return true;
+    };
+
+    const validateAll = () => {
+        const titleValid = validateTitle(title);
+        const descriptionValid = validateDescription(description);
+        const startTimeValid = validateTime(startTime, 'Start', setStartTimeError);
+        const endTimeValid = validateTime(endTime, 'End', setEndTimeError);
+        const virtualLinkValid = validateVirtualLink(virtualLink);
+        const dateTimeValid = validateDateTime();
+
+        return titleValid && descriptionValid && startTimeValid && endTimeValid && virtualLinkValid && dateTimeValid;
+    };
+
     const handleStartDateChange = (date: Date | null) => {
         if (date) {
             setStartDate(date);
@@ -65,18 +136,7 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
     };
 
     const handleCreate = async () => {
-        if (!title.trim() || !description.trim()) {
-            Alert.alert('Error', 'Title and description are required.');
-            return;
-        }
-
-        if (startDate >= endDate) {
-            Alert.alert('Error', 'End date must be after start date.');
-            return;
-        }
-
-        if (isVirtual && !virtualLink.trim()) {
-            Alert.alert('Error', 'Virtual link is required for virtual events.');
+        if (!validateAll()) {
             return;
         }
 
@@ -174,11 +234,14 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                         </Text>
                         <TextInput
                             value={title}
-                            onChangeText={setTitle}
+                            onChangeText={(value) => {
+                                setTitle(value);
+                                validateTitle(value);
+                            }}
                             placeholder="Enter event title..."
                             style={{
                                 borderWidth: 1,
-                                borderColor: '#D1D5DB',
+                                borderColor: titleError ? 'red' : '#D1D5DB',
                                 borderRadius: 8,
                                 paddingHorizontal: 16,
                                 paddingVertical: 12,
@@ -186,6 +249,7 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                                 backgroundColor: '#ffffff'
                             }}
                         />
+                        {titleError ? <Text style={{ color: 'red', marginTop: 4 }}>{titleError}</Text> : null}
                     </View>
 
                     {/* Description */}
@@ -195,13 +259,16 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                         </Text>
                         <TextInput
                             value={description}
-                            onChangeText={setDescription}
+                            onChangeText={(value) => {
+                                setDescription(value);
+                                validateDescription(value);
+                            }}
                             placeholder="Enter event description..."
                             multiline
                             numberOfLines={4}
                             style={{
                                 borderWidth: 1,
-                                borderColor: '#D1D5DB',
+                                borderColor: descriptionError ? 'red' : '#D1D5DB',
                                 borderRadius: 8,
                                 paddingHorizontal: 16,
                                 paddingVertical: 12,
@@ -211,6 +278,7 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                                 textAlignVertical: 'top'
                             }}
                         />
+                        {descriptionError ? <Text style={{ color: 'red', marginTop: 4 }}>{descriptionError}</Text> : null}
                     </View>
 
                     {/* Event Type */}
@@ -292,11 +360,14 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                             </Text>
                             <TextInput
                                 value={virtualLink}
-                                onChangeText={setVirtualLink}
+                                onChangeText={(value) => {
+                                    setVirtualLink(value);
+                                    validateVirtualLink(value);
+                                }}
                                 placeholder="Enter meeting link (Zoom, Teams, etc.)..."
                                 style={{
                                     borderWidth: 1,
-                                    borderColor: '#D1D5DB',
+                                    borderColor: virtualLinkError ? 'red' : '#D1D5DB',
                                     borderRadius: 8,
                                     paddingHorizontal: 16,
                                     paddingVertical: 12,
@@ -304,6 +375,7 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                                     backgroundColor: '#ffffff'
                                 }}
                             />
+                            {virtualLinkError ? <Text style={{ color: 'red', marginTop: 4 }}>{virtualLinkError}</Text> : null}
                         </View>
                     )}
 
@@ -408,7 +480,7 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                             <View style={{
                                 flex: 1,
                                 borderWidth: 1,
-                                borderColor: '#D1D5DB',
+                                borderColor: startTimeError ? 'red' : '#D1D5DB',
                                 borderRadius: 8,
                                 backgroundColor: '#ffffff',
                                 ...(Platform.OS === 'web' && {
@@ -418,17 +490,26 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                                 })
                             }}>
                                 {Platform.OS === 'web' ? (
-                                    <TimePicker
-                                        onChange={(value) => setStartTime(value || '10:00')}
+                                    <TextInput
                                         value={startTime}
-                                        format="HH:mm"
-                                        clockIcon={null}
-                                        clearIcon={null}
+                                        onChangeText={(value) => {
+                                            setStartTime(value);
+                                            validateTime(value, 'Start', setStartTimeError);
+                                        }}
+                                        placeholder="HH:MM"
+                                        style={{
+                                            paddingHorizontal: 16,
+                                            paddingVertical: 12,
+                                            fontSize: 16,
+                                        }}
                                     />
                                 ) : (
                                     <TextInput
                                         value={startTime}
-                                        onChangeText={setStartTime}
+                                        onChangeText={(value) => {
+                                            setStartTime(value);
+                                            validateTime(value, 'Start', setStartTimeError);
+                                        }}
                                         placeholder="HH:MM"
                                         style={{
                                             paddingHorizontal: 16,
@@ -439,6 +520,7 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                                 )}
                             </View>
                         </View>
+                        {startTimeError ? <Text style={{ color: 'red', marginTop: 4 }}>{startTimeError}</Text> : null}
                     </View>
 
                     <View style={{ marginBottom: 20 }}>
@@ -470,7 +552,7 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                             <View style={{
                                 flex: 1,
                                 borderWidth: 1,
-                                borderColor: '#D1D5DB',
+                                borderColor: endTimeError ? 'red' : '#D1D5DB',
                                 borderRadius: 8,
                                 backgroundColor: '#ffffff',
                                 ...(Platform.OS === 'web' && {
@@ -480,17 +562,26 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                                 })
                             }}>
                                 {Platform.OS === 'web' ? (
-                                    <TimePicker
-                                        onChange={(value) => setEndTime(value || '12:00')}
+                                    <TextInput
                                         value={endTime}
-                                        format="HH:mm"
-                                        clockIcon={null}
-                                        clearIcon={null}
+                                        onChangeText={(value) => {
+                                            setEndTime(value);
+                                            validateTime(value, 'End', setEndTimeError);
+                                        }}
+                                        placeholder="HH:MM"
+                                        style={{
+                                            paddingHorizontal: 16,
+                                            paddingVertical: 12,
+                                            fontSize: 16,
+                                        }}
                                     />
                                 ) : (
                                     <TextInput
                                         value={endTime}
-                                        onChangeText={setEndTime}
+                                        onChangeText={(value) => {
+                                            setEndTime(value);
+                                            validateTime(value, 'End', setEndTimeError);
+                                        }}
                                         placeholder="HH:MM"
                                         style={{
                                             paddingHorizontal: 16,
@@ -501,7 +592,14 @@ export const CreateEventModal = ({ visible, onClose, onEventCreated }: CreateEve
                                 )}
                             </View>
                         </View>
+                        {endTimeError ? <Text style={{ color: 'red', marginTop: 4 }}>{endTimeError}</Text> : null}
                     </View>
+
+                    {dateTimeError ? (
+                        <View style={{ marginBottom: 20 }}>
+                            <Text style={{ color: 'red', fontSize: 14 }}>{dateTimeError}</Text>
+                        </View>
+                    ) : null}
 
                     <View style={{ height: 40 }} />
                 </ScrollView>

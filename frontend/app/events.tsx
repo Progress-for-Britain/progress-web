@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Platform, ScrollView, Alert, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, ScrollView, Alert, TextInput, Linking } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +28,7 @@ export default function Events() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [registering, setRegistering] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState('UPCOMING');
 
   // Animation values
   const fadeAnim = useSharedValue(0);
@@ -56,7 +57,7 @@ export default function Events() {
     if (isAuthenticated) {
       loadEvents();
     }
-  }, [isAuthenticated, selectedEventType, searchQuery]);
+  }, [isAuthenticated, selectedEventType, searchQuery, selectedStatus]);
 
   const loadEvents = async (resetPage = true) => {
     try {
@@ -68,7 +69,7 @@ export default function Events() {
         limit: 10,
         eventType: selectedEventType === 'all' ? undefined : selectedEventType,
         search: searchQuery || undefined,
-        status: 'UPCOMING'
+        status: selectedStatus
       });
 
       if (resetPage) {
@@ -178,6 +179,16 @@ export default function Events() {
     loadEvents(); // Reload events after update
   };
 
+  const handleAddToCalendar = () => {
+    if (!user) return;
+    // Use webcal for iCal subscription
+    const baseApiUrl = `api/events/ical/${user.id}`;
+    //backend url
+    const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3005';
+    const webcalBaseUrl = apiBaseUrl.replace(/^https?:\/\//, 'webcal://');
+    const webcalUrl = `${webcalBaseUrl}${baseApiUrl}`;
+    Linking.openURL(webcalUrl);
+  };
 
   const canCreateEvent = user?.role === 'ADMIN' || user?.role === 'WRITER';
 
@@ -290,6 +301,13 @@ export default function Events() {
       ['REGISTERED', 'CONFIRMED'].includes(participant.status)
     );
     const isFull = event.capacity && event._count && event._count.participants >= event.capacity;
+    const isPast = new Date(event.endDate) < new Date();
+    
+    // Check if user participated in past event
+    const userParticipated = user && event.participants?.some(
+      participant => participant.user.id === user.id && 
+      participant.status !== 'CANCELLED'
+    );
 
     return (
       <TouchableOpacity
@@ -439,7 +457,39 @@ export default function Events() {
             borderTopColor: '#f1f5f9'
           }}>
             <View style={{ flex: 1 }}>
-              {isFull && !isRegistered ? (
+              {isPast ? (
+                userParticipated ? (
+                  <View style={{ 
+                    backgroundColor: '#059669', 
+                    borderRadius: 8, 
+                    paddingHorizontal: 12, 
+                    paddingVertical: 6,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    alignSelf: 'flex-start'
+                  }}>
+                    <Ionicons name="checkmark-circle" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                    <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '600' }}>
+                      You Attended
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ 
+                    backgroundColor: '#6b7280', 
+                    borderRadius: 8, 
+                    paddingHorizontal: 12, 
+                    paddingVertical: 6,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    alignSelf: 'flex-start'
+                  }}>
+                    <Ionicons name="time-outline" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                    <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '600' }}>
+                      Event Completed
+                    </Text>
+                  </View>
+                )
+              ) : isFull && !isRegistered ? (
                 <View style={{ 
                   backgroundColor: '#ef4444', 
                   borderRadius: 8, 
@@ -687,7 +737,7 @@ export default function Events() {
                       </Text>
                     </TouchableOpacity>
                   )}
-                  
+
                   <TextInput
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -716,6 +766,93 @@ export default function Events() {
                       ))}
                     </View>
                   </ScrollView>
+                  
+                  {/* Status Filter Buttons */}
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    marginTop: 16, 
+                    marginBottom: 8,
+                    justifyContent: 'center'
+                  }}>
+                    <TouchableOpacity
+                      onPress={() => setSelectedStatus('UPCOMING')}
+                      style={{
+                        backgroundColor: selectedStatus === 'UPCOMING' ? '#d946ef' : '#ffffff',
+                        borderWidth: 2,
+                        borderColor: selectedStatus === 'UPCOMING' ? '#d946ef' : '#e5e7eb',
+                        borderRadius: 16,
+                        paddingHorizontal: 24,
+                        paddingVertical: 14,
+                        marginRight: 16,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowOpacity: 0.12,
+                        shadowRadius: 10,
+                        elevation: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        minWidth: 120,
+                        justifyContent: 'center',
+                        ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                      }}
+                    >
+                      <Ionicons 
+                        name="time-outline" 
+                        size={18} 
+                        color={selectedStatus === 'UPCOMING' ? '#ffffff' : '#6b7280'} 
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text 
+                        style={{ 
+                          fontSize: 16,
+                          fontWeight: '700',
+                          color: selectedStatus === 'UPCOMING' ? '#ffffff' : '#374151',
+                          letterSpacing: 0.5
+                        }}
+                      >
+                        Upcoming
+                      </Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      onPress={() => setSelectedStatus('COMPLETED')}
+                      style={{
+                        backgroundColor: selectedStatus === 'COMPLETED' ? '#d946ef' : '#ffffff',
+                        borderWidth: 2,
+                        borderColor: selectedStatus === 'COMPLETED' ? '#d946ef' : '#e5e7eb',
+                        borderRadius: 16,
+                        paddingHorizontal: 24,
+                        paddingVertical: 14,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowOpacity: 0.12,
+                        shadowRadius: 10,
+                        elevation: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        minWidth: 120,
+                        justifyContent: 'center',
+                        ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                      }}
+                    >
+                      <Ionicons 
+                        name="checkmark-circle-outline" 
+                        size={18} 
+                        color={selectedStatus === 'COMPLETED' ? '#ffffff' : '#6b7280'} 
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text 
+                        style={{ 
+                          fontSize: 16,
+                          fontWeight: '700',
+                          color: selectedStatus === 'COMPLETED' ? '#ffffff' : '#374151',
+                          letterSpacing: 0.5
+                        }}
+                      >
+                        Past
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
 
@@ -775,6 +912,44 @@ export default function Events() {
                       )}
                     </>
                   )}
+                </View>
+              </View>
+              
+              {/* Subscribe to Calendar Button at Bottom */}
+              <View style={{ 
+                paddingHorizontal: 20, 
+                paddingVertical: 40, 
+                backgroundColor: '#ffffff',
+                borderTopWidth: 1,
+                borderTopColor: '#f1f5f9'
+              }}>
+                <View style={{ maxWidth: 1200, alignSelf: 'center', width: '100%', alignItems: 'center' }}>
+                  <TouchableOpacity
+                    onPress={handleAddToCalendar}
+                    style={{
+                      backgroundColor: '#10b981',
+                      borderRadius: 16,
+                      paddingHorizontal: 24,
+                      paddingVertical: 16,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 12,
+                      elevation: 6,
+                    }}
+                  >
+                    <Ionicons name="calendar-outline" size={24} color="#ffffff" style={{ marginRight: 8 }} />
+                    <Text style={{ 
+                      color: '#ffffff', 
+                      fontSize: 18, 
+                      fontWeight: '700' 
+                    }}>
+                      Subscribe to Calendar
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             </ScrollView>

@@ -65,11 +65,11 @@ export default function Account() {
         api.getUserStats().catch(error => {
           console.warn('Failed to load user stats:', error);
           return {
-            eventsAttended: 0,
+            eventsParticipated: 0,
             totalVolunteerHours: 0,
             totalDonated: 0,
             thisMonth: {
-              eventsAttended: 0,
+              eventsParticipated: 0,
               volunteerHours: 0,
               donationAmount: 0
             }
@@ -480,9 +480,9 @@ export default function Account() {
                     gap: 12
                   }}>
                     <StatCard 
-                      label="Events Attended" 
-                      value={loadingStats ? "..." : userStats?.eventsAttended.toString() || "0"} 
-                      trend={loadingStats ? "" : userStats?.thisMonth.eventsAttended ? `+${userStats.thisMonth.eventsAttended} this month` : "No events this month"} 
+                      label="Events Participated" 
+                      value={loadingStats ? "..." : userStats?.eventsParticipated.toString() || "0"} 
+                      trend={loadingStats ? "" : userStats?.thisMonth.eventsParticipated ? `+${userStats.thisMonth.eventsParticipated} this month` : "No events this month"} 
                       icon="calendar" 
                       color="#8b5cf6" 
                     />

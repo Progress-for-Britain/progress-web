@@ -8,16 +8,17 @@ const {
   deleteEvent,
   registerForEvent,
   cancelEventRegistration,
-  logVolunteerHours
+  logVolunteerHours,
+  generateUserICal
 } = require('../controllers/eventController');
 const {
   authenticateToken,
-  requireAdmin,
   requireRole
 } = require('../middleware/auth');
 
 // Public routes (for browsing events)
 router.get('/', getAllEvents);
+router.get('/ical/:userId', generateUserICal);
 router.get('/:id', getEventById);
 
 // Protected routes

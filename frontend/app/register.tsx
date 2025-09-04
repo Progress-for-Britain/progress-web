@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Animated, ScrollView } from 'react-native';
 import { Stack, useRouter, Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import { api } from '../util/api';;
+import { api } from '../util/api';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
+import useResponsive from '../util/useResponsive';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -22,19 +24,43 @@ export default function Register() {
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const [codeValidated, setCodeValidated] = useState(false);
   const [suggestedRole, setSuggestedRole] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+  const [firstNameFocused, setFirstNameFocused] = useState(false);
+  const [lastNameFocused, setLastNameFocused] = useState(false);
+  const [accessCodeFocused, setAccessCodeFocused] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { register, isStorageReady } = useAuth();
   const { isDark } = useTheme();
+  const { isMobile, width } = useResponsive();
   const router = useRouter();
 
-  const commonStyles = getCommonStyles(isDark);
+  const commonStyles = getCommonStyles(isDark, isMobile, width);
   const gradients = getGradients(isDark);
   const colors = getColors(isDark);
+
+  // Only use animations on web to avoid mobile callback issues
+  const fadeAnim = React.useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    if (Platform.OS === 'web') {
+      fadeAnim.setValue(0);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: Platform.OS !== 'web',
+      }).start();
+    }
+  }, []);
 
   const validateAccessCode = async () => {
     const { accessCode, email } = formData;
     
     if (!accessCode || !email) {
-      Alert.alert('Error', 'Please enter both access code and email address');
+      setErrorMessage('Please enter both access code and email address');
       return;
     }
 
@@ -51,9 +77,10 @@ export default function Register() {
           firstName: response.data.firstName,
           lastName: response.data.lastName
         }));
-        Alert.alert('Success', 'Access code validated! You can now complete your registration.');
+        setErrorMessage(''); // Clear any previous error
+        // Could show success message if needed
       } else {
-        Alert.alert('Invalid Code', response.message);
+        setErrorMessage(response.message || 'Invalid access code');
       }
     } catch (error) {
       let errorMessage = 'Failed to validate access code. Please try again.';
@@ -66,7 +93,7 @@ export default function Register() {
         }
       }
       
-      Alert.alert('Error', errorMessage);
+      setErrorMessage(errorMessage);
     } finally {
       setIsValidatingCode(false);
     }
@@ -76,37 +103,33 @@ export default function Register() {
     const { email, password, confirmPassword, firstName, lastName, accessCode } = formData;
     
     if (!accessCode) {
-      Alert.alert('Error', 'Access code is required to create an account');
+      setErrorMessage('Access code is required to create an account');
       return;
     }
 
     if (!codeValidated) {
-      Alert.alert('Error', 'Please validate your access code before proceeding');
+      setErrorMessage('Please validate your access code before proceeding');
       return;
     }
     
     if (!email || !password || !firstName || !lastName) {
-      Alert.alert('Error', 'Please fill in all fields');
+      setErrorMessage('Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      setErrorMessage('Password must be at least 6 characters long');
       return;
     }
 
     // Check if storage is ready before attempting registration
     if (!isStorageReady) {
-      Alert.alert(
-        'Storage Error', 
-        'Device storage is not ready. Please ensure you have sufficient storage space and try again.',
-        [{ text: 'OK' }]
-      );
+      setErrorMessage('Device storage is not ready. Please ensure you have sufficient storage space and try again.');
       return;
     }
 
@@ -134,7 +157,7 @@ export default function Register() {
         }
       }
       
-      Alert.alert('Registration Failed', errorMessage);
+      setErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -142,6 +165,7 @@ export default function Register() {
 
   const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errorMessage) setErrorMessage('');
   };
 
   return (
@@ -160,31 +184,32 @@ export default function Register() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <View 
+            <Animated.View 
               style={{ 
                 backgroundColor: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                borderRadius: 16,
-                padding: 32,
+                borderRadius: isMobile ? 16 : 20,
+                padding: isMobile ? 24 : 40,
                 width: '100%',
-                maxWidth: 400,
+                maxWidth: 500,
                 shadowColor: isDark ? colors.accent : '#000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: isDark ? 0.3 : 0.1,
                 shadowRadius: 12,
                 elevation: 8,
+                opacity: Platform.OS === 'web' ? fadeAnim : 1,
                 borderWidth: isDark ? 1 : 0,
                 borderColor: isDark ? 'rgba(217, 70, 239, 0.3)' : 'transparent',
               }}
             >
-              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: 28 }]}>
+              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: isMobile ? 24 : 32 }]}>
                 Complete Registration
               </Text>
               <Text 
                 style={{ 
-                  fontSize: 16,
+                  fontSize: isMobile ? 16 : 18,
                   color: colors.textSecondary,
                   textAlign: 'center',
-                  marginBottom: 32,
+                  marginBottom: isMobile ? 32 : 40,
                   ...(Platform.OS === 'web' && {
                     fontFamily: "'Montserrat', sans-serif",
                   }),
@@ -193,9 +218,15 @@ export default function Register() {
                 Use your access code to create your account
               </Text>
 
-              <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              {errorMessage ? (
+                <Text style={{ color: 'red', marginBottom: 16, textAlign: 'center' }}>
+                  {errorMessage}
+                </Text>
+              ) : null}
+
+              <View style={commonStyles.formRow}>
+                <View style={commonStyles.formField}>
+                  <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
                     First Name
                   </Text>
                   <TextInput
@@ -203,21 +234,25 @@ export default function Register() {
                     onChangeText={(value) => updateField('firstName', value)}
                     placeholder="First name"
                     placeholderTextColor={colors.textSecondary}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 8,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      fontSize: 16,
-                      backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
-                      color: colors.text,
-                      ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
-                    }}
+                    onFocus={() => setFirstNameFocused(true)}
+                    onBlur={() => setFirstNameFocused(false)}
+                    style={[
+                      commonStyles.textInput,
+                      {
+                        borderColor: firstNameFocused || formData.firstName ? colors.accent : colors.border,
+                        fontSize: isMobile ? 16 : 18,
+                        paddingVertical: isMobile ? 14 : 16,
+                        ...(Platform.OS === 'web' && { 
+                          outline: 'none',
+                          transition: 'all 0.2s ease',
+                          boxShadow: firstNameFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                        } as any)
+                      }
+                    ]}
                   />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                <View style={commonStyles.formField}>
+                  <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
                     Last Name
                   </Text>
                   <TextInput
@@ -225,23 +260,27 @@ export default function Register() {
                     onChangeText={(value) => updateField('lastName', value)}
                     placeholder="Last name"
                     placeholderTextColor={colors.textSecondary}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      borderRadius: 8,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      fontSize: 16,
-                      backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
-                      color: colors.text,
-                      ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
-                    }}
+                    onFocus={() => setLastNameFocused(true)}
+                    onBlur={() => setLastNameFocused(false)}
+                    style={[
+                      commonStyles.textInput,
+                      {
+                        borderColor: lastNameFocused || formData.lastName ? colors.accent : colors.border,
+                        fontSize: isMobile ? 16 : 18,
+                        paddingVertical: isMobile ? 14 : 16,
+                        ...(Platform.OS === 'web' && { 
+                          outline: 'none',
+                          transition: 'all 0.2s ease',
+                          boxShadow: lastNameFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                        } as any)
+                      }
+                    ]}
                   />
                 </View>
               </View>
 
-              <View style={{ marginBottom: 16 }}>
-                <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              <View style={{ marginBottom: isMobile ? 16 : 20 }}>
+                <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
                   Email
                 </Text>
                 <TextInput
@@ -251,80 +290,141 @@ export default function Register() {
                   placeholderTextColor={colors.textSecondary}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 8,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    fontSize: 16,
-                    backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
-                    color: colors.text,
-                    ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
-                  }}
+                  autoComplete="email"
+                  textContentType="emailAddress"
+                  onFocus={() => setEmailFocused(true)}
+                  onBlur={() => setEmailFocused(false)}
+                  style={[
+                    commonStyles.textInput,
+                    {
+                      borderColor: emailFocused || formData.email ? colors.accent : colors.border,
+                      fontSize: isMobile ? 16 : 18,
+                      paddingVertical: isMobile ? 14 : 16,
+                      ...(Platform.OS === 'web' && { 
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                        boxShadow: emailFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                      } as any)
+                    }
+                  ]}
                 />
               </View>
 
-              <View style={{ marginBottom: 16 }}>
-                <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              <View style={{ marginBottom: isMobile ? 16 : 20 }}>
+                <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
                   Password
                 </Text>
-                <TextInput
-                  value={formData.password}
-                  onChangeText={(value) => updateField('password', value)}
-                  placeholder="Create a password"
-                  placeholderTextColor={colors.textSecondary}
-                  secureTextEntry
-                  style={{
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 8,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    fontSize: 16,
-                    backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
-                    color: colors.text,
-                    ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
-                  }}
-                />
+                <View style={{ position: 'relative' }}>
+                  <TextInput
+                    value={formData.password}
+                    onChangeText={(value) => updateField('password', value)}
+                    placeholder="Create a password"
+                    placeholderTextColor={colors.textSecondary}
+                    secureTextEntry={!isPasswordVisible}
+                    autoComplete="current-password"
+                    textContentType="password"
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                    style={[
+                      commonStyles.textInput,
+                      {
+                        borderColor: passwordFocused || formData.password ? colors.accent : colors.border,
+                        fontSize: isMobile ? 16 : 18,
+                        paddingVertical: isMobile ? 14 : 16,
+                        paddingRight: 55,
+                        ...(Platform.OS === 'web' && { 
+                          outline: 'none',
+                          transition: 'all 0.2s ease',
+                          boxShadow: passwordFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                        } as any)
+                      }
+                    ]}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                    style={{
+                      position: 'absolute',
+                      right: 15,
+                      top: '50%',
+                      transform: [{ translateY: -12 }],
+                      padding: 6,
+                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                    }}
+                    activeOpacity={0.6}
+                  >
+                    <Ionicons
+                      name={isPasswordVisible ? 'eye' : 'eye-off'}
+                      size={22}
+                      color={colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              <View style={{ marginBottom: 24 }}>
-                <Text style={{ fontSize: 16, fontWeight: '500', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+              <View style={{ marginBottom: isMobile ? 20 : 28 }}>
+                <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
                   Confirm Password
                 </Text>
-                <TextInput
-                  value={formData.confirmPassword}
-                  onChangeText={(value) => updateField('confirmPassword', value)}
-                  placeholder="Confirm your password"
-                  placeholderTextColor={colors.textSecondary}
-                  secureTextEntry
-                  style={{
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 8,
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    fontSize: 16,
-                    backgroundColor: isDark ? 'rgba(55, 65, 81, 0.5)' : colors.background,
-                    color: colors.text,
-                    ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
-                  }}
-                />
+                <View style={{ position: 'relative' }}>
+                  <TextInput
+                    value={formData.confirmPassword}
+                    onChangeText={(value) => updateField('confirmPassword', value)}
+                    placeholder="Confirm your password"
+                    placeholderTextColor={colors.textSecondary}
+                    secureTextEntry={!isConfirmPasswordVisible}
+                    autoComplete="current-password"
+                    textContentType="password"
+                    onFocus={() => setConfirmPasswordFocused(true)}
+                    onBlur={() => setConfirmPasswordFocused(false)}
+                    style={[
+                      commonStyles.textInput,
+                      {
+                        borderColor: confirmPasswordFocused || formData.confirmPassword ? colors.accent : colors.border,
+                        fontSize: isMobile ? 16 : 18,
+                        paddingVertical: isMobile ? 14 : 16,
+                        paddingRight: 55,
+                        ...(Platform.OS === 'web' && { 
+                          outline: 'none',
+                          transition: 'all 0.2s ease',
+                          boxShadow: confirmPasswordFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                        } as any)
+                      }
+                    ]}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
+                    style={{
+                      position: 'absolute',
+                      right: 15,
+                      top: '50%',
+                      transform: [{ translateY: -12 }],
+                      padding: 6,
+                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                    }}
+                    activeOpacity={0.6}
+                  >
+                    <Ionicons
+                      name={isConfirmPasswordVisible ? 'eye' : 'eye-off'}
+                      size={22}
+                      color={colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
+
               {/* Access Code Section */}
               <View style={{ 
                 backgroundColor: isDark ? 'rgba(251, 191, 36, 0.15)' : '#fef3c7', 
-                padding: 16, 
+                padding: isMobile ? 16 : 20, 
                 borderRadius: 8, 
-                marginBottom: 24,
+                marginBottom: isMobile ? 24 : 32,
                 borderWidth: 1,
                 borderColor: isDark ? 'rgba(245, 158, 11, 0.5)' : '#f59e0b'
               }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 8, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                <Text style={[commonStyles.inputLabel, { marginBottom: 8, color: isDark ? '#fbbf24' : '#7c2d12' }]}>
                   Access Code (Required)
                 </Text>
-                <Text style={{ fontSize: 14, color: isDark ? '#fbbf24' : '#7c2d12', marginBottom: 12, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                <Text style={{ fontSize: isMobile ? 14 : 16, color: isDark ? '#fbbf24' : '#7c2d12', marginBottom: 12, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   You need an access code that was sent to your email after your membership application was approved. Please check your email and enter the code below.
                 </Text>
                 
@@ -335,16 +435,23 @@ export default function Register() {
                     placeholder="Enter your access code (required)"
                     placeholderTextColor={colors.textSecondary}
                     autoCapitalize="characters"
+                    onFocus={() => setAccessCodeFocused(true)}
+                    onBlur={() => setAccessCodeFocused(false)}
                     style={{
                       borderWidth: 2,
                       borderColor: codeValidated ? '#10b981' : (formData.accessCode ? '#f59e0b' : '#dc2626'),
                       borderRadius: 8,
                       paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      fontSize: 16,
+                      paddingVertical: isMobile ? 14 : 16,
+                      fontSize: isMobile ? 16 : 18,
                       backgroundColor: isDark ? 'rgba(55, 65, 81, 0.7)' : '#ffffff',
                       color: colors.text,
-                      ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
+                      ...(Platform.OS === 'web' && { 
+                        fontFamily: "'Montserrat', sans-serif",
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                        boxShadow: accessCodeFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                      } as any)
                     }}
                   />
                 </View>
@@ -441,8 +548,8 @@ export default function Register() {
 
               <View
                 style={{
-                  marginBottom: 16,
-                  borderRadius: 8,
+                  marginBottom: 20,
+                  borderRadius: isMobile ? 8 : 10,
                   ...(Platform.OS === 'ios' && !isLoading && codeValidated && formData.accessCode && {
                     shadowColor: colors.accent,
                     shadowOffset: { width: 0, height: 4 },
@@ -462,7 +569,7 @@ export default function Register() {
                   onPress={handleRegister}
                   disabled={isLoading || !codeValidated || !formData.accessCode}
                   style={{
-                    borderRadius: 8,
+                    borderRadius: isMobile ? 8 : 10,
                     overflow: 'hidden',
                     ...(Platform.OS === 'web' && { 
                       cursor: (isLoading || !codeValidated || !formData.accessCode) ? 'not-allowed' : 'pointer',
@@ -474,14 +581,14 @@ export default function Register() {
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={{
-                      paddingVertical: 16,
+                      paddingVertical: isMobile ? 16 : 18,
                       alignItems: 'center',
                     }}
                   >
                     <Text 
                       style={{ 
                         color: '#ffffff',
-                        fontSize: 16,
+                        fontSize: isMobile ? 16 : 18,
                         fontWeight: '600',
                         textAlign: 'center',
                         ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
@@ -494,23 +601,23 @@ export default function Register() {
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 14, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                <Text style={{ color: colors.textSecondary, fontSize: isMobile ? 14 : 18, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Don't have an access code?{' '}
                 </Text>
-                <Link href="/join" style={{ color: colors.accent, fontSize: 14, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                <Link href="/join" style={{ color: colors.accent, fontSize: isMobile ? 14 : 18, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Apply for membership
                 </Link>
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 16, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                <Text style={{ color: colors.textSecondary, fontSize: isMobile ? 14 : 18, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Already have an account?{' '}
                 </Text>
-                <Link href="/login" style={{ color: colors.accent, fontSize: 16, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
+                <Link href="/login" style={{ color: colors.accent, fontSize: isMobile ? 14 : 18, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                   Sign in
                 </Link>
               </View>
-            </View>
+            </Animated.View>
           </KeyboardAvoidingView>
           {/* Add extra space at the bottom for mobile scroll */}
           <View style={{ height: 200 }} />

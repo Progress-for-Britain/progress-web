@@ -2,6 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const cron = require('node-cron');
+
+// Import the event completion function
+const { completeEvents } = require('./scripts/completeEvents');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -63,6 +67,8 @@ app.use((err, req, res, next) => {
 app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Frontend served from: ${frontendDistPath}`);
+
+  await completeEvents();
   
   // Seed test users in development environment
   if (process.env.NODE_ENV === 'development' || process.env.SEED_TEST_USERS === 'true') {
@@ -73,6 +79,16 @@ app.listen(PORT, async () => {
       console.error('Failed to seed test users:', error);
     }
   }
+
+  // Schedule daily event completion at midnight
+  cron.schedule('0 0 * * *', async () => {
+    console.log('🕛 Running daily event completion...');
+    try {
+      await completeEvents();
+    } catch (error) {
+      console.error('Error in scheduled event completion:', error);
+    }
+  });
 });
 
 module.exports = app;

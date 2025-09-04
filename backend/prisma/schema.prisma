@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,11 +7,218 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                      String                   @id @default(cuid())
+  firstName               String?
+  lastName                String?
+  email                   String                   @unique
+  password                String
+  role                    UserRole                 @default(MEMBER)
+  address                 String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  eventParticipants       EventParticipant[]
+  createdEvents           Event[]                  @relation("EventCreator")
+  notificationPreferences NotificationPreferences?
+  payments                Payment[]
+  posts                   Post[]
+  privacySettings         PrivacySettings?
+  reactions               Reaction[]
+  volunteerHours          VolunteerHours[]
+
+  @@map("users")
+}
+
+model Payment {
+  id             String    @id @default(cuid())
+  customerId     String
+  subscriptionId String?
+  status         SubStatus @default(INACTIVE)
+  amount         Decimal   @db.Decimal(10, 2)
+  currency       String    @default("GDP")
+  startDate      DateTime
+  endDate        DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  userId         String
+  totalDonated   Decimal   @default(0) @db.Decimal(10, 2)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model NotificationPreferences {
+  id                 String   @id @default(cuid())
+  emailNewsletter    Boolean  @default(true)
+  eventNotifications Boolean  @default(true)
+  donationReminders  Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+  smsUpdates         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model PrivacySettings {
+  id            String   @id @default(cuid())
+  publicProfile Boolean  @default(false)
+  shareActivity Boolean  @default(false)
+  allowMessages Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("privacy_settings")
+}
+
+model Post {
+  id          String       @id @default(cuid())
+  title       String
+  content     String
+  excerpt     String?
+  category    PostCategory @default(NEWS)
+  status      PostStatus   @default(DRAFT)
+  featured    Boolean      @default(false)
+  readTime    Int?
+  imageUrl    String?
+  tags        String[]
+  publishedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  authorId    String
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions   Reaction[]
+
+  @@map("posts")
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  emoji     String
+  createdAt DateTime @default(now())
+  userId    String
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("reactions")
+}
+
+model Event {
+  id             String             @id @default(cuid())
+  title          String
+  description    String
+  eventType      EventType          @default(MEETING)
+  status         EventStatus        @default(UPCOMING)
+  location       String?
+  address        String?
+  latitude       Float?
+  longitude      Float?
+  capacity       Int?
+  isVirtual      Boolean            @default(false)
+  virtualLink    String?
+  startDate      DateTime           @default(now())
+  endDate        DateTime           @default(dbgenerated("(now() + '01:00:00'::interval)"))
+  imageUrl       String?
+  tags           String[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  createdById    String
+  participants   EventParticipant[]
+  createdBy      User               @relation("EventCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  VolunteerHours VolunteerHours[]
+
+  @@map("events")
+}
+
+model EventParticipant {
+  id           String            @id @default(cuid())
+  status       ParticipantStatus @default(REGISTERED)
+  notes        String?
+  registeredAt DateTime          @default(now())
+  checkedInAt  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  userId       String
+  eventId      String
+  event        Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("event_participants")
+}
+
+model VolunteerHours {
+  id          String   @id @default(cuid())
+  hours       Float
+  description String?
+  date        DateTime
+  approved    Boolean  @default(false)
+  approvedBy  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  eventId     String?
+  event       Event?   @relation(fields: [eventId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("volunteer_hours")
+}
+
+model PendingUser {
+  id                String            @id @default(cuid())
+  firstName         String
+  lastName          String
+  email             String            @unique
+  phone             String?
+  constituency      String?
+  interests         String[]
+  volunteer         Boolean           @default(false)
+  newsletter        Boolean           @default(true)
+  status            PendingUserStatus @default(UNREVIEWED)
+  accessCode        String?
+  reviewedBy        String?
+  reviewNotes       String?
+  approvedAt        DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  briefBio          String?
+  briefCV           String?
+  canContribute     String[]
+  gdprConsent       Boolean           @default(false)
+  interestedIn      String[]
+  isBritishCitizen  Boolean?
+  livesInUK         Boolean?
+  otherAffiliations String?
+  signedNDA         Boolean           @default(false)
+  socialMediaHandle String?
+
+  @@map("pending_users")
+}
+
+model AccessCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  email     String
+  used      Boolean   @default(false)
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@map("access_codes")
+}
+
 enum UserRole {
   ADMIN
-  WRITER
   MEMBER
   VOLUNTEER
+  WRITER
 }
 
 enum SubStatus {
@@ -66,242 +267,9 @@ enum ParticipantStatus {
   CANCELLED
 }
 
-model User {
-  id        String   @id @default(cuid())
-  firstName String?
-  lastName  String?
-  email     String   @unique
-  password  String
-  role      UserRole @default(MEMBER)
-  address   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relationships
-  payments               Payment[]
-  notificationPreferences NotificationPreferences?
-  privacySettings        PrivacySettings?
-  posts                  Post[]
-  reactions              Reaction[]
-  eventParticipants      EventParticipant[]
-  volunteerHours         VolunteerHours[]
-  createdEvents          Event[] @relation("EventCreator")
-  
-  @@map("users")
-}
-
-model Payment {
-  id             String        @id @default(cuid())
-  customerId     String        // Stripe customer ID or other payment provider ID
-  subscriptionId String?       // Subscription ID from payment providere
-  status         SubStatus     @default(INACTIVE)
-  amount         Decimal       @db.Decimal(10, 2)
-  totalDonated   Decimal       @default(0) @db.Decimal(10, 2) // Total amount donated by user
-  currency       String        @default("GDP")
-  startDate      DateTime
-  endDate        DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  
-  // Foreign key to User
-  userId         String
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("payments")
-}
-
-model NotificationPreferences {
-  id                 String   @id @default(cuid())
-  emailNewsletter    Boolean  @default(true)   // Receive our weekly newsletter with party updates and news
-  eventNotifications Boolean  @default(true)   // Get notified about upcoming events and rallies in your area
-  donationReminders  Boolean  @default(true)   // Occasional reminders about supporting our campaigns
-  pushNotifications  Boolean  @default(true)   // Receive urgent updates and breaking news notifications
-  smsUpdates         Boolean  @default(false)  // Get text messages for time-sensitive campaign updates
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  
-  // Foreign key to User
-  userId             String   @unique
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("notification_preferences")
-}
-
-model PrivacySettings {
-  id             String   @id @default(cuid())
-  publicProfile  Boolean  @default(false)  // Allow other members to see your profile and activity
-  shareActivity  Boolean  @default(false)  // Show your donations and volunteer hours to other members
-  allowMessages  Boolean  @default(true)   // Let other members send you direct messages
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  // Foreign key to User
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("privacy_settings")
-}
-
-model Post {
-  id          String      @id @default(cuid())
-  title       String
-  content     String      @db.Text
-  excerpt     String?     // Short summary for preview
-  category    PostCategory @default(NEWS)
-  status      PostStatus  @default(DRAFT)
-  featured    Boolean     @default(false)
-  readTime    Int?        // Estimated read time in minutes
-  imageUrl    String?     // Optional featured image
-  tags        String[]    // Array of tags for better organization
-  publishedAt DateTime?   // When the post was published
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
-  // Foreign key to User (author)
-  authorId    String
-  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
-  // Relationships
-  reactions   Reaction[]
-  
-  @@map("posts")
-}
-
-model Reaction {
-  id        String   @id @default(cuid())
-  emoji     String   // The emoji used for reaction (👍, ❤️, 🎉, etc.)
-  createdAt DateTime @default(now())
-  
-  // Foreign keys
-  userId    String
-  postId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  // Ensure one reaction per user per post
-  @@unique([userId, postId])
-  @@map("reactions")
-}
-
-model Event {
-  id          String      @id @default(cuid())
-  title       String
-  description String      @db.Text
-  eventType   EventType   @default(MEETING)
-  status      EventStatus @default(UPCOMING)
-  location    String?     // Physical location or virtual link
-  address     String?     // Full address for physical events
-  latitude    Float?      // For mapping functionality
-  longitude   Float?      // For mapping functionality
-  capacity    Int?        // Maximum number of participants
-  isVirtual   Boolean     @default(false)
-  virtualLink String?     // Zoom/Meet link for virtual events
-  startDate   DateTime @default(now())
-  endDate     DateTime @default(dbgenerated("(now() + interval '1 hour')"))
-  imageUrl    String?     // Event banner/image
-  tags        String[]    // Event tags for categorization
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
-  // Foreign key to User (event creator)
-  createdById String
-  createdBy   User        @relation("EventCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  
-  // Relationships
-  participants EventParticipant[]
-  volunteerHours VolunteerHours[]
-  
-  @@map("events")
-}
-
-model EventParticipant {
-  id       String            @id @default(cuid())
-  status   ParticipantStatus @default(REGISTERED)
-  notes    String?           // Additional notes about participation
-  registeredAt DateTime      @default(now())
-  checkedInAt  DateTime?     // When participant checked in
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  
-  // Foreign keys
-  userId   String
-  eventId  String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
-  // Ensure one participation record per user per event
-  @@unique([userId, eventId])
-  @@map("event_participants")
-}
-
-model VolunteerHours {
-  id          String   @id @default(cuid())
-  hours       Float    // Number of hours volunteered
-  description String?  // Description of volunteer work
-  date        DateTime // Date of volunteer work
-  approved    Boolean  @default(false) // Whether hours are approved by admin
-  approvedBy  String?  // ID of admin who approved
-  notes       String?  // Additional notes
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Foreign keys
-  userId      String
-  eventId     String?  // Optional - if volunteer work was for a specific event
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event       Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
-  
-  @@map("volunteer_hours")
-}
-
 enum PendingUserStatus {
   UNREVIEWED
   CONTACTED
   APPROVED
   REJECTED
-}
-
-model PendingUser {
-  id           String            @id @default(cuid())
-  firstName    String
-  lastName     String
-  email        String            @unique
-  phone        String?
-  constituency String?
-  interests    String[]          // Array of policy interests
-  volunteer    Boolean           @default(false) // Whether they want to volunteer
-  newsletter   Boolean           @default(true)  // Whether they want newsletter
-  status       PendingUserStatus @default(UNREVIEWED)
-  accessCode   String?           // Generated access code for approved users
-  reviewedBy   String?           // ID of admin who reviewed
-  reviewNotes  String?           // Admin notes about the review
-  approvedAt   DateTime?         // When the user was approved/rejected
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  
-  // Volunteer-specific fields (only filled if volunteer = true)
-  socialMediaHandle String?       // Public social media handle
-  isBritishCitizen  Boolean?      // Are you a British Citizen?
-  livesInUK         Boolean?      // Do you live in the United Kingdom?
-  briefBio          String?       @db.Text // Brief Bio
-  briefCV           String?       @db.Text // Brief CV
-  otherAffiliations String?       @db.Text // Other Affiliations
-  interestedIn      String[]      // What they're interested in (volunteer-specific)
-  canContribute     String[]      // What they can contribute
-  signedNDA         Boolean       @default(false) // I have signed the Progress NDA
-  gdprConsent       Boolean       @default(false) // GDPR & Data Privacy consent
-  
-  @@map("pending_users")
-}
-
-model AccessCode {
-  id        String   @id @default(cuid())
-  code      String   @unique
-  email     String   
-  used      Boolean  @default(false)
-  usedAt    DateTime?
-  expiresAt DateTime // Access codes expire after a certain time
-  createdAt DateTime @default(now())
-  
-  @@map("access_codes")
 }

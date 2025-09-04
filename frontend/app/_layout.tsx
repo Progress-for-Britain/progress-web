@@ -51,7 +51,7 @@ Curious? Join us at ${websiteUrl}
   
   // Define unauthenticated routes that should show aurora background
   const unauthenticatedRoutes = ['/', '/about', '/our-approach', '/join', '/login', '/register', '/nda'];
-  const shouldShowAurora = !isAuthenticated && unauthenticatedRoutes.includes(pathname) && !isMobilePlatform;
+  const shouldShowAurora = unauthenticatedRoutes.includes(pathname) && !isMobilePlatform;
   
   return (
     <View style={[{ flex: 1 }, commonStyles.appContainer]}>
