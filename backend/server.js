@@ -17,7 +17,8 @@ const { seedAllTestUsers } = require('./utils/seedTestUser');
 
 // CORS Configuration
 const corsOptions = {
-  origin: ['https://progress.tristans.club', 'http://localhost:8081'],
+  //dev host, prod host, vercel host
+  origin: ['http://localhost:8081','https://progress.tristans.club', 'https://progress-web-hazel.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
