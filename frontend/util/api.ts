@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 const isMobileWeb = typeof window !== 'undefined' && 
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+  //backend url
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3005';
 
 // Mobile web optimizations
@@ -1401,25 +1402,6 @@ class ApiClient {
       };
     }>('/api/users/management/stats');
     return response.data.data;
-  }
-
-  async getUserICalUrl(userId: string): Promise<string> {
-    // Generate the iCal URL for the user's events
-    const baseUrl = this.client.defaults.baseURL || API_BASE_URL;
-    // Add /api prefix like all other API endpoints
-    return `${baseUrl}/api/events/ical/${userId}`;
-  }
-
-  async subscribeToCalendar(userId: string): Promise<void> {
-    const icalUrl = await this.getUserICalUrl(userId);
-    
-    if (Platform.OS === 'web') {
-      window.open(icalUrl, '_blank');
-    } else {
-      // For mobile, use expo-linking to open the URL
-      const { openURL } = await import('expo-linking');
-      await openURL(icalUrl);
-    }
   }
 }
 

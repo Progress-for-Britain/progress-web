@@ -27,7 +27,8 @@ const useActiveRoute = (href?: string) => {
       pathname === href || 
       (href === '/events' && pathname.startsWith('/events/')) ||
       (href === '/newsroom' && pathname.startsWith('/news/')) ||
-      (href === '/account' && pathname.startsWith('/account'))
+      (href === '/account' && pathname.startsWith('/account')) ||
+      (href === '/policies' && pathname.startsWith('/policies'))
     );
   }, [pathname, href]);
 };
@@ -359,6 +360,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
       // Insert admin link after Events if user is admin
       if (user?.role === 'ADMIN') {
         baseItems.push({ href: "/user-management", icon: "people", label: "User Management" });
+        baseItems.push({ href: "/policies", icon: "document-text", label: "Policies" });
       }
 
       // Add remaining items

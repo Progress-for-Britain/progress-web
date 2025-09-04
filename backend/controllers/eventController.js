@@ -611,7 +611,8 @@ const generateUserICal = async (req, res) => {
             createdBy: {
               select: {
                 firstName: true,
-                lastName: true
+                lastName: true,
+                email: true
               }
             }
           }
@@ -639,14 +640,17 @@ X-WR-TIMEZONE:UTC
       const startDate = new Date(event.startDate);
       const endDate = new Date(event.endDate);
       
-      // Format dates for iCal (YYYYMMDDTHHMMSSZ)
+      // Format dates for iCal (YYYYMMDDTHHMMSS)
       const formatDate = (date) => {
-        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        return date.toISOString().replace(/-|:|\.\d+/g, '');
       };
 
       const eventLocation = event.isVirtual 
         ? (event.virtualLink || 'Virtual Event')
         : (event.location || event.address || 'TBD');
+
+      const organizerName = event.createdBy ? `${event.createdBy.firstName} ${event.createdBy.lastName}` : 'Organizer';
+      const organizerEmail = event.createdBy?.email || 'organizer@example.com';
 
       icalContent += `BEGIN:VEVENT
 UID:${event.id}@progress-web
@@ -656,7 +660,23 @@ DTSTAMP:${formatDate(new Date())}
 SUMMARY:${event.title.replace(/[,;\\]/g, '\\$&')}
 DESCRIPTION:${(event.description || '').replace(/[,;\\]/g, '\\$&')}
 LOCATION:${eventLocation.replace(/[,;\\]/g, '\\$&')}
+ORGANIZER;CN=${organizerName}:mailto:${organizerEmail}
 STATUS:CONFIRMED
+BEGIN:VALARM
+TRIGGER:-PT15M
+DESCRIPTION:Reminder - 15 minutes before
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT1H
+DESCRIPTION:Reminder - 1 hour before
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-P1D
+DESCRIPTION:Reminder - 1 day before
+ACTION:DISPLAY
+END:VALARM
 END:VEVENT
 `;
     });

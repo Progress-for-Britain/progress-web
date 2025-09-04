@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Platform, ScrollView, Alert, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, ScrollView, Alert, TextInput, Linking } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -178,6 +178,16 @@ export default function Events() {
     loadEvents(); // Reload events after update
   };
 
+  const handleAddToCalendar = () => {
+    if (!user) return;
+    // Use webcal for iCal subscription
+    const baseApiUrl = `/api/events/ical/user/${user.id}`;
+    //backend url
+    const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3005';
+    const webcalBaseUrl = apiBaseUrl.replace(/^https?:\/\//, 'webcal://');
+    const webcalUrl = `${webcalBaseUrl}${baseApiUrl}`;
+    Linking.openURL(webcalUrl);
+  };
 
   const canCreateEvent = user?.role === 'ADMIN' || user?.role === 'WRITER';
 
@@ -690,10 +700,7 @@ export default function Events() {
 
                   {/* iCal Calendar Button */}
                   <TouchableOpacity
-                    onPress={() => {
-                      if (!user) return;
-                      api.subscribeToCalendar(user.id);
-                    }}
+                    onPress={handleAddToCalendar}
                     style={{
                       backgroundColor: '#10b981',
                       borderRadius: 16,
