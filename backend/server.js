@@ -30,12 +30,15 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   maxAge: 86400, // 24 hours
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 200 // Changed from 204 to 200 for better compatibility
 };
 
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Add explicit handler for OPTIONS requests
+app.options('*', cors(corsOptions));
 
 // API Routes
 app.use('/api/users', userRoutes);
