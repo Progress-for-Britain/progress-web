@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, Platform, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import SEOHead from '../components/SEOHead';
 import { getCommonStyles, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
+import { useAuth } from '../util/auth-context';
 
 export default function Home() {
   const { isDark } = useTheme();
@@ -12,7 +14,15 @@ export default function Home() {
   const commonStyles = getCommonStyles(isDark, isMobile, width);
   const gradients = getGradients(isDark);
   const styles = getStyles(isMobile);
-  
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      router.replace('/account');
+    }
+  }, [isAuthenticated, isLoading]);
+
   return (
     <>
       <SEOHead pageKey="home" />
