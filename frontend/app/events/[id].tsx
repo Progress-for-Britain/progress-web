@@ -228,7 +228,7 @@ export default function EventDetail() {
         <View style={styles.titleContainer}>
           <Pressable
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() => router.replace('/events')}
           >
             <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
           </Pressable>

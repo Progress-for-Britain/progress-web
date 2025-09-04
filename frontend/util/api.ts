@@ -365,11 +365,11 @@ export interface LogVolunteerHoursRequest {
 }
 
 export interface UserStats {
-  eventsAttended: number;
+  eventsParticipated: number;
   totalVolunteerHours: number;
   totalDonated: number;
   thisMonth: {
-    eventsAttended: number;
+    eventsParticipated: number;
     volunteerHours: number;
     donationAmount: number;
   };

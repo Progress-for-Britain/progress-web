@@ -18,7 +18,6 @@ const getAllEvents = async (req, res) => {
     // Build where clause
     const where = {
       ...(eventType && { eventType }),
-      ...(status && { status }),
       ...(search && {
         OR: [
           { title: { contains: search, mode: 'insensitive' } },
@@ -33,6 +32,17 @@ const getAllEvents = async (req, res) => {
         }
       })
     };
+
+    // Handle status filtering
+    if (status === 'UPCOMING') {
+      where.endDate = { gte: new Date() };
+    } else if (status === 'COMPLETED') {
+      where.endDate = { lt: new Date() };
+    } else if (status) {
+      where.status = status;
+    }
+
+    const orderBy = status === 'COMPLETED' ? { startDate: 'desc' } : { startDate: 'asc' };
 
     const [events, total] = await Promise.all([
       prisma.event.findMany({
@@ -71,9 +81,7 @@ const getAllEvents = async (req, res) => {
         },
         skip,
         take: parseInt(limit),
-        orderBy: {
-          startDate: 'asc'
-        }
+        orderBy
       }),
       prisma.event.count({ where })
     ]);
@@ -382,6 +390,19 @@ const cancelEventRegistration = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Cannot cancel registration for an event you have already attended'
+      });
+    }
+
+    // Check if the event has already happened
+    const event = await prisma.event.findUnique({
+      where: { id },
+      select: { endDate: true }
+    });
+
+    if (new Date(event.endDate) < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot cancel registration for a past event'
       });
     }
 

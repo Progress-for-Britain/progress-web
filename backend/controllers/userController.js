@@ -593,13 +593,18 @@ const updatePrivacySettings = async (req, res) => {
 // Get user statistics for account dashboard
 const getUserStats = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
-    // Get event participation stats
-    const eventStats = await prisma.eventParticipant.aggregate({
+    // Get total events participated in (all statuses except cancelled, only completed events)
+    const totalEventParticipations = await prisma.eventParticipant.aggregate({
       where: {
         userId,
-        status: 'ATTENDED'
+        status: {
+          not: 'CANCELLED'
+        },
+        event: {
+          status: 'COMPLETED'
+        }
       },
       _count: {
         id: true
@@ -632,11 +637,16 @@ const getUserStats = async (req, res) => {
     currentMonth.setDate(1);
     currentMonth.setHours(0, 0, 0, 0);
 
-    const thisMonthEvents = await prisma.eventParticipant.count({
+    const thisMonthEventParticipations = await prisma.eventParticipant.count({
       where: {
         userId,
-        status: 'ATTENDED',
-        checkedInAt: {
+        status: {
+          not: 'CANCELLED'
+        },
+        event: {
+          status: 'COMPLETED'
+        },
+        registeredAt: {
           gte: currentMonth
         }
       }
@@ -670,11 +680,11 @@ const getUserStats = async (req, res) => {
     res.json({
       success: true,
       data: {
-        eventsAttended: eventStats._count.id || 0,
+        eventsParticipated: totalEventParticipations._count.id || 0,
         totalVolunteerHours: volunteerStats._sum.hours || 0,
         totalDonated: donationStats._sum.totalDonated || 0,
         thisMonth: {
-          eventsAttended: thisMonthEvents || 0,
+          eventsParticipated: thisMonthEventParticipations || 0,
           volunteerHours: thisMonthVolunteerHours._sum.hours || 0,
           donationAmount: thisMonthDonations._sum.amount || 0
         }
@@ -693,25 +703,31 @@ const getUserStats = async (req, res) => {
 // Get user activity timeline for account dashboard
 const getUserActivity = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { limit = 10 } = req.query;
 
-    // Get recent event participations
+    // Get recent event participations (all statuses except cancelled, only completed events)
     const recentEvents = await prisma.eventParticipant.findMany({
       where: {
         userId,
-        status: 'ATTENDED'
+        status: {
+          not: 'CANCELLED'
+        },
+        event: {
+          status: 'COMPLETED'
+        }
       },
       include: {
         event: {
           select: {
             title: true,
-            eventType: true
+            eventType: true,
+            startDate: true
           }
         }
       },
       orderBy: {
-        checkedInAt: 'desc'
+        registeredAt: 'desc'
       },
       take: parseInt(limit)
     });
@@ -752,9 +768,9 @@ const getUserActivity = async (req, res) => {
     recentEvents.forEach(participation => {
       activities.push({
         type: 'event',
-        title: `Attended ${participation.event.title}`,
+        title: `Participated in ${participation.event.title}`,
         description: `Participated in ${participation.event.eventType.toLowerCase()} event`,
-        date: participation.checkedInAt,
+        date: participation.event.startDate,
         icon: 'calendar',
         color: '#10B981'
       });
@@ -802,7 +818,7 @@ const getUserActivity = async (req, res) => {
 // Get user's upcoming events
 const getUserUpcomingEvents = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { limit = 5 } = req.query;
 
     const upcomingEvents = await prisma.eventParticipant.findMany({

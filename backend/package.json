@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed:test-users": "node scripts/seed-test-users.js",
+    "complete:events": "node scripts/completeEvents.js",
     "dev:seed": "SEED_TEST_USERS=true nodemon server.js"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
     "dotenv": "^17.2.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
+    "node-cron": "^4.2.1",
     "path": "^0.12.7",
     "prisma": "^6.14.0"
   },
