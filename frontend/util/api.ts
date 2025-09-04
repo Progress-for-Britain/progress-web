@@ -590,7 +590,7 @@ class ApiClient {
       timeout: MOBILE_CONFIG.timeout,
       timeoutErrorMessage: 'Request timed out - please check your connection',
       // Enable keep-alive for connection reuse on mobile
-      withCredentials: true, 
+      withCredentials: false,
     });
 
     // Add request interceptor for mobile optimizations

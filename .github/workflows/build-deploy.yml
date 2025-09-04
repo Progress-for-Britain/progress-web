@@ -2,7 +2,7 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "upd/events" ]
 
 jobs:
   build-and-deploy:
@@ -54,19 +54,19 @@ jobs:
             echo "❌ dist folder not found! Build may have failed."
             exit 1
           fi
-          echo "📂 Creating /root/progressweb/frontend/dist on VPS if it doesn't exist..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "mkdir -p /root/progressweb/frontend"
+          echo "📂 Creating /root/progress-web/frontend/dist on VPS if it doesn't exist..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "mkdir -p /root/progress-web/frontend"
           echo "📤 Removing old dist directory on VPS..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "rm -rf /root/progressweb/frontend/dist"
-          echo "📤 Uploading dist to /root/progressweb/frontend/ ..."
-          scp -v -r dist ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/root/progressweb/frontend/
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "rm -rf /root/progress-web/frontend/dist"
+          echo "📤 Uploading dist to /root/progress-web/frontend/ ..."
+          scp -v -r dist ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/root/progress-web/frontend/
           echo "♻️ Restarting app with PM2..."
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            cd /root/progressweb
+            cd /root/progress-web
             echo "🔄 Pulling latest changes from git..."
             git pull
             # Assuming your PM2 process serves from the reactapp/dist directory or similar
             # Adjust the PM2 command if your server setup is different
-            pm2 restart 11 || pm2 start npm --name "progressweb" -- start
+            pm2 restart 11 || pm2 start npm --name "progress-web" -- start
           EOF
           echo "✅ Deploy complete!!"
