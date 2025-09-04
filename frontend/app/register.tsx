@@ -32,6 +32,7 @@ export default function Register() {
   const [firstNameFocused, setFirstNameFocused] = useState(false);
   const [lastNameFocused, setLastNameFocused] = useState(false);
   const [accessCodeFocused, setAccessCodeFocused] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { register, isStorageReady } = useAuth();
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
@@ -59,7 +60,7 @@ export default function Register() {
     const { accessCode, email } = formData;
     
     if (!accessCode || !email) {
-      Alert.alert('Error', 'Please enter both access code and email address');
+      setErrorMessage('Please enter both access code and email address');
       return;
     }
 
@@ -76,9 +77,10 @@ export default function Register() {
           firstName: response.data.firstName,
           lastName: response.data.lastName
         }));
-        Alert.alert('Success', 'Access code validated! You can now complete your registration.');
+        setErrorMessage(''); // Clear any previous error
+        // Could show success message if needed
       } else {
-        Alert.alert('Invalid Code', response.message);
+        setErrorMessage(response.message || 'Invalid access code');
       }
     } catch (error) {
       let errorMessage = 'Failed to validate access code. Please try again.';
@@ -91,7 +93,7 @@ export default function Register() {
         }
       }
       
-      Alert.alert('Error', errorMessage);
+      setErrorMessage(errorMessage);
     } finally {
       setIsValidatingCode(false);
     }
@@ -101,37 +103,33 @@ export default function Register() {
     const { email, password, confirmPassword, firstName, lastName, accessCode } = formData;
     
     if (!accessCode) {
-      Alert.alert('Error', 'Access code is required to create an account');
+      setErrorMessage('Access code is required to create an account');
       return;
     }
 
     if (!codeValidated) {
-      Alert.alert('Error', 'Please validate your access code before proceeding');
+      setErrorMessage('Please validate your access code before proceeding');
       return;
     }
     
     if (!email || !password || !firstName || !lastName) {
-      Alert.alert('Error', 'Please fill in all fields');
+      setErrorMessage('Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      setErrorMessage('Password must be at least 6 characters long');
       return;
     }
 
     // Check if storage is ready before attempting registration
     if (!isStorageReady) {
-      Alert.alert(
-        'Storage Error', 
-        'Device storage is not ready. Please ensure you have sufficient storage space and try again.',
-        [{ text: 'OK' }]
-      );
+      setErrorMessage('Device storage is not ready. Please ensure you have sufficient storage space and try again.');
       return;
     }
 
@@ -159,7 +157,7 @@ export default function Register() {
         }
       }
       
-      Alert.alert('Registration Failed', errorMessage);
+      setErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -167,6 +165,7 @@ export default function Register() {
 
   const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errorMessage) setErrorMessage('');
   };
 
   return (
@@ -218,6 +217,12 @@ export default function Register() {
               >
                 Use your access code to create your account
               </Text>
+
+              {errorMessage ? (
+                <Text style={{ color: 'red', marginBottom: 16, textAlign: 'center' }}>
+                  {errorMessage}
+                </Text>
+              ) : null}
 
               <View style={commonStyles.formRow}>
                 <View style={commonStyles.formField}>

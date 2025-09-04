@@ -17,6 +17,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { login, isStorageReady } = useAuth();
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
@@ -43,17 +44,13 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      setErrorMessage('Please fill in all fields');
       return;
     }
 
     // Check if storage is ready before attempting login
     if (!isStorageReady) {
-      Alert.alert(
-        'Storage Error', 
-        'Device storage is not ready. Please ensure you have sufficient storage space and try again.',
-        [{ text: 'OK' }]
-      );
+      setErrorMessage('Device storage is not ready. Please ensure you have sufficient storage space and try again.');
       return;
     }
 
@@ -75,7 +72,7 @@ export default function Login() {
         }
       }
       
-      Alert.alert('Login Failed', errorMessage);
+      setErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -131,13 +128,22 @@ export default function Login() {
                 Sign in to your Progress account
               </Text>
 
+              {errorMessage ? (
+                <Text style={{ color: 'red', marginBottom: 16, textAlign: 'center' }}>
+                  {errorMessage}
+                </Text>
+              ) : null}
+
             <View style={{ marginBottom: isMobile ? 16 : 20 }}>
               <Text style={{ fontSize: isMobile ? 16 : 18, fontWeight: '500', color: colors.text, marginBottom: 10, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Email
               </Text>
               <TextInput
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (errorMessage) setErrorMessage('');
+                }}
                 placeholder="Enter your email"
                 placeholderTextColor={colors.textSecondary}
                 keyboardType="email-address"
@@ -169,7 +175,10 @@ export default function Login() {
               <View style={{ position: 'relative' }}>
                 <TextInput
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (errorMessage) setErrorMessage('');
+                  }}
                   placeholder="Enter your password"
                   placeholderTextColor={colors.textSecondary}
                   secureTextEntry={!isPasswordVisible}
