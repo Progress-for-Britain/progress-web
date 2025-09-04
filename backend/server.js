@@ -15,8 +15,17 @@ const pendingUserRoutes = require('./routes/pendingUserRoutes');
 // Import test user seeding utility
 const { seedAllTestUsers } = require('./utils/seedTestUser');
 
+// CORS Configuration
+const corsOptions = {
+  origin: ['https://progress.tristans.club', 'http://localhost:8081'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // 24 hours
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // API Routes
