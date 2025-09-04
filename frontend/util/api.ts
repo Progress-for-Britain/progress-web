@@ -453,9 +453,11 @@ const isOnline = (): boolean => {
 // Network status monitoring for mobile
 class NetworkMonitor {
   private listeners: Array<(online: boolean) => void> = [];
-  private isOnline: boolean = navigator.onLine;
+  private isOnline: boolean;
 
   constructor() {
+    this.isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+    
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => this.handleOnline());
       window.addEventListener('offline', () => this.handleOffline());
@@ -575,7 +577,7 @@ class RequestBatcher {
 const requestBatcher = new RequestBatcher();
 
 class ApiClient {
-  public client: AxiosInstance;
+  private client: AxiosInstance;
 
   constructor(baseURL: string) {
     this.client = axios.create({
@@ -1403,23 +1405,29 @@ class ApiClient {
     return response.data.data;
   }
 
-  async getUserICalUrl(userId: string): Promise<string> {
-    // Generate the iCal URL for the user's events
-    const baseUrl = this.client.defaults.baseURL || API_BASE_URL;
-    // Add /api prefix like all other API endpoints
-    return `${baseUrl}/api/events/ical/${userId}`;
-  }
-
-  async subscribeToCalendar(userId: string): Promise<void> {
-    const icalUrl = await this.getUserICalUrl(userId);
-    
-    if (Platform.OS === 'web') {
-      window.open(icalUrl, '_blank');
-    } else {
-      // For mobile, use expo-linking to open the URL
-      const { openURL } = await import('expo-linking');
-      await openURL(icalUrl);
-    }
+  // Method to enable performance monitoring
+  enablePerformanceMonitoring(): void {
+    const originalRequest = this.client.request;
+    this.client.request = async <T = any, R = AxiosResponse<T, any>, D = any>(
+      config: AxiosRequestConfig<D>
+    ): Promise<R> => {
+      const startTime = Date.now();
+      try {
+        const response = await originalRequest.call(this.client, config);
+        const duration = Date.now() - startTime;
+        
+        // Log slow requests (> 3 seconds on mobile)
+        if (duration > 3000) {
+          console.warn(`Slow API request: ${config.method?.toUpperCase()} ${config.url} took ${duration}ms`);
+        }
+        
+        return response as R;
+      } catch (error) {
+        const duration = Date.now() - startTime;
+        console.error(`API request failed: ${config.method?.toUpperCase()} ${config.url} after ${duration}ms`, error);
+        throw error;
+      }
+    };
   }
 }
 
@@ -1532,27 +1540,7 @@ export const registerServiceWorker = async () => {
 export const monitorApiPerformance = () => {
   if (!isMobileWeb) return;
 
-  const originalRequest = api.client.request;
-  api.client.request = async <T = any, R = AxiosResponse<T, any>, D = any>(
-    config: AxiosRequestConfig<D>
-  ): Promise<R> => {
-    const startTime = Date.now();
-    try {
-      const response = await originalRequest(config);
-      const duration = Date.now() - startTime;
-      
-      // Log slow requests (> 3 seconds on mobile)
-      if (duration > 3000) {
-        console.warn(`Slow API request: ${config.method?.toUpperCase()} ${config.url} took ${duration}ms`);
-      }
-      
-      return response as R;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      console.error(`API request failed: ${config.method?.toUpperCase()} ${config.url} after ${duration}ms`, error);
-      throw error;
-    }
-  };
+  api.enablePerformanceMonitoring();
 };
 
 // Initialize mobile optimizations
