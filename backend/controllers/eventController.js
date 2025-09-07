@@ -145,7 +145,7 @@ const getEventById = async (req, res) => {
             registeredAt: 'asc'
           }
         },
-        volunteerHours: {
+        VolunteerHours: {
           where: {
             approved: true
           },
