@@ -1,5 +1,6 @@
 const prisma = require('../utils/prisma');
 const crypto = require('crypto');
+const { sendFormSubmissionEmail, sendAcceptanceEmail } = require('../utils/email');
 
 // Submit membership application (join page)
 const submitApplication = async (req, res) => {
@@ -139,6 +140,13 @@ const submitApplication = async (req, res) => {
         gdprConsent: volunteer ? (gdprConsent || false) : false
       }
     });
+
+    // Send form submission email
+    const emailResult = await sendFormSubmissionEmail(email, firstName);
+    if (!emailResult.success) {
+      console.error('Failed to send form submission email:', emailResult.error);
+      // Note: We don't fail the application submission if email fails
+    }
 
     res.status(201).json({
       success: true,
@@ -299,6 +307,13 @@ const approveApplication = async (req, res) => {
 
       return updatedPendingUser;
     });
+
+    // Send acceptance email
+    const emailResult = await sendAcceptanceEmail(pendingUser.email, pendingUser.firstName);
+    if (!emailResult.success) {
+      console.error('Failed to send acceptance email:', emailResult.error);
+      // Note: We don't fail the approval if email fails
+    }
 
     res.json({
       success: true,

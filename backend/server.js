@@ -4,6 +4,9 @@ const path = require('path');
 const cors = require('cors');
 const cron = require('node-cron');
 
+// Import the Discord bot
+const discordBot = require('./utils/discordBot');
+
 // Import the event completion function
 const { completeEvents } = require('./scripts/completeEvents');
 
@@ -43,21 +46,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve static files from the frontend dist directory
-const frontendDistPath = path.join(__dirname, '..', 'frontend', 'dist');
-app.use(express.static(frontendDistPath));
-
-// Catch all handler: send back React's index.html file for any non-API routes
+// Catch all handler: send 404 page for any non-API routes
 app.get('*', (req, res) => {
-  const indexPath = path.join(frontendDistPath, 'index.html');
-  res.sendFile(indexPath, (err) => {
-    if (err) {
-      console.error('Error serving index.html:', err);
-      res.status(404).json({ 
-        error: 'Frontend build not found. Please build the frontend first.' 
-      });
-    }
-  });
+  const notFoundPath = path.join(__dirname, 'public', '404.html');
+  res.status(404).sendFile(notFoundPath);
 });
 
 // Error handling middleware
@@ -68,7 +60,18 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
-  console.log(`Frontend served from: ${frontendDistPath}`);
+
+  // Start Discord bot
+  if (process.env.DISCORD_BOT_TOKEN) {
+    try {
+      await discordBot.login(process.env.DISCORD_BOT_TOKEN);
+      console.log('Discord bot started successfully');
+    } catch (error) {
+      console.error('Failed to start Discord bot:', error);
+    }
+  } else {
+    console.warn('DISCORD_BOT_TOKEN not found in environment variables. Discord bot will not start.');
+  }
 
   await completeEvents();
   

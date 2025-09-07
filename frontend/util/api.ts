@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 const isMobileWeb = typeof window !== 'undefined' && 
   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3005';
+const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || 'http://localhost:3005';
 
 // Mobile web optimizations
 const MOBILE_CONFIG = {

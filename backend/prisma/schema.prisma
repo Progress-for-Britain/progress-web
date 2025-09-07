@@ -16,6 +16,8 @@ model User {
   role                    UserRole                 @default(MEMBER)
   constituency            String?
   address                 String?
+  discordUsername         String?                  @unique
+  discordLinkedAt         DateTime?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   eventParticipants       EventParticipant[]
@@ -223,6 +225,20 @@ model AccessCode {
   createdAt DateTime  @default(now())
 
   @@map("access_codes")
+}
+
+model DiscordVerificationCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  email          String
+  discordUserId  String
+  discordUsername String
+  used           Boolean   @default(false)
+  usedAt         DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+
+  @@map("discord_verification_codes")
 }
 
 enum UserRole {
