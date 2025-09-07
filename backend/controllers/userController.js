@@ -15,6 +15,7 @@ const getAllUsers = async (req, res) => {
         address: true,
         createdAt: true,
         updatedAt: true,
+        constituency: true,
         payments: {
           select: {
             id: true,
@@ -25,6 +26,9 @@ const getAllUsers = async (req, res) => {
             currency: true,
             startDate: true,
             endDate: true,
+            createdAt: true,
+            updatedAt: true,
+            totalDonated: true
           }
         },
         notificationPreferences: true,
@@ -67,13 +71,14 @@ const getUserById = async (req, res) => {
             id: true,
             customerId: true,
             subscriptionId: true,
-            billingCycle: true,
             status: true,
             amount: true,
             currency: true,
             startDate: true,
             endDate: true,
-            nextBillingDate: true
+            createdAt: true,
+            updatedAt: true,
+            totalDonated: true
           }
         },
         notificationPreferences: true,
@@ -105,7 +110,7 @@ const getUserById = async (req, res) => {
 // Create new user (registration)
 const createUser = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, address, role, accessCode } = req.body;
+    let { email, password, firstName, lastName, accessCode } = req.body;
 
     // Validate required fields
     if (!email || !password) {
@@ -128,6 +133,7 @@ const createUser = async (req, res) => {
     }
 
     let userRole = 'MEMBER'; // Default role
+    let constituency = null;
 
     // If access code is provided, validate it and determine role
     if (accessCode) {
@@ -163,6 +169,12 @@ const createUser = async (req, res) => {
         });
       }
 
+      constituency = accessCodeRecord.constituency;
+      firstName = accessCodeRecord.firstName || firstName;
+      lastName = accessCodeRecord.lastName || lastName;
+      email = accessCodeRecord.email || email;
+      role = accessCodeRecord.role || role;
+
       // Get the pending user to determine role
       const pendingUser = await prisma.pendingUser.findUnique({
         where: { email: email.toLowerCase() }
@@ -184,10 +196,10 @@ const createUser = async (req, res) => {
         data: {
           email,
           password: hashedPassword,
-          firstName: firstName || null,
-          lastName: lastName || null,
-          address: address || null,
-          role: role || userRole
+          firstName,
+          lastName,
+          role: role || userRole,
+          constituency
         },
         select: {
           id: true,
@@ -195,7 +207,6 @@ const createUser = async (req, res) => {
           role: true,
           firstName: true,
           lastName: true,
-          address: true,
           createdAt: true
         }
       });
@@ -247,7 +258,7 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, firstName, lastName, address, role } = req.body;
+    const { email, firstName, lastName, address, role, constituency } = req.body;
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -283,7 +294,8 @@ const updateUser = async (req, res) => {
         ...(firstName !== undefined && { firstName }),
         ...(lastName !== undefined && { lastName }),
         ...(address !== undefined && { address }),
-        ...(role && { role })
+        ...(role && { role }),
+        ...(constituency !== undefined && { constituency })
       },
       select: {
         id: true,
@@ -292,6 +304,7 @@ const updateUser = async (req, res) => {
         firstName: true,
         lastName: true,
         address: true,
+        constituency: true,
         updatedAt: true
       }
     });

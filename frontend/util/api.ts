@@ -21,6 +21,7 @@ export interface User {
   email: string;
   firstName: string | null;
   lastName: string | null;
+  constituency: string | null;
   role: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
   address: string | null;
   createdAt: string;
@@ -100,6 +101,7 @@ export interface UpdateUserRequest {
   lastName?: string;
   address?: string;
   role?: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
+  constituency?: string;
 }
 
 // Pending User interfaces
@@ -1428,6 +1430,11 @@ class ApiClient {
         throw error;
       }
     };
+  }
+
+  async createSubscriptionCheckout(planId: string, billingInterval: string, metadata?: any): Promise<{url: string}> {
+    const response = await this.client.post('/api/subscriptions/create-checkout', { planId, billingInterval, metadata });
+    return response.data.data;
   }
 }
 
