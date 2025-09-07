@@ -186,6 +186,7 @@ export default function Login() {
                   textContentType="password"
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}
+                  onSubmitEditing={() => handleLogin()}
                   style={[
                     commonStyles.textInput,
                     {
@@ -207,7 +208,7 @@ export default function Login() {
                     position: 'absolute',
                     right: 15,
                     top: '50%',
-                    transform: [{ translateY: -12 }],
+                    transform: [{ translateY: -17 }],
                     padding: 6,
                     ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
                   }}
@@ -222,13 +223,13 @@ export default function Login() {
               </View>
             </View>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={{ alignSelf: 'flex-end', marginBottom: isMobile ? 20 : 28 }}
             >
               <Text style={{ color: colors.accent, fontSize: isMobile ? 14 : 16, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
                 Forgot Password?
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <View
               style={{

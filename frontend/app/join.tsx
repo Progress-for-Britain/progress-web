@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Alert, KeyboardAvoidingView, StyleSheet, Linking } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Alert, KeyboardAvoidingView, StyleSheet, Linking, Modal } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
@@ -57,6 +57,9 @@ export default function Join() {
   const [hasSavedData, setHasSavedData] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [showApiError, setShowApiError] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
   const router = useRouter();
 
   // Animation values
@@ -413,18 +416,26 @@ export default function Join() {
     } catch (error) {
       console.error('Error:', error);
       // Handle network/unexpected errors
-      setApiError(error instanceof Error ? error.message : 'Network error. Please check your connection and try again.');
-      setShowApiError(true);
+      const errorMessage = error instanceof Error ? error.message : 'Network error. Please check your connection and try again.';
+      
+      if (!volunteer && errorMessage.includes('Failed to create checkout session')) {
+        setModalTitle('Membership Temporarily Unavailable');
+        setModalMessage('We are currently not admitting members at this time. Please try again later or apply as a volunteer.');
+        setIsModalVisible(true);
+      } else {
+        setApiError(errorMessage);
+        setShowApiError(true);
 
-      // Scroll to top to show error
-      if (Platform.OS === 'web') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Scroll to top to show error
+        if (Platform.OS === 'web') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Auto-hide error after 10 seconds
+        setTimeout(() => {
+          setShowApiError(false);
+        }, 10000);
       }
-
-      // Auto-hide error after 10 seconds
-      setTimeout(() => {
-        setShowApiError(false);
-      }, 10000);
     } finally {
       setIsLoading(false);
     }
@@ -1252,6 +1263,24 @@ export default function Join() {
           </ScrollView>
         )}
       </KeyboardAvoidingView>
+
+      {/* Custom Modal */}
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{modalTitle}</Text>
+            <Text style={styles.modalMessage}>{modalMessage}</Text>
+            <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalButton}>
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1716,5 +1745,41 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButton: {
+    backgroundColor: colors.accent,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  modalButtonText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

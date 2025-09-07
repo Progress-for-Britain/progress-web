@@ -266,7 +266,7 @@ export default function Register() {
                       position: 'absolute',
                       right: 15,
                       top: '50%',
-                      transform: [{ translateY: -12 }],
+                      transform: [{ translateY: -17 }],
                       padding: 6,
                       ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
                     }}
@@ -296,6 +296,7 @@ export default function Register() {
                     textContentType="password"
                     onFocus={() => setConfirmPasswordFocused(true)}
                     onBlur={() => setConfirmPasswordFocused(false)}
+                    onSubmitEditing={() => handleRegister()}
                     style={[
                       commonStyles.textInput,
                       {
@@ -317,7 +318,7 @@ export default function Register() {
                       position: 'absolute',
                       right: 15,
                       top: '50%',
-                      transform: [{ translateY: -12 }],
+                      transform: [{ translateY: -17 }],
                       padding: 6,
                       ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
                     }}
