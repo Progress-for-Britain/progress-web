@@ -15,7 +15,7 @@ const client = new Client({
 
 // Generate 4-digit verification code
 const generateVerificationCode = () => {
-  return crypto.randomBytes(2).toString('hex').toUpperCase();
+  return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
 // Handle DM messages
