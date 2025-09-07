@@ -184,7 +184,7 @@ export default function Events() {
     // Use webcal for iCal subscription
     const baseApiUrl = `api/events/ical/${user.id}`;
     //backend url
-    const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3005';
+    const apiBaseUrl = process.env.EXPO_PUBLIC_BACKEND_API_URL || 'http://localhost:3005';
     const webcalBaseUrl = apiBaseUrl.replace(/^https?:\/\//, 'webcal://');
     const webcalUrl = `${webcalBaseUrl}${baseApiUrl}`;
     Linking.openURL(webcalUrl);

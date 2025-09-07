@@ -50,7 +50,7 @@ Curious? Join us at ${websiteUrl}
   const isMobilePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
   
   // Define unauthenticated routes that should show aurora background
-  const unauthenticatedRoutes = ['/', '/about', '/our-approach', '/join', '/login', '/register', '/nda'];
+  const unauthenticatedRoutes = ['/', '/about', '/our-approach', '/join', '/login', '/register', '/nda', '/settings', '/eula', '/privacy-policy'];
   const shouldShowAurora = unauthenticatedRoutes.includes(pathname) && !isMobilePlatform;
   
   return (
