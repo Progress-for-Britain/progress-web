@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Aurora Background Effect */
+        .aurora-background {
+            position: fixed;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background-image:
+                repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 7%, transparent 10%, transparent 12%, rgba(255, 255, 255, 0.1) 16%),
+                repeating-linear-gradient(100deg, #012168 10%, #123995 15%, #2854b0 20%, #3a66c5 25%, #012168 30%);
+            background-size: 300%, 200%;
+            background-position: 50% 50%, 50% 50%;
+            filter: blur(10px);
+            mix-blend-mode: overlay;
+            animation: aurora 15s infinite;
+            mask-image: radial-gradient(ellipse at 100% 0%, black 10%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at 100% 0%, black 10%, transparent 70%);
+            z-index: 1;
+            opacity: 0.6;
+        }
+
+        .aurora-background::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.05) 7%, transparent 10%, transparent 12%, rgba(255, 255, 255, 0.05) 16%),
+                repeating-linear-gradient(100deg, #012168 10%, #123995 15%, #2854b0 20%, #3a66c5 25%, #012168 30%);
+            background-size: 200%, 100%;
+            mix-blend-mode: difference;
+            opacity: 0.4;
+        }
+
+        @keyframes aurora {
+            0%, 100% {
+                background-position: 0% 50%, 0% 50%;
+            }
+            50% {
+                background-position: 100% 100%, 100% 100%;
+            }
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 3s ease-in-out infinite;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease-out;
+            opacity: 0.8;
+        }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #f1f5f9;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: rgba(59, 130, 246, 0.1);
+            color: #e2e8f0;
+            text-decoration: none;
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Subtle geometric patterns */
+        .geometric-pattern {
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 100px;
+            height: 100px;
+            border: 2px solid rgba(59, 130, 246, 0.1);
+            border-radius: 50%;
+            animation: rotate 20s linear infinite;
+            z-index: -1;
+        }
+
+        .geometric-pattern:nth-child(2) {
+            top: -30px;
+            left: -30px;
+            width: 60px;
+            height: 60px;
+            animation: rotate 15s linear infinite reverse;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 6rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            p {
+                font-size: 1rem;
+            }
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn {
+                width: 200px;
+            }
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="aurora-background"></div>
+    <div class="geometric-pattern"></div>
+    <div class="geometric-pattern"></div>
+    <div class="container">
+        <div class="error-code">404</div>
+        <div class="error-icon">🔍</div>
+        <h1>Page Not Found</h1>
+        <p>The page you're looking for seems to have wandered off the path of British prosperity. Let's get you back on track.</p>
+        <div class="buttons">
+            <a href="https://www.progressforbritain.org/" class="btn btn-primary">🏠 Return Home</a>
+            <a href="https://www.progressforbritain.org/join" class="btn">🤝 Join Movement</a>
+        </div>
+    </div>
+</body>
+</html>
