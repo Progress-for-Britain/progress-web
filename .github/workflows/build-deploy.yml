@@ -27,6 +27,7 @@ jobs:
         working-directory: ./frontend
         env:
           EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+          EXPO_BACKEND_API_URL: ${{ secrets.EXPO_BACKEND_API_URL }}
           # REACT_APP_API_BASE_URL: ${{ secrets.APP_URL }}
           # EXPO_PUBLIC_STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUB_KEY }}
         run: |

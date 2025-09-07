@@ -4,6 +4,9 @@ const path = require('path');
 const cors = require('cors');
 const cron = require('node-cron');
 
+// Import the Discord bot
+const discordBot = require('./utils/discordBot');
+
 // Import the event completion function
 const { completeEvents } = require('./scripts/completeEvents');
 
@@ -67,6 +70,18 @@ app.use((err, req, res, next) => {
 app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Frontend served from: ${frontendDistPath}`);
+
+  // Start Discord bot
+  if (process.env.DISCORD_BOT_TOKEN) {
+    try {
+      await discordBot.login(process.env.DISCORD_BOT_TOKEN);
+      console.log('Discord bot started successfully');
+    } catch (error) {
+      console.error('Failed to start Discord bot:', error);
+    }
+  } else {
+    console.warn('DISCORD_BOT_TOKEN not found in environment variables. Discord bot will not start.');
+  }
 
   await completeEvents();
   
