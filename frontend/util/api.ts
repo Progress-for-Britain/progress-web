@@ -1468,6 +1468,11 @@ class ApiClient {
     const response = await this.client.post(`/api/policies/${repo}/edit`, { path, content, message, branchName });
     return response.data;
   }
+
+  async createPolicyRepo(name: string, description?: string): Promise<any> {
+    const response = await this.client.post('/api/policies', { name, description });
+    return response.data;
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

@@ -116,23 +116,13 @@ export default function PolicyContent() {
               </View>
 
               <View style={styles.section}>
-                <Text style={[commonStyles.text, styles.sectionTitle]}>Branches</Text>
-                {branches.map((b) => (
-                  <View key={b.name} style={styles.listItem}>
-                    <Text style={commonStyles.text}>{b.name}</Text>
-                  </View>
-                ))}
-              </View>
-
-              <View style={styles.section}>
                 <Text style={[commonStyles.text, styles.sectionTitle]}>Pull Requests</Text>
                 {prs.map((pr) => (
                   <View key={pr.id} style={styles.listItem}>
                     <Text style={commonStyles.text}>{pr.title}</Text>
                     <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                      <Text style={[commonStyles.text, styles.prState]}>{pr.state}</Text>
                       <TouchableOpacity onPress={() => Linking.openURL(pr.html_url)}>
-                        <Text style={styles.openText}>Open</Text>
+                        <Text style={styles.openText}>View</Text>
                       </TouchableOpacity>
                     </View>
                   </View>

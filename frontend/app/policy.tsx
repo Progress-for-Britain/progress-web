@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, FlatList } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, TextInput, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import SEOHead from '../components/SEOHead';
 import { getCommonStyles, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
+import { useAuth } from '../util/auth-context';
 import { api } from '../util/api';
 
 // Define interfaces for our data types
@@ -19,12 +20,20 @@ export default function Policy() {
   const router = useRouter();
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
+  const { user } = useAuth();
   const commonStyles = getCommonStyles(isDark, isMobile, width);
   const colors = getColors(isDark);
   const styles = getStyles(colors, isMobile, width);
 
   const [repos, setRepos] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Admin state for creating repos
+  const [newRepoName, setNewRepoName] = useState('');
+  const [newRepoDescription, setNewRepoDescription] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  const isAdmin = user?.roles?.includes('ADMIN');
 
   // Load repos on mount
   useEffect(() => {
@@ -52,6 +61,27 @@ export default function Policy() {
       console.error('Error fetching repos:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createRepo = async () => {
+    if (!newRepoName.trim()) {
+      Alert.alert('Error', 'Please enter a repository name');
+      return;
+    }
+
+    try {
+      setCreating(true);
+      await api.createPolicyRepo(newRepoName.trim(), newRepoDescription.trim() || undefined);
+      setNewRepoName('');
+      setNewRepoDescription('');
+      Alert.alert('Success', 'Policy repository created successfully!');
+      fetchRepos(); // Refresh the list
+    } catch (error) {
+      console.error('Error creating repo:', error);
+      Alert.alert('Error', 'Failed to create policy repository');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -92,6 +122,31 @@ export default function Policy() {
               />
             )}
           </View>
+
+          {isAdmin && (
+            <View style={styles.section}>
+              <Text style={[commonStyles.text, styles.sectionTitle]}>Create New Policy Repository</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Repository Name"
+                value={newRepoName}
+                onChangeText={setNewRepoName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Repository Description (optional)"
+                value={newRepoDescription}
+                onChangeText={setNewRepoDescription}
+              />
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={createRepo}
+                disabled={creating}
+              >
+                <Text style={styles.buttonText}>{creating ? 'Creating...' : 'Create Repository'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={{ height: 100 }} />
         </ScrollView>
@@ -155,5 +210,19 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
   buttonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: colors.surface,
+  },
+  createButton: {
+    backgroundColor: colors.accent,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
   },
 });

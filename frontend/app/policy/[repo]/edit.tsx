@@ -43,6 +43,21 @@ export default function PolicyEditor() {
 
   const isWriter = user?.roles?.includes('WRITER') || user?.roles?.includes('ADMIN');
 
+  // Memoize SimpleMDE options so the editor isn't re-initialized on each render
+  const mdeOptions = useMemo(() => ({
+    spellChecker: true,
+    // Disable autofocus to avoid auto-scroll to editor on load
+    autofocus: false,
+    status: false,
+    minHeight: '400px',
+    placeholder: 'Edit policy markdown…',
+    toolbar: [
+      'bold', 'italic', 'heading', '|',
+      'quote', 'unordered-list', 'ordered-list', '|',
+      'link', 'table', '|', 'preview', 'side-by-side', 'fullscreen'
+    ],
+  }), []);
+
   useEffect(() => {
     // Ensure page opens scrolled to top
     if (isWeb && typeof window !== 'undefined') {
@@ -209,19 +224,7 @@ export default function PolicyEditor() {
             <WebMDE
               value={content}
               onChange={(v: string) => setContent(v)}
-              options={{
-                spellChecker: true,
-                // Disable autofocus to avoid auto-scroll to editor on load
-                autofocus: false,
-                status: false,
-                minHeight: '400px',
-                placeholder: 'Edit policy markdown…',
-                toolbar: [
-                  'bold', 'italic', 'heading', '|',
-                  'quote', 'unordered-list', 'ordered-list', '|',
-                  'link', 'table', '|', 'preview', 'side-by-side', 'fullscreen'
-                ],
-              }}
+              options={mdeOptions}
             />
           </View>
         ) : (
