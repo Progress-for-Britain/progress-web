@@ -91,7 +91,9 @@ router.get('/:repo/branches', authenticateToken, requireWriterOrAdmin, async (re
       owner: getOrganization(),
       repo,
     });
-    res.json(data);
+    // Filter out the main branch to prevent direct editing on it
+    const filteredBranches = data.filter(branch => branch.name !== 'main');
+    res.json(filteredBranches);
   } catch (error) {
     console.error('Error fetching branches:', error);
     res.status(500).json({ error: 'Failed to fetch branches' });
@@ -209,10 +211,12 @@ router.get('/:repo/:path(*)', async (req, res) => {
   try {
     const octokit = await initializeOctokit();
     const { repo, path } = req.params;
+    const { ref } = req.query; // Add support for branch/ref query parameter
     const { data } = await octokit.repos.getContent({
       owner: getOrganization(),
       repo,
       path,
+      ref, // Use the ref if provided
     });
     // If directory listing is returned, pass through
     if (Array.isArray(data)) {
@@ -238,35 +242,71 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
     const userName = `${firstName} ${lastName}`;
     const title = `${userName}'s changes`;
 
-    // Get the SHA of the main branch
-    const { data: refData } = await octokit.git.getRef({
-      owner,
-      repo,
-      ref: 'heads/main',
-    });
-    const sha = refData.object.sha;
+    let targetBranch = branchName;
+    let branchExists = false;
 
-    // Create a new branch
-    const newBranch = branchName || `${firstName}-${lastName}-changes-${Date.now()}`;
-    await octokit.git.createRef({
-      owner,
-      repo,
-      ref: `refs/heads/${newBranch}`,
-      sha,
-    });
+    // Check if branch exists
+    if (branchName) {
+      try {
+        await octokit.git.getRef({
+          owner,
+          repo,
+          ref: `heads/${branchName}`,
+        });
+        branchExists = true;
+        targetBranch = branchName;
+      } catch (e) {
+        // Branch doesn't exist, will create it
+        branchExists = false;
+      }
+    }
 
-    // Get current file SHA
+    if (!targetBranch) {
+      targetBranch = `${firstName}-${lastName}-changes-${Date.now()}`;
+    }
+
+    let baseBranch = 'main';
+    let baseSha;
+
+    if (branchExists) {
+      // Use the existing branch as base
+      const { data: refData } = await octokit.git.getRef({
+        owner,
+        repo,
+        ref: `heads/${targetBranch}`,
+      });
+      baseSha = refData.object.sha;
+      baseBranch = targetBranch; // For PR creation, base should be main, but we'll handle this differently
+    } else {
+      // Get the SHA of the main branch to create new branch
+      const { data: refData } = await octokit.git.getRef({
+        owner,
+        repo,
+        ref: 'heads/main',
+      });
+      baseSha = refData.object.sha;
+
+      // Create a new branch
+      await octokit.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${targetBranch}`,
+        sha: baseSha,
+      });
+    }
+
+    // Get current file SHA from the target branch
     let fileSha;
     try {
       const { data: fileData } = await octokit.repos.getContent({
         owner,
         repo,
         path,
-        ref: 'main',
+        ref: targetBranch,
       });
       fileSha = fileData.sha;
     } catch (e) {
-      // File doesn't exist, sha not needed
+      // File doesn't exist on this branch, sha not needed
     }
 
     // Commit the new content
@@ -276,21 +316,24 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
       path,
       message: message || `Policy update by ${userName}`,
       content: Buffer.from(content).toString('base64'),
-      branch: newBranch,
+      branch: targetBranch,
       sha: fileSha,
     });
 
-    // Create a PR
-    const { data: prData } = await octokit.pulls.create({
-      owner,
-      repo,
-      title,
-      head: newBranch,
-      base: 'main',
-      body: message || `Policy update by ${userName}`,
-    });
+    // Only create PR if it's a new branch (not existing)
+    let prData = null;
+    if (!branchExists) {
+      prData = await octokit.pulls.create({
+        owner,
+        repo,
+        title,
+        head: targetBranch,
+        base: 'main',
+        body: message || `Policy update by ${userName}`,
+      });
+    }
 
-    res.json({ commit: commitData, pr: prData });
+    res.json({ commit: commitData, pr: prData, branch: targetBranch, branchExists });
   } catch (error) {
     console.error('Error editing policy:', error);
     res.status(500).json({ error: 'Failed to edit policy' });

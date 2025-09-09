@@ -1449,8 +1449,11 @@ class ApiClient {
     return response.data;
   }
 
-  async getPolicyContent(repo: string, path: string): Promise<{content: string; sha: string}> {
-    const response = await this.client.get(`/api/policies/${repo}/${path}`);
+  async getPolicyContent(repo: string, path: string, branch?: string): Promise<{content: string; sha: string}> {
+    const queryParams = new URLSearchParams();
+    if (branch) queryParams.append('ref', branch);
+    
+    const response = await this.client.get(`/api/policies/${repo}/${path}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`);
     return response.data;
   }
 

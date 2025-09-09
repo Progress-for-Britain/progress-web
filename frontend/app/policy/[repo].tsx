@@ -11,7 +11,6 @@ import { getCommonStyles, getColors } from '../../util/commonStyles';
 import { useAuth } from '../../util/auth-context';
 import { api } from '../../util/api';
 
-interface Branch { name: string }
 interface PullRequest { id: string; title: string; state: string; html_url: string; number: number }
 
 export default function PolicyContent() {
@@ -38,6 +37,8 @@ export default function PolicyContent() {
       if (!repo) return;
       setLoading(true);
       setError(null);
+      // Add a tiny delay to ensure auth is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
       try {
         const data = await api.getPolicyContent(String(repo), 'policy.md');
         if (!mounted) return;
@@ -51,8 +52,7 @@ export default function PolicyContent() {
           setTitle(repo || '');
         }
         if (isWriter) {
-          const [b, p] = await Promise.all([
-            api.getPolicyBranches(String(repo)),
+          const [p] = await Promise.all([
             api.getPolicyPRs(String(repo))
           ]);
           if (!mounted) return;
@@ -68,7 +68,7 @@ export default function PolicyContent() {
     }
     load();
     return () => { mounted = false };
-  }, [repo]);
+  }, [repo, user]);
 
   return (
     <>
