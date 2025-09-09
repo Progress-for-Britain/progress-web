@@ -230,19 +230,64 @@ async function handleVerificationCode(message) {
       });
     });
 
-    // Assign linked role on Discord
+    // Assign Discord roles based on app roles[]
     try {
       const guild = client.guilds.cache.get(process.env.DISCORD_GUILD_ID);
       if (guild) {
         const member = await guild.members.fetch(message.author.id);
-        const linkedRole = guild.roles.cache.get(process.env.DISCORD_LINKED_ROLE_ID);
 
-        if (linkedRole && member) {
-          await member.roles.add(linkedRole);
+        // Fetch user to get roles[]
+        const user = await prisma.user.findUnique({
+          where: { email: verificationCode.email },
+          select: { roles: true }
+        });
+
+        if (!user) {
+          throw new Error('User not found during Discord role sync');
+        }
+
+        const roleEnvMap = {
+          ADMIN: process.env.DISCORD_ADMIN_ROLE_ID,
+          ONBOARDING: process.env.DISCORD_ONBOARDING_ROLE_ID,
+          EVENT_MANAGER: process.env.DISCORD_EVENT_MANAGER_ROLE_ID,
+          WRITER: process.env.DISCORD_WRITER_ROLE_ID,
+          VOLUNTEER: process.env.DISCORD_VOLUNTEER_ROLE_ID,
+          MEMBER: process.env.DISCORD_MEMBER_ROLE_ID,
+        };
+
+        const mappedRoleIds = Object.values(roleEnvMap).filter(Boolean);
+        const desiredRoleIds = (user.roles || [])
+          .map(r => roleEnvMap[r])
+          .filter(Boolean)
+          .filter(roleId => guild.roles.cache.has(roleId));
+
+        // Optionally add a general linked role if provided
+        const linkedRoleId = process.env.DISCORD_LINKED_ROLE_ID;
+        if (linkedRoleId && guild.roles.cache.has(linkedRoleId)) {
+          desiredRoleIds.push(linkedRoleId);
+        }
+
+        const currentRoleIds = new Set(member.roles.cache.map(r => r.id));
+        const desiredSet = new Set(desiredRoleIds);
+
+        // Add missing desired roles
+        for (const roleId of desiredSet) {
+          if (!currentRoleIds.has(roleId)) {
+            const role = guild.roles.cache.get(roleId);
+            if (role) await member.roles.add(role);
+          }
+        }
+
+        // Remove mapped roles the user should no longer have (keep non-mapped ones untouched)
+        for (const roleId of mappedRoleIds) {
+          if (currentRoleIds.has(roleId) && !desiredSet.has(roleId)) {
+            const role = guild.roles.cache.get(roleId);
+            if (role) await member.roles.remove(role);
+          }
         }
       }
     } catch (error) {
-      console.error('Error assigning Discord role:', error);
+      console.error('Error syncing Discord roles:', error);
     }
 
     const successEmbed = new EmbedBuilder()
@@ -291,19 +336,33 @@ async function handleUnlinkCommand(message) {
       }
     });
 
-    // Remove linked role from Discord
+    // Remove mapped roles (and linked role) from Discord
     try {
       const guild = client.guilds.cache.get(process.env.DISCORD_GUILD_ID);
       if (guild) {
         const member = await guild.members.fetch(message.author.id);
-        const linkedRole = guild.roles.cache.get(process.env.DISCORD_LINKED_ROLE_ID);
+        const roleEnvMap = {
+          ADMIN: process.env.DISCORD_ADMIN_ROLE_ID,
+          ONBOARDING: process.env.DISCORD_ONBOARDING_ROLE_ID,
+          EVENT_MANAGER: process.env.DISCORD_EVENT_MANAGER_ROLE_ID,
+          WRITER: process.env.DISCORD_WRITER_ROLE_ID,
+          VOLUNTEER: process.env.DISCORD_VOLUNTEER_ROLE_ID,
+          MEMBER: process.env.DISCORD_MEMBER_ROLE_ID,
+        };
+        const allMapped = [
+          ...Object.values(roleEnvMap).filter(Boolean),
+          process.env.DISCORD_LINKED_ROLE_ID
+        ].filter(Boolean);
 
-        if (linkedRole && member) {
-          await member.roles.remove(linkedRole);
+        for (const roleId of allMapped) {
+          const role = guild.roles.cache.get(roleId);
+          if (role && member.roles.cache.has(roleId)) {
+            await member.roles.remove(role);
+          }
         }
       }
     } catch (error) {
-      console.error('Error removing Discord role:', error);
+      console.error('Error removing Discord roles:', error);
     }
 
     const successEmbed = new EmbedBuilder()

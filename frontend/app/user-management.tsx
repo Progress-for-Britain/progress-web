@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from "@expo/vector-icons";
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import { api, PendingUser, User } from '../util/api';
+import { api, PendingUser, User, Role } from '../util/api';
 import { format } from 'date-fns';
 
 interface EventAssignment {
@@ -65,20 +65,14 @@ export default function UserManagement() {
 
   // Redirect if not authenticated (but wait for loading to complete)
   React.useEffect(() => {
-    const isAdmin = (user?.roles && user.roles.includes('ADMIN')) || user?.role === 'ADMIN';
+    const isAdmin = (user?.roles && (user.roles.includes('ADMIN') || user.roles.includes('ONBOARDING')));
     if (!isLoading && (!isAuthenticated || !user || !isAdmin)) {
       Alert.alert('Access Denied', 'You must be an admin to access this page.');
       router.push('/');
       return;
     }
+    loadData();
   }, [isAuthenticated, isLoading, user]);
-
-  useEffect(() => {
-    const isAdmin = (user?.roles && user.roles.includes('ADMIN')) || user?.role === 'ADMIN';
-    if (isAuthenticated && user && isAdmin) {
-      loadData();
-    }
-  }, [isAuthenticated, user]);
 
   const loadData = async () => {
     setLoading(true);
@@ -158,7 +152,7 @@ export default function UserManagement() {
     if (!selectedUser || !newRole) return;
 
     try {
-      const response = await api.updateUserRole(selectedUser.id, newRole);
+      const response = await api.updateUserRole(selectedUser.id, newRole as Role);
       Alert.alert('Success', 'User role updated successfully');
       setShowRoleModal(false);
       setShowUserModal(false);

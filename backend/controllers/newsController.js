@@ -141,7 +141,7 @@ const getPostById = async (req, res) => {
 
     // Only allow access to unpublished posts to author or admin
     const userRoles = Array.isArray(req.user?.roles) ? req.user.roles : [];
-    const isAdmin = (req.user?.role === 'ADMIN') || userRoles.includes('ADMIN');
+    const isAdmin = userRoles.includes('ADMIN');
     const isAuthor = req.user?.userId === post.authorId;
     if (post.status !== 'PUBLISHED' && !isAuthor && !isAdmin) {
       return res.status(403).json({

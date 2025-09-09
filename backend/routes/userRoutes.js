@@ -52,7 +52,7 @@ router.get('/me/activity', authenticateToken, getUserActivity);
 router.get('/me/upcoming-events', authenticateToken, getUserUpcomingEvents);
 
 // Admin user management routes
-router.get('/management/stats', authenticateToken, requireAdmin, getUserManagementStats);
+router.get('/management/stats', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), getUserManagementStats);
 router.get('/:id/events', authenticateToken, requireAdmin, getUserEventAssignments);
 router.put('/:id/role', authenticateToken, requireAdmin, updateUserRole);
 router.post('/assign-event', authenticateToken, requireAdmin, assignUserToEvent);

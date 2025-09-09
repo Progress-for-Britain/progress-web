@@ -191,8 +191,7 @@ export default function Events() {
   };
 
   const canCreateEvent =
-    (user?.roles && (user.roles.includes('ADMIN') || user.roles.includes('EVENT_MANAGER')))
-    || user?.role === 'ADMIN' || user?.role === 'EVENT_MANAGER';
+    (user?.roles && (user.roles.includes('ADMIN') || user.roles.includes('EVENT_MANAGER')));
 
   const eventTypes = [
     { id: 'all', label: 'All Events', icon: 'calendar' },

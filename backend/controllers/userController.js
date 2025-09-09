@@ -919,13 +919,15 @@ const assignUserToEvent = async (req, res) => {
     const { userId, eventId } = req.body;
     const { status = 'REGISTERED' } = req.body;
 
-    // Validate admin permissions
+    // Validate permissions: Admin or Onboarding
     {
       const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
-      if (req.user.role !== 'ADMIN' && !roles.includes('ADMIN')) {
+      const isAdmin = req.user.role === 'ADMIN' || roles.includes('ADMIN');
+      const isEventManager = roles.includes('EVENT_MANAGER');
+      if (!isAdmin && !isEventManager) {
         return res.status(403).json({
           success: false,
-          message: 'Access denied. Admin role required.'
+          message: 'Access denied. Admin or Onboarding role required.'
         });
       }
     }
@@ -1021,7 +1023,10 @@ const unassignUserFromEvent = async (req, res) => {
     // Validate admin permissions
     {
       const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
-      if (req.user.role !== 'ADMIN' && !roles.includes('ADMIN')) {
+      if (
+        !roles.includes('ADMIN') && 
+        !roles.includes('EVENT_MANAGER')
+      ) {
         return res.status(403).json({
           success: false,
           message: 'Access denied. Admin role required.'
@@ -1096,7 +1101,7 @@ const updateUserRole = async (req, res) => {
 
     // Validate admin permissions
     const userRoles = Array.isArray(req.user.roles) ? req.user.roles : [];
-    if (req.user.role !== 'ADMIN' && !userRoles.includes('ADMIN')) {
+    if (!userRoles.includes('ADMIN')) {
       return res.status(403).json({
         success: false,
         message: 'Access denied. Admin role required.'
@@ -1182,7 +1187,10 @@ const getUserEventAssignments = async (req, res) => {
     // Validate admin permissions
     {
       const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
-      if (req.user.role !== 'ADMIN' && !roles.includes('ADMIN')) {
+      if (
+        !roles.includes('ADMIN') && 
+        !roles.includes('EVENT_MANAGER')
+      ) {
         return res.status(403).json({
           success: false,
           message: 'Access denied. Admin role required.'
@@ -1233,10 +1241,13 @@ const getUserManagementStats = async (req, res) => {
     // Validate admin permissions
     {
       const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
-      if (req.user.role !== 'ADMIN' && !roles.includes('ADMIN')) {
+      if (
+        !roles.includes('ADMIN') && 
+        !roles.includes('ONBOARDING')
+      ) {
         return res.status(403).json({
           success: false,
-          message: 'Access denied. Admin role required.'
+          message: 'Access denied. Admin or Onboarding role required.'
         });
       }
     }

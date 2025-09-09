@@ -358,7 +358,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
       ];
 
       // Insert admin link after Events if user is admin
-      const hasAdmin = (user?.roles && user.roles.includes('ADMIN')) || user?.role === 'ADMIN';
+      const hasAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('ONBOARDING');
       if (hasAdmin) {
         baseItems.push({ href: "/user-management", icon: "people", label: "User Management" });
       }
