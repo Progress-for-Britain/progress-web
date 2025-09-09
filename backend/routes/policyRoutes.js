@@ -12,6 +12,13 @@ const initializeOctokit = async () => {
     if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_INSTALLATION_ID || !process.env.GITHUB_PRIVATE_KEY) {
       throw new Error('GitHub App configuration missing. Please set GITHUB_APP_ID, GITHUB_INSTALLATION_ID, and GITHUB_PRIVATE_KEY environment variables.');
     }
+    
+    // Log environment variables for debugging
+    console.log('GitHub App Environment Variables:');
+    console.log(`GITHUB_APP_ID: ${process.env.GITHUB_APP_ID ? 'Set' : 'Not set'}`);
+    console.log(`GITHUB_INSTALLATION_ID: ${process.env.GITHUB_INSTALLATION_ID ? 'Set' : 'Not set'}`);
+    console.log(`GITHUB_PRIVATE_KEY: ${process.env.GITHUB_PRIVATE_KEY ? `Set (${process.env.GITHUB_PRIVATE_KEY.length} characters)` : 'Not set'}`);
+    
     const privateKey = process.env.GITHUB_PRIVATE_KEY;
     octokit = new Octokit({
       authStrategy: createAppAuth,
