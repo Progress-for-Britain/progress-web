@@ -13,7 +13,7 @@ const seedTestUser = async (testUserData = {}) => {
       password: 'TestPassword123!',
       firstName: 'Test',
       lastName: 'User',
-      role: 'MEMBER',
+      roles: ['MEMBER'],
       address: '123 Test Street, Test City, TC 12345',
       ...testUserData
     };
@@ -26,7 +26,7 @@ const seedTestUser = async (testUserData = {}) => {
         email: true,
         firstName: true,
         lastName: true,
-        role: true,
+        roles: true,
         address: true,
         createdAt: true
       }
@@ -53,7 +53,7 @@ const seedTestUser = async (testUserData = {}) => {
         password: hashedPassword,
         firstName: defaultTestUser.firstName,
         lastName: defaultTestUser.lastName,
-        role: defaultTestUser.role,
+        roles: defaultTestUser.roles,
         address: defaultTestUser.address
       },
       select: {
@@ -61,7 +61,7 @@ const seedTestUser = async (testUserData = {}) => {
         email: true,
         firstName: true,
         lastName: true,
-        role: true,
+        roles: true,
         address: true,
         createdAt: true
       }
@@ -96,12 +96,50 @@ const seedTestAdmin = async (testAdminData = {}) => {
     password: 'AdminPassword123!',
     firstName: 'Admin',
     lastName: 'User',
-    role: 'ADMIN',
+    roles: ['ADMIN'],
     address: '456 Admin Avenue, Admin City, AC 67890',
     ...testAdminData
   };
 
   return await seedTestUser(defaultTestAdmin);
+};
+
+/**
+ * Creates a test writer user in the database if it doesn't already exist
+ * @param {Object} testWriterData - Optional custom test writer data
+ * @returns {Promise<Object>} - Created or existing writer user data
+ */
+const seedTestWriter = async (testWriterData = {}) => {
+  const defaultTestWriter = {
+    email: 'writer@example.com',
+    password: 'WriterPassword123!',
+    firstName: 'Writer',
+    lastName: 'User',
+    roles: ['WRITER'],
+    address: '789 Writer Way, Writer City, WC 34567',
+    ...testWriterData
+  };
+
+  return await seedTestUser(defaultTestWriter);
+};
+
+/**
+ * Creates a test event manager user in the database if it doesn't already exist
+ * @param {Object} testEventManagerData - Optional custom test event manager data
+ * @returns {Promise<Object>} - Created or existing event manager user data
+ */
+const seedTestEventManager = async (testEventManagerData = {}) => {
+  const defaultTestEventManager = {
+    email: 'eventmanager@example.com',
+    password: 'EventManagerPassword123!',
+    firstName: 'Event',
+    lastName: 'Manager',
+    roles: ['EVENT_MANAGER'],
+    address: '101 Event Blvd, Event City, EC 89012',
+    ...testEventManagerData
+  };
+
+  return await seedTestUser(defaultTestEventManager);
 };
 
 /**
@@ -113,17 +151,23 @@ const seedAllTestUsers = async () => {
   
   const userResult = await seedTestUser();
   const adminResult = await seedTestAdmin();
+  const writerResult = await seedTestWriter();
+  const eventManagerResult = await seedTestEventManager();
 
   console.log('🌱 Test user seeding completed');
   
   return {
     user: userResult,
-    admin: adminResult
+    admin: adminResult,
+    writer: writerResult,
+    eventManager: eventManagerResult
   };
 };
 
 module.exports = {
   seedTestUser,
   seedTestAdmin,
+  seedTestWriter,
+  seedTestEventManager,
   seedAllTestUsers
 };

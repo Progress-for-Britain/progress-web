@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAdmin, requireRole } = require('../middleware/auth');
 const {
   submitApplication,
   getAllPendingApplications,
@@ -21,27 +21,27 @@ router.post('/apply', submitApplication);
 // Validate access code (used during registration)
 router.post('/validate-access-code', validateAccessCode);
 
-// Protected routes (admin only)
+// Protected routes (admin or onboarding)
 
 // Get all pending applications
-router.get('/', authenticateToken, requireAdmin, getAllPendingApplications);
+router.get('/', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), getAllPendingApplications);
 
 // Get application statistics
-router.get('/stats', authenticateToken, requireAdmin, getApplicationStats);
+router.get('/stats', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), getApplicationStats);
 
 // Get specific pending application
-router.get('/:id', authenticateToken, requireAdmin, getPendingApplicationById);
+router.get('/:id', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), getPendingApplicationById);
 
 // Approve pending application
-router.post('/:id/approve', authenticateToken, requireAdmin, approveApplication);
+router.post('/:id/approve', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), approveApplication);
 
 // Reject pending application
-router.post('/:id/reject', authenticateToken, requireAdmin, rejectApplication);
+router.post('/:id/reject', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), rejectApplication);
 
 // Update volunteer details for pending user
-router.put('/:id/volunteer-details', authenticateToken, requireAdmin, updatePendingUserVolunteerDetails);
+router.put('/:id/volunteer-details', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), updatePendingUserVolunteerDetails);
 
 // Update application status
-router.put('/:id/status', authenticateToken, requireAdmin, updateApplicationStatus);
+router.put('/:id/status', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), updateApplicationStatus);
 
 module.exports = router;

@@ -502,7 +502,10 @@ const updateEvent = async (req, res) => {
     }
 
     // Check if user has permission to update this event
-    if (req.user.role !== 'ADMIN' && existingEvent.createdById !== req.user.userId) {
+    const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
+    const isAdmin = req.user.role === 'ADMIN' || roles.includes('ADMIN');
+    const isEventManager = req.user.role === 'EVENT_MANAGER' || roles.includes('EVENT_MANAGER');
+    if (!isAdmin && !isEventManager && existingEvent.createdById !== req.user.userId) {
       return res.status(403).json({
         success: false,
         message: 'You do not have permission to update this event'
@@ -579,7 +582,10 @@ const deleteEvent = async (req, res) => {
     }
 
     // Check if user has permission to delete this event
-    if (req.user.role !== 'ADMIN' && existingEvent.createdById !== req.user.userId) {
+    const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
+    const isAdmin = req.user.role === 'ADMIN' || roles.includes('ADMIN');
+    const isEventManager = req.user.role === 'EVENT_MANAGER' || roles.includes('EVENT_MANAGER');
+    if (!isAdmin && !isEventManager && existingEvent.createdById !== req.user.userId) {
       return res.status(403).json({
         success: false,
         message: 'You do not have permission to delete this event'

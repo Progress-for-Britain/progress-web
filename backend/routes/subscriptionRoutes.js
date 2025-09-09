@@ -392,7 +392,7 @@ async function handleCheckoutSessionCompleted(session) {
           lastName: lastName || null,
           phone: phone || null,
           constituency: constituency || null,
-          role: volunteer === 'true' ? 'VOLUNTEER' : 'MEMBER',
+          roles: [volunteer === 'true' ? 'VOLUNTEER' : 'MEMBER'],
           interests: interests ? interests.split(',') : [],
           newsletter: newsletter === 'true',
           address: null,

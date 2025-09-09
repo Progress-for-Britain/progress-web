@@ -190,7 +190,8 @@ export default function Events() {
     Linking.openURL(webcalUrl);
   };
 
-  const canCreateEvent = user?.role === 'ADMIN' || user?.role === 'WRITER';
+  const canCreateEvent =
+    (user?.roles && (user.roles.includes('ADMIN') || user.roles.includes('EVENT_MANAGER')));
 
   const eventTypes = [
     { id: 'all', label: 'All Events', icon: 'calendar' },

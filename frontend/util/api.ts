@@ -16,13 +16,16 @@ const MOBILE_CONFIG = {
   enableCaching: true,
 };
 
+export type Role = 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER' | 'ONBOARDING' | 'EVENT_MANAGER';
+
 export interface User {
   id: string;
   email: string;
   firstName: string | null;
   lastName: string | null;
   constituency: string | null;
-  role: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
+  role: Role;
+  roles?: Role[];
   address: string | null;
   createdAt: string;
   updatedAt?: string;
@@ -91,7 +94,7 @@ export interface RegisterRequest {
   firstName?: string;
   lastName?: string;
   address?: string;
-  role?: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
+  role?: Role;
   accessCode?: string;
 }
 
@@ -100,7 +103,8 @@ export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
   address?: string;
-  role?: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
+  role?: Role;
+  roles?: Role[];
   constituency?: string;
 }
 
@@ -403,7 +407,8 @@ export interface AuthResponse {
     user: {
       id: string;
       email: string;
-      role: 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER';
+      role: Role;
+      roles?: Role[];
       firstName: string | null;
       lastName: string | null;
       address?: string | null;
@@ -1342,16 +1347,17 @@ class ApiClient {
     return response.data;
   }
 
-  async updateUserRole(userId: string, role: string): Promise<{
+  async updateUserRole(userId: string, role: Role | Role[]): Promise<{
     success: boolean;
     message: string;
     data: User;
   }> {
+    const body = Array.isArray(role) ? { roles: role } : { role };
     const response = await this.client.put<{
       success: boolean;
       message: string;
       data: User;
-    }>(`/api/users/${userId}/role`, { role });
+    }>(`/api/users/${userId}/role`, body);
     return response.data;
   }
 
@@ -1435,6 +1441,32 @@ class ApiClient {
   async createSubscriptionCheckout(planId: string, billingInterval: string, metadata?: any): Promise<{url: string}> {
     const response = await this.client.post('/api/subscriptions/create-checkout', { planId, billingInterval, metadata });
     return response.data.data;
+  }
+
+  // Policy endpoints
+  async getPolicyRepos(): Promise<any[]> {
+    const response = await this.client.get('/api/policies');
+    return response.data;
+  }
+
+  async getPolicyContent(repo: string, path: string): Promise<{content: string; sha: string}> {
+    const response = await this.client.get(`/api/policies/${repo}/${path}`);
+    return response.data;
+  }
+
+  async getPolicyBranches(repo: string): Promise<any[]> {
+    const response = await this.client.get(`/api/policies/${repo}/branches`);
+    return response.data;
+  }
+
+  async getPolicyPRs(repo: string): Promise<any[]> {
+    const response = await this.client.get(`/api/policies/${repo}/pulls`);
+    return response.data;
+  }
+
+  async editPolicy(repo: string, path: string, content: string, message: string, branchName?: string): Promise<any> {
+    const response = await this.client.post(`/api/policies/${repo}/edit`, { path, content, message, branchName });
+    return response.data;
   }
 }
 
