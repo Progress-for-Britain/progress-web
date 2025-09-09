@@ -50,8 +50,9 @@ Curious? Join us at ${websiteUrl}
   const isMobilePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
   
   // Define unauthenticated routes that should show aurora background
-  const unauthenticatedRoutes = ['/', '/about', '/our-approach', '/join', '/login', '/register', '/nda', '/settings', '/eula', '/privacy-policy', '/policy'];
-  const shouldShowAurora = unauthenticatedRoutes.includes(pathname) && !isMobilePlatform;
+  const unauthenticatedRoutes = ['/', '/about', '/our-approach', '/join', '/login', '/register', '/nda', '/settings', '/eula', '/privacy-policy'];
+  const isEditorRoute = /^\/policy\/[^/]+\/edit(\?.*)?$/.test(pathname || '');
+  const shouldShowAurora = (unauthenticatedRoutes.includes(pathname) || pathname.startsWith('/policy')) && !isMobilePlatform && !isEditorRoute;
   
   return (
     <View style={[{ flex: 1 }, commonStyles.appContainer]}>
@@ -106,7 +107,7 @@ Curious? Join us at ${websiteUrl}
         </View>
       )}
       
-      <Header />
+      {!isEditorRoute && <Header />}
       <View style={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false }} />
       </View>

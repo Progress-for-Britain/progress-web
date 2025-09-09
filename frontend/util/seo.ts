@@ -21,11 +21,35 @@ export const SEO_DATA: Record<string, SEOData> = {
     type: 'website'
   },
   
+  policy: {
+    title: 'Policies - Progress UK',
+    description: "Explore Progress UK's policies and guiding principles shaping Britain's future.",
+    url: `${BASE_URL}/policy`,
+    image: `${BASE_URL}/public/assets/favicon.png`,
+    type: 'website'
+  },
+
+  'privacy-policy': {
+    title: 'Privacy Policy - Progress UK',
+    description: 'Read how Progress UK collects, uses, and protects your personal information.',
+    url: `${BASE_URL}/privacy-policy`,
+    image: `${BASE_URL}/public/assets/favicon.png`,
+    type: 'website'
+  },
+
+  eula: {
+    title: 'End User License Agreement - Progress UK',
+    description: 'The terms governing your use of the Progress UK app and services.',
+    url: `${BASE_URL}/eula`,
+    image: `${BASE_URL}/public/assets/favicon.png`,
+    type: 'website'
+  },
+
   about: {
     title: 'About Us - Progress UK',
     description: 'Learn about Progress UK\'s mission to revitalize Britain. Formed by engineers, founders, NHS professionals, and more - united by the belief that Britain\'s decline can be stopped.',
     url: `${BASE_URL}/about`,
-    image: `${BASE_URL}/public/assets/progress-uk-about-social.png`,
+    image: `${BASE_URL}/public/assets/favicon.png`,
     type: 'website'
   },
   
@@ -33,7 +57,7 @@ export const SEO_DATA: Record<string, SEOData> = {
     title: 'Our Approach - Progress UK',
     description: '2029 is an historic opportunity for regime change. Discover how Progress UK plans to seize this moment with the most talented team in the country.',
     url: `${BASE_URL}/our-approach`,
-    image: `${BASE_URL}/public/assets/progress-uk-approach-social.png`,
+    image: `${BASE_URL}/public/assets/favicon.png`,
     type: 'website'
   },
   
@@ -41,7 +65,7 @@ export const SEO_DATA: Record<string, SEOData> = {
     title: 'Join Us - Progress UK',
     description: 'Join Progress UK and help build the most serious new party in the country. Be part of the 2029 opportunity to transform British politics.',
     url: `${BASE_URL}/join`,
-    image: `${BASE_URL}/public/assets/progress-uk-join-social.png`,
+    image: `${BASE_URL}/public/assets/favicon.png`,
     type: 'website'
   },
   

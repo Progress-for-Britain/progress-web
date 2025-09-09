@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const { authenticateToken, requireAdmin, requireWriterOrAdmin } = require('../middleware/auth');
 
 // Initialize Octokit with GitHub App authentication
@@ -9,11 +11,12 @@ const initializeOctokit = async () => {
     const { Octokit } = await import('@octokit/rest');
     const { createAppAuth } = await import('@octokit/auth-app');
 
-    if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_PRIVATE_KEY || !process.env.GITHUB_INSTALLATION_ID) {
-      throw new Error('GitHub App configuration missing. Please set GITHUB_APP_ID, GITHUB_PRIVATE_KEY, and GITHUB_INSTALLATION_ID environment variables.');
+    if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_INSTALLATION_ID) {
+      throw new Error('GitHub App configuration missing. Please set GITHUB_APP_ID and GITHUB_INSTALLATION_ID environment variables, and ensure policy-access.private-key.pem exists.');
     }
-    // Support private keys provided with escaped newlines (\n)
-    const privateKey = process.env.GITHUB_PRIVATE_KEY.replace(/\\n/g, '\n');
+    // Read private key from file
+    const privateKeyPath = path.join(__dirname, '../policy-access.private-key.pem');
+    const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
     octokit = new Octokit({
       authStrategy: createAppAuth,
       auth: {
@@ -140,6 +143,9 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
     const { repo } = req.params;
     const { path, content, message, branchName } = req.body;
     const owner = getOrganization();
+    const { firstName, lastName } = req.user;
+    const userName = `${firstName} ${lastName}`;
+    const title = `${userName}'s changes`;
 
     // Get the SHA of the main branch
     const { data: refData } = await octokit.git.getRef({
@@ -150,7 +156,7 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
     const sha = refData.object.sha;
 
     // Create a new branch
-    const newBranch = branchName || `edit-${Date.now()}`;
+    const newBranch = branchName || `${firstName}-${lastName}-changes-${Date.now()}`;
     await octokit.git.createRef({
       owner,
       repo,
@@ -177,7 +183,7 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
       owner,
       repo,
       path,
-      message: message || 'Update policy',
+      message: message || `Policy update by ${userName}`,
       content: Buffer.from(content).toString('base64'),
       branch: newBranch,
       sha: fileSha,
@@ -187,10 +193,10 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
     const { data: prData } = await octokit.pulls.create({
       owner,
       repo,
-      title: `Update ${path}`,
+      title,
       head: newBranch,
       base: 'main',
-      body: message || 'Policy update',
+      body: message || `Policy update by ${userName}`,
     });
 
     res.json({ commit: commitData, pr: prData });
