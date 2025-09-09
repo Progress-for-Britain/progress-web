@@ -249,7 +249,9 @@ const createUser = async (req, res) => {
         userId: result.id, 
         email: result.email, 
         role: derivePrimaryRole(result.roles),
-        roles: Array.isArray(result.roles) ? result.roles : []
+        roles: Array.isArray(result.roles) ? result.roles : [],
+        firstName: result.firstName,
+        lastName: result.lastName
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
@@ -419,7 +421,9 @@ const loginUser = async (req, res) => {
         userId: user.id, 
         email: user.email, 
         role: derivePrimaryRole(user.roles),
-        roles: Array.isArray(user.roles) ? user.roles : []
+        roles: Array.isArray(user.roles) ? user.roles : [],
+        firstName: user.firstName,
+        lastName: user.lastName
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
