@@ -44,7 +44,13 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     success: true, 
     message: 'Server is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    env: {
+      VERCEL_ENV: process.env.VERCEL_ENV,
+      GAI: !!process.env.GITHUB_APP_ID,
+      GII: !!process.env.GITHUB_INSTALLATION_ID,
+      GPK: !!process.env.GITHUB_PRIVATE_KEY
+    }
   });
 });
 
