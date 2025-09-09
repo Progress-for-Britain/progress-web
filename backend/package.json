@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "seed:test-users": "node scripts/seed-test-users.js",
     "complete:events": "node scripts/completeEvents.js",
-    "dev:seed": "SEED_TEST_USERS=true nodemon server.js"
+    "dev:seed": "SEED_TEST_USERS=true nodemon server.js",
+    "write-key": "node scripts/write-key.js"
   },
   "dependencies": {
     "@octokit/auth-app": "^8.1.0",
