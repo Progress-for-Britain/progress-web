@@ -12,10 +12,8 @@ const initializeOctokit = async () => {
     if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_PRIVATE_KEY || !process.env.GITHUB_INSTALLATION_ID) {
       throw new Error('GitHub App configuration missing. Please set GITHUB_APP_ID, GITHUB_PRIVATE_KEY, and GITHUB_INSTALLATION_ID environment variables.');
     }
-    
     // Support private keys provided with escaped newlines (\n)
     const privateKey = process.env.GITHUB_PRIVATE_KEY.replace(/\\n/g, '\n');
-
     octokit = new Octokit({
       authStrategy: createAppAuth,
       auth: {
@@ -78,7 +76,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get content of a specific policy file
 // Get list of branches for a repo
 router.get('/:repo/branches', authenticateToken, requireWriterOrAdmin, async (req, res) => {
   try {
@@ -134,6 +131,7 @@ router.get('/:repo/:path(*)', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch policy content' });
   }
 });
+
 
 // Edit and propose changes (create branch, commit, PR)
 router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, res) => {
