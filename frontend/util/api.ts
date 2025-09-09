@@ -1436,6 +1436,32 @@ class ApiClient {
     const response = await this.client.post('/api/subscriptions/create-checkout', { planId, billingInterval, metadata });
     return response.data.data;
   }
+
+  // Policy endpoints
+  async getPolicyRepos(): Promise<any[]> {
+    const response = await this.client.get('/api/policies');
+    return response.data;
+  }
+
+  async getPolicyContent(repo: string, path: string): Promise<{content: string; sha: string}> {
+    const response = await this.client.get(`/api/policies/${repo}/${path}`);
+    return response.data;
+  }
+
+  async getPolicyBranches(repo: string): Promise<any[]> {
+    const response = await this.client.get(`/api/policies/${repo}/branches`);
+    return response.data;
+  }
+
+  async getPolicyPRs(repo: string): Promise<any[]> {
+    const response = await this.client.get(`/api/policies/${repo}/pulls`);
+    return response.data;
+  }
+
+  async editPolicy(repo: string, path: string, content: string, message: string, branchName?: string): Promise<any> {
+    const response = await this.client.post(`/api/policies/${repo}/edit`, { path, content, message, branchName });
+    return response.data;
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

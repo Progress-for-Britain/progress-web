@@ -345,6 +345,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         { href: "/", icon: "home", label: "Home" },
         { href: "/about", icon: "information-circle", label: "About" },
         { href: "/our-approach", icon: "analytics", label: "Our Approach" },
+        {href: "/policy", icon: "document-text", label: "Policies" },
         { href: "/join", icon: "people", label: "Join Us", variant: "primary" as const },
         { href: "/login", icon: "log-in", label: "Login" },
       ];
