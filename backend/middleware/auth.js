@@ -24,9 +24,17 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Helper: does user have any of the roles
+const userHasAnyRole = (user, roles = []) => {
+  if (!user) return false;
+  const single = user.role;
+  const multi = Array.isArray(user.roles) ? user.roles : [];
+  return roles.some(r => single === r || multi.includes(r));
+};
+
 // Middleware for admin only routes
 const requireAdmin = (req, res, next) => {
-  if (req.user.role !== 'ADMIN') {
+  if (!userHasAnyRole(req.user, ['ADMIN'])) {
     return res.status(403).json({
       success: false,
       message: 'Admin access required'
@@ -38,7 +46,7 @@ const requireAdmin = (req, res, next) => {
 // Middleware for owner or admin access
 const requireOwnerOrAdmin = (req, res, next) => {
   const { id } = req.params;
-  if (req.user.role !== 'ADMIN' && req.user.userId !== id) {
+  if (!userHasAnyRole(req.user, ['ADMIN']) && req.user.userId !== id) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. You can only access your own data.'
@@ -50,7 +58,7 @@ const requireOwnerOrAdmin = (req, res, next) => {
 // Middleware for user access (own payments) or admin
 const requireUserOrAdmin = (req, res, next) => {
   const { userId } = req.params;
-  if (req.user.role !== 'ADMIN' && req.user.userId !== userId) {
+  if (!userHasAnyRole(req.user, ['ADMIN']) && req.user.userId !== userId) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. You can only access your own payments.'
@@ -61,7 +69,7 @@ const requireUserOrAdmin = (req, res, next) => {
 
 // Middleware for writer or admin access (for creating posts)
 const requireWriterOrAdmin = (req, res, next) => {
-  if (req.user.role !== 'ADMIN' && req.user.role !== 'WRITER') {
+  if (!userHasAnyRole(req.user, ['ADMIN', 'WRITER'])) {
     return res.status(403).json({
       success: false,
       message: 'Writer or Admin access required'
@@ -73,7 +81,7 @@ const requireWriterOrAdmin = (req, res, next) => {
 // Middleware for checking specific roles
 const requireRole = (allowedRoles) => {
   return (req, res, next) => {
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!userHasAnyRole(req.user, allowedRoles)) {
       return res.status(403).json({
         success: false,
         message: `Access denied. Required role: ${allowedRoles.join(' or ')}`

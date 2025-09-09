@@ -26,7 +26,7 @@ const seedTestUser = async (testUserData = {}) => {
         email: true,
         firstName: true,
         lastName: true,
-        role: true,
+        roles: true, // derive legacy role in memory
         address: true,
         createdAt: true
       }
@@ -53,7 +53,7 @@ const seedTestUser = async (testUserData = {}) => {
         password: hashedPassword,
         firstName: defaultTestUser.firstName,
         lastName: defaultTestUser.lastName,
-        role: defaultTestUser.role,
+        roles: [defaultTestUser.role],
         address: defaultTestUser.address
       },
       select: {
@@ -61,7 +61,7 @@ const seedTestUser = async (testUserData = {}) => {
         email: true,
         firstName: true,
         lastName: true,
-        role: true,
+        roles: true, // derive legacy role in memory
         address: true,
         createdAt: true
       }

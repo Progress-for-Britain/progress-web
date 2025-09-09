@@ -177,7 +177,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const octokit = await initializeOctokit();
     const { name, description } = req.body;
-    const { data } = await octokit.repos.createForAuthenticatedUser({
+    const { data } = await octokit.repos.createInOrg({
       name: `policy-${name}`,
       description,
       private: false, // or true if needed

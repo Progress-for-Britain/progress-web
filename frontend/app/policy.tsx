@@ -48,7 +48,9 @@ export default function Policy() {
   const [preview, setPreview] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const isWriter = user?.role === 'WRITER' || user?.role === 'ADMIN';
+  const isWriter =
+    (user?.roles && (user.roles.includes('WRITER') || user.roles.includes('ADMIN')))
+    || user?.role === 'WRITER' || user?.role === 'ADMIN';
 
   useEffect(() => {
     fetchRepos();

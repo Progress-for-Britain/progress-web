@@ -22,9 +22,10 @@ router.get('/ical/:userId', generateUserICal);
 router.get('/:id', getEventById);
 
 // Protected routes
-router.post('/', authenticateToken, requireRole(['ADMIN', 'WRITER']), createEvent);
-router.put('/:id', authenticateToken, requireRole(['ADMIN', 'WRITER']), updateEvent);
-router.delete('/:id', authenticateToken, requireRole(['ADMIN', 'WRITER']), deleteEvent);
+// Event management allowed for ADMIN and EVENT_MANAGER
+router.post('/', authenticateToken, requireRole(['ADMIN', 'EVENT_MANAGER']), createEvent);
+router.put('/:id', authenticateToken, requireRole(['ADMIN', 'EVENT_MANAGER']), updateEvent);
+router.delete('/:id', authenticateToken, requireRole(['ADMIN', 'EVENT_MANAGER']), deleteEvent);
 router.post('/:id/register', authenticateToken, registerForEvent);
 router.delete('/:id/register', authenticateToken, cancelEventRegistration);
 router.post('/volunteer-hours', authenticateToken, logVolunteerHours);

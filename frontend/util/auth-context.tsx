@@ -134,7 +134,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const userData = JSON.parse(userDataString);
           api.setToken(token);
-          setUser(userData);
+          // If roles are missing in stored data, refresh from API to get roles[]
+          if (!userData.roles || !Array.isArray(userData.roles)) {
+            try {
+              const fresh = await api.getUserById(userData.id);
+              const merged = { ...userData, roles: fresh.roles || [fresh.role] };
+              setUser(merged);
+              await secureStorageSet(USER_DATA_KEY, JSON.stringify(merged), false);
+            } catch (e) {
+              // Fall back to inferring roles from legacy role
+              const merged = { ...userData, roles: [userData.role] };
+              setUser(merged);
+              await secureStorageSet(USER_DATA_KEY, JSON.stringify(merged), false);
+            }
+          } else {
+            setUser(userData);
+          }
         } catch (parseError) {
           console.error('Failed to parse stored user data:', parseError);
           // Clear corrupted data
@@ -169,7 +184,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...response.data.user,
         address: response.data.user.address || null,
         createdAt: response.data.user.createdAt || new Date().toISOString(),
-        role: response.data.user.role as 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER'
+        role: response.data.user.role as any,
+        roles: (response.data.user as any).roles || [response.data.user.role]
       };
       
       // Store token and user data with mobile-optimized storage
@@ -199,7 +215,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...response.data.user,
         address: response.data.user.address || null,
         createdAt: response.data.user.createdAt || new Date().toISOString(),
-        role: response.data.user.role as 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER'
+        role: response.data.user.role as any,
+        roles: (response.data.user as any).roles || [response.data.user.role]
       };
       
       // Store token and user data with mobile-optimized storage

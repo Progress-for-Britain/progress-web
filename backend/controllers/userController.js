@@ -2,6 +2,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../utils/prisma');
 
+// Primary role derivation from roles[] with precedence
+const derivePrimaryRole = (roles) => {
+  const r = Array.isArray(roles) ? roles : [];
+  const order = ['ADMIN', 'ONBOARDING', 'EVENT_MANAGER', 'WRITER', 'VOLUNTEER', 'MEMBER'];
+  for (const key of order) if (r.includes(key)) return key;
+  return 'MEMBER';
+};
+
 // Get all users (admin only)
 const getAllUsers = async (req, res) => {
   try {
@@ -9,7 +17,7 @@ const getAllUsers = async (req, res) => {
       select: {
         id: true,
         email: true,
-        role: true,
+        roles: true,
         firstName: true,
         lastName: true,
         address: true,
@@ -36,9 +44,12 @@ const getAllUsers = async (req, res) => {
       }
     });
 
+    // Synthesize legacy role for clients
+    const usersWithPrimaryRole = users.map(u => ({ ...u, role: derivePrimaryRole(u.roles) }));
+
     res.json({
       success: true,
-      data: users
+      data: usersWithPrimaryRole
     });
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -60,7 +71,7 @@ const getUserById = async (req, res) => {
       select: {
         id: true,
         email: true,
-        role: true,
+        roles: true,
         firstName: true,
         lastName: true,
         address: true,
@@ -93,9 +104,11 @@ const getUserById = async (req, res) => {
       });
     }
 
+    const userWithPrimaryRole = user ? { ...user, role: derivePrimaryRole(user.roles) } : null;
+
     res.json({
       success: true,
-      data: user
+      data: userWithPrimaryRole
     });
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -173,7 +186,12 @@ const createUser = async (req, res) => {
       firstName = accessCodeRecord.firstName || firstName;
       lastName = accessCodeRecord.lastName || lastName;
       email = accessCodeRecord.email || email;
-      role = accessCodeRecord.role || role;
+      // Determine roles granted by access code
+      const codeRoles = Array.isArray(accessCodeRecord.roles) && accessCodeRecord.roles.length
+        ? accessCodeRecord.roles
+        : [accessCodeRecord.role || userRole];
+      role = codeRoles[0];
+      req._grantedRoles = codeRoles; // carry forward for user creation
 
       // Get the pending user to determine role
       const pendingUser = await prisma.pendingUser.findUnique({
@@ -198,13 +216,13 @@ const createUser = async (req, res) => {
           password: hashedPassword,
           firstName,
           lastName,
-          role: role || userRole,
+          roles: (req._grantedRoles && req._grantedRoles.length) ? req._grantedRoles : [role || userRole],
           constituency
         },
         select: {
           id: true,
           email: true,
-          role: true,
+          roles: true,
           firstName: true,
           lastName: true,
           createdAt: true
@@ -230,7 +248,8 @@ const createUser = async (req, res) => {
       { 
         userId: result.id, 
         email: result.email, 
-        role: result.role 
+        role: derivePrimaryRole(result.roles),
+        roles: Array.isArray(result.roles) ? result.roles : []
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
@@ -240,7 +259,7 @@ const createUser = async (req, res) => {
       success: true,
       message: 'User created successfully',
       data: {
-        user: result,
+        user: { ...result, role: derivePrimaryRole(result.roles) },
         token
       }
     });
@@ -294,13 +313,13 @@ const updateUser = async (req, res) => {
         ...(firstName !== undefined && { firstName }),
         ...(lastName !== undefined && { lastName }),
         ...(address !== undefined && { address }),
-        ...(role && { role }),
         ...(constituency !== undefined && { constituency })
       },
       select: {
         id: true,
         email: true,
-        role: true,
+        // role derived
+        roles: true,
         firstName: true,
         lastName: true,
         address: true,
@@ -312,7 +331,7 @@ const updateUser = async (req, res) => {
     res.json({
       success: true,
       message: 'User updated successfully',
-      data: updatedUser
+      data: { ...updatedUser, role: derivePrimaryRole(updatedUser.roles) }
     });
   } catch (error) {
     console.error('Error updating user:', error);
@@ -399,7 +418,8 @@ const loginUser = async (req, res) => {
       { 
         userId: user.id, 
         email: user.email, 
-        role: user.role 
+        role: derivePrimaryRole(user.roles),
+        roles: Array.isArray(user.roles) ? user.roles : []
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
@@ -412,7 +432,8 @@ const loginUser = async (req, res) => {
         user: {
           id: user.id,
           email: user.email,
-          role: user.role,
+          role: derivePrimaryRole(user.roles),
+          roles: Array.isArray(user.roles) ? user.roles : [],
           firstName: user.firstName,
           lastName: user.lastName
         },
@@ -899,11 +920,14 @@ const assignUserToEvent = async (req, res) => {
     const { status = 'REGISTERED' } = req.body;
 
     // Validate admin permissions
-    if (req.user.role !== 'ADMIN') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Admin role required.'
-      });
+    {
+      const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
+      if (req.user.role !== 'ADMIN' && !roles.includes('ADMIN')) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. Admin role required.'
+        });
+      }
     }
 
     // Check if user exists
@@ -995,11 +1019,14 @@ const unassignUserFromEvent = async (req, res) => {
     const { userId, eventId } = req.body;
 
     // Validate admin permissions
-    if (req.user.role !== 'ADMIN') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Admin role required.'
-      });
+    {
+      const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
+      if (req.user.role !== 'ADMIN' && !roles.includes('ADMIN')) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. Admin role required.'
+        });
+      }
     }
 
     // Check if assignment exists
@@ -1061,14 +1088,15 @@ const unassignUserFromEvent = async (req, res) => {
   }
 };
 
-// Update user role (admin only)
+// Update user role(s) (admin only)
 const updateUserRole = async (req, res) => {
   try {
     const { id } = req.params;
-    const { role } = req.body;
+    const { role, roles } = req.body;
 
     // Validate admin permissions
-    if (req.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(req.user.roles) ? req.user.roles : [];
+    if (req.user.role !== 'ADMIN' && !userRoles.includes('ADMIN')) {
       return res.status(403).json({
         success: false,
         message: 'Access denied. Admin role required.'
@@ -1076,12 +1104,23 @@ const updateUserRole = async (req, res) => {
     }
 
     // Validate role
-    const validRoles = ['ADMIN', 'WRITER', 'MEMBER', 'VOLUNTEER'];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid role. Must be one of: ' + validRoles.join(', ')
-      });
+    const validRoles = ['ADMIN', 'WRITER', 'MEMBER', 'VOLUNTEER', 'ONBOARDING', 'EVENT_MANAGER'];
+    if (roles !== undefined) {
+      if (!Array.isArray(roles) || roles.length === 0 || !roles.every(r => validRoles.includes(r))) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid roles. Must be a non-empty array of: ' + validRoles.join(', ')
+        });
+      }
+    } else if (role !== undefined) {
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid role. Must be one of: ' + validRoles.join(', ')
+        });
+      }
+    } else {
+      return res.status(400).json({ success: false, message: 'role or roles is required' });
     }
 
     // Check if user exists
@@ -1096,14 +1135,24 @@ const updateUserRole = async (req, res) => {
       });
     }
 
-    // Update user role
+    // Build update
+    const updateData = {};
+    if (roles) {
+      updateData.roles = roles;
+    } else if (role) {
+      // Update single role and ensure roles[] contains it
+      const current = await prisma.user.findUnique({ where: { id }, select: { roles: true } });
+      const merged = Array.from(new Set([...(current?.roles || []), role]));
+      updateData.roles = merged;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { role },
+      data: updateData,
       select: {
         id: true,
         email: true,
-        role: true,
+        roles: true,
         firstName: true,
         lastName: true,
         updatedAt: true
@@ -1113,7 +1162,7 @@ const updateUserRole = async (req, res) => {
     res.json({
       success: true,
       message: 'User role updated successfully',
-      data: updatedUser
+      data: { ...updatedUser, role: derivePrimaryRole(updatedUser.roles) }
     });
   } catch (error) {
     console.error('Error updating user role:', error);
@@ -1131,11 +1180,14 @@ const getUserEventAssignments = async (req, res) => {
     const { id } = req.params;
 
     // Validate admin permissions
-    if (req.user.role !== 'ADMIN') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Admin role required.'
-      });
+    {
+      const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
+      if (req.user.role !== 'ADMIN' && !roles.includes('ADMIN')) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. Admin role required.'
+        });
+      }
     }
 
     const eventAssignments = await prisma.eventParticipant.findMany({
@@ -1179,20 +1231,23 @@ const getUserEventAssignments = async (req, res) => {
 const getUserManagementStats = async (req, res) => {
   try {
     // Validate admin permissions
-    if (req.user.role !== 'ADMIN') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Admin role required.'
-      });
+    {
+      const roles = Array.isArray(req.user.roles) ? req.user.roles : [];
+      if (req.user.role !== 'ADMIN' && !roles.includes('ADMIN')) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. Admin role required.'
+        });
+      }
     }
 
-    // Get total users by role
-    const userStats = await prisma.user.groupBy({
-      by: ['role'],
-      _count: {
-        id: true
-      }
-    });
+    // Get total users by role (from roles[])
+    const users = await prisma.user.findMany({ select: { roles: true } });
+    const counts = users.reduce((acc, u) => {
+      const r = Array.isArray(u.roles) ? u.roles : [];
+      for (const role of r) acc[role] = (acc[role] || 0) + 1;
+      return acc;
+    }, {});
 
     // Get recent user registrations (last 30 days)
     const thirtyDaysAgo = new Date();
@@ -1242,10 +1297,7 @@ const getUserManagementStats = async (req, res) => {
     res.json({
       success: true,
       data: {
-        usersByRole: userStats.reduce((acc, stat) => {
-          acc[stat.role] = stat._count.id;
-          return acc;
-        }, {}),
+        usersByRole: counts,
         recentRegistrations,
         activeUsers,
         monthlyVolunteerHours: monthlyVolunteerHours._sum.hours || 0

@@ -47,8 +47,7 @@ const getAllPosts = async (req, res) => {
             select: {
               id: true,
               firstName: true,
-              lastName: true,
-              role: true
+              lastName: true
             }
           },
           _count: {
@@ -122,8 +121,7 @@ const getPostById = async (req, res) => {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
-            role: true
+            lastName: true
           }
         },
         _count: {
@@ -141,8 +139,11 @@ const getPostById = async (req, res) => {
       });
     }
 
-    // Only allow access to published posts for non-authors
-    if (post.status !== 'PUBLISHED' && req.user.userId !== post.authorId && req.user.role !== 'ADMIN') {
+    // Only allow access to unpublished posts to author or admin
+    const userRoles = Array.isArray(req.user?.roles) ? req.user.roles : [];
+    const isAdmin = (req.user?.role === 'ADMIN') || userRoles.includes('ADMIN');
+    const isAuthor = req.user?.userId === post.authorId;
+    if (post.status !== 'PUBLISHED' && !isAuthor && !isAdmin) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -225,8 +226,7 @@ const createPost = async (req, res) => {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
-            role: true
+            lastName: true
           }
         }
       }
@@ -276,7 +276,9 @@ const updatePost = async (req, res) => {
     }
 
     // Check permissions (author or admin)
-    if (existingPost.authorId !== req.user.userId && req.user.role !== 'ADMIN') {
+    const userRoles = Array.isArray(req.user.roles) ? req.user.roles : [];
+    const isAdmin = req.user.role === 'ADMIN' || userRoles.includes('ADMIN');
+    if (existingPost.authorId !== req.user.userId && !isAdmin) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -308,8 +310,7 @@ const updatePost = async (req, res) => {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
-            role: true
+            lastName: true
           }
         }
       }
@@ -348,7 +349,9 @@ const deletePost = async (req, res) => {
     }
 
     // Check permissions (author or admin)
-    if (existingPost.authorId !== req.user.userId && req.user.role !== 'ADMIN') {
+    const userRolesDel = Array.isArray(req.user.roles) ? req.user.roles : [];
+    const isAdminDel = req.user.role === 'ADMIN' || userRolesDel.includes('ADMIN');
+    if (existingPost.authorId !== req.user.userId && !isAdminDel) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
@@ -392,8 +395,7 @@ const getMyPosts = async (req, res) => {
             select: {
               id: true,
               firstName: true,
-              lastName: true,
-              role: true
+              lastName: true
             }
           },
           _count: {

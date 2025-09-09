@@ -13,7 +13,7 @@ model User {
   lastName                String?
   email                   String                   @unique
   password                String
-  role                    UserRole                 @default(MEMBER)
+  roles                   UserRole[]               @default([MEMBER])
   constituency            String?
   address                 String?
   discordUsername         String?                  @unique
@@ -217,7 +217,7 @@ model AccessCode {
   lastName                String?
   email                   String
   constituency            String?
-  role                    UserRole                 @default(MEMBER)
+  roles                   UserRole[]               @default([])
   code      String    @unique
   used      Boolean   @default(false)
   usedAt    DateTime?
@@ -246,6 +246,8 @@ enum UserRole {
   MEMBER
   VOLUNTEER
   WRITER
+  ONBOARDING
+  EVENT_MANAGER
 }
 
 enum SubStatus {
