@@ -6,7 +6,11 @@ if (!pem) {
   process.exit(1);
 }
 
-const target = 'policy-access.private-key.pem';
+// Allow filename to be set via command line argument or environment variable, fallback to default
+const target =
+  process.argv[2] ||
+  process.env.PRIVATE_KEY_FILENAME ||
+  'policy-access.private-key.pem';
 if (!fs.existsSync(target)) {
   fs.writeFileSync(target, pem, { mode: 0o600 });
   console.log(`Wrote ${target}`);
