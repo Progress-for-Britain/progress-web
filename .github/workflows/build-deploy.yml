@@ -2,7 +2,7 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "git-policies" ]
 
 jobs:
   build-and-deploy:
