@@ -64,6 +64,16 @@ interface FileChange {
   patch?: string;
 }
 
+const parseMessage = (body: string, login: string) => {
+  if (login.includes('[bot]')) {
+    const match = body.match(/^(.+?):\s*(.+)$/s);
+    if (match) {
+      return { author: match[1], message: match[2] };
+    }
+  }
+  return { author: login, message: body };
+};
+
 export default function PRDetail() {
   const router = useRouter();
   const { repo, id } = useLocalSearchParams<{ repo: string; id: string }>();
@@ -92,6 +102,8 @@ export default function PRDetail() {
       if (!repo || !id) return;
       setLoading(true);
       setError(null);
+      // Add a tiny delay to ensure auth is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
       try {
         const [prData, reviewsData, commentsData, filesData] = await Promise.all([
           api.getPolicyPR(repo, id),
@@ -121,7 +133,7 @@ export default function PRDetail() {
     }
     load();
     return () => { mounted = false };
-  }, [repo, id]);
+  }, [repo, id, user]);
 
   const handlePostComment = async () => {
     if (!newComment.trim() || !repo || !id) return;
@@ -207,7 +219,17 @@ export default function PRDetail() {
                       </View>
                       {file.patch && (
                         <View style={styles.diffContainer}>
-                          <Text style={[commonStyles.text, styles.diffText]}>{file.patch}</Text>
+                          {file.patch.split('\n').map((line, idx) => {
+                            let color = colors.text;
+                            if (line.startsWith('+')) color = colors.success;
+                            else if (line.startsWith('-')) color = colors.error;
+                            else if (line.startsWith('@@')) color = colors.textSecondary;
+                            return (
+                              <Text key={idx} style={[styles.diffText, { color }]}>
+                                {line}
+                              </Text>
+                            );
+                          })}
                         </View>
                       )}
                     </View>
@@ -223,22 +245,25 @@ export default function PRDetail() {
 
                 <View style={styles.section}>
                   <Text style={[commonStyles.text, styles.sectionTitle]}>Conversation ({conversation.length})</Text>
-                  {conversation.map((item) => (
-                    <View key={item.id} style={styles.conversationItem}>
-                      <View style={styles.conversationHeader}>
-                        <Text style={commonStyles.text}>{item.user.login}</Text>
-                        {item.type === 'review' && (
-                          <Text style={[commonStyles.text, styles.reviewState, { color: item.state === 'APPROVED' ? colors.success : item.state === 'CHANGES_REQUESTED' ? colors.warning : colors.text }]}>
-                            {item.state}
-                          </Text>
+                  {conversation.map((item) => {
+                    const { author, message } = parseMessage(item.body, item.user.login);
+                    return (
+                      <View key={item.id} style={styles.conversationItem}>
+                        <View style={styles.conversationHeader}>
+                          <Text style={commonStyles.text}>{author}</Text>
+                          {item.type === 'review' && (
+                            <Text style={[commonStyles.text, styles.reviewState, { color: item.state === 'APPROVED' ? colors.success : item.state === 'CHANGES_REQUESTED' ? colors.warning : colors.text }]}>
+                              {item.state}
+                            </Text>
+                          )}
+                          <Text style={[commonStyles.text, styles.conversationDate]}>{formatDate(item.date)}</Text>
+                        </View>
+                        {message && (
+                          <Markdown style={getMarkdownStyles(colors)}>{message}</Markdown>
                         )}
-                        <Text style={[commonStyles.text, styles.conversationDate]}>{formatDate(item.date)}</Text>
                       </View>
-                      {item.body && (
-                        <Markdown style={getMarkdownStyles(colors)}>{item.body}</Markdown>
-                      )}
-                    </View>
-                  ))}
+                    );
+                  })}
                   {conversation.length === 0 && (
                     <Text style={[commonStyles.text, styles.noData]}>No conversation yet.</Text>
                   )}

@@ -64,6 +64,10 @@ export default function PolicyEditor() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showOutline, setShowOutline] = useState(true);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<string>('main');
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [showBranchDropdown, setShowBranchDropdown] = useState(false);
 
   const isWriter = user?.roles?.includes('WRITER') || user?.roles?.includes('ADMIN');
 
@@ -106,7 +110,7 @@ export default function PolicyEditor() {
       setLoading(true);
       setError(null);
       try {
-        const data = await api.getPolicyContent(String(repo), 'policy.md');
+        const data = await api.getPolicyContent(String(repo), 'policy.md', selectedBranch);
         if (!mounted) return;
         setContent(data.content || '');
       } catch (e) {
@@ -117,13 +121,47 @@ export default function PolicyEditor() {
     }
     load();
     return () => { mounted = false };
+  }, [repo, selectedBranch]);
+
+  // Load branches on component mount
+  useEffect(() => {
+    async function loadBranches() {
+      if (!repo) return;
+      setLoadingBranches(true);
+      // Add a tiny delay to ensure auth is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      try {
+        const branchesData = await api.getPolicyBranches(String(repo));
+        console.log('Loaded branches:', branchesData); // Debug log
+        setBranches(branchesData);
+      } catch (e) {
+        console.error('Failed to load branches:', e);
+      } finally {
+        setLoadingBranches(false);
+      }
+    }
+    loadBranches();
   }, [repo]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!showBranchDropdown) return;
+
+    const handleClickOutside = () => {
+      setShowBranchDropdown(false);
+    };
+
+    if (isWeb && typeof document !== 'undefined') {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showBranchDropdown, isWeb]);
 
   const handleSave = async () => {
     if (!repo) return;
     try {
       setSaving(true);
-      await api.editPolicy(String(repo), 'policy.md', content, commitMessage || 'Update policy.md', branchName || undefined);
+      await api.editPolicy(String(repo), 'policy.md', content, commitMessage || 'Update policy.md', selectedBranch);
       Alert.alert('Success', 'Policy updated and PR created!');
       router.replace(`/policy/${repo}`);
     } catch (e) {
@@ -214,7 +252,7 @@ export default function PolicyEditor() {
                 </View>
               </View>
               {/* Commit controls */}
-              <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 8, marginBottom: 12 }}>
+              <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 8, marginBottom: 12, position: 'relative' }}>
                 <TextInput
                   style={[styles.input, { flex: 2 }]}
                   placeholder="Commit message"
@@ -222,14 +260,78 @@ export default function PolicyEditor() {
                   value={commitMessage}
                   onChangeText={setCommitMessage}
                 />
-                <TextInput
-                  style={[styles.input, { flex: 1 }]}
-                  placeholder="Branch name (optional)"
-                  placeholderTextColor={colors.textSecondary}
-                  value={branchName}
-                  onChangeText={setBranchName}
-                />
+                {/* Branch name combobox */}
+                <View style={{ flex: 1, position: 'relative' }}>
+                  <View style={[styles.input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+                    <TextInput
+                      style={{ flex: 1, color: colors.text, borderWidth: 0, backgroundColor: 'transparent' }}
+                      placeholder="Branch name (optional)"
+                      placeholderTextColor={colors.textSecondary}
+                      value={branchName}
+                      onChangeText={setBranchName}
+                      onFocus={() => setShowBranchDropdown(true)}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowBranchDropdown(!showBranchDropdown)}
+                      style={{ padding: 4 }}
+                    >
+                      <Text style={{ color: colors.text, fontSize: 16 }}>
+                        {showBranchDropdown ? '▲' : '▼'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
+              
+              {/* Branch dropdown - positioned outside the commit controls to appear over editor */}
+              {showBranchDropdown && (
+                <View style={[styles.dropdown, { 
+                  position: 'absolute',
+                  top: 80, // Position below the commit controls
+                  right: isMobile ? 8 : 32, // Align with the right edge of the editor area
+                  width: isMobile ? width - 16 : 300, // Dynamically calculate width for mobile
+                  zIndex: 10000,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 4,
+                  elevation: 5,
+                }]}>
+                  <ScrollView style={{ maxHeight: 200 }}>
+                    {loadingBranches ? (
+                      <View style={{ padding: 12, alignItems: 'center' }}>
+                        <ActivityIndicator size="small" color={colors.accent} />
+                        <Text style={{ color: colors.text, marginTop: 4, fontSize: 14 }}>Loading branches…</Text>
+                      </View>
+                    ) : branches.length === 0 ? (
+                      <View style={{ padding: 12, alignItems: 'center' }}>
+                        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>No branches found</Text>
+                      </View>
+                    ) : (
+                      branches.map((branch) => (
+                        <TouchableOpacity
+                          key={branch.name}
+                          onPress={() => {
+                            setBranchName(branch.name);
+                            setSelectedBranch(branch.name);
+                            setShowBranchDropdown(false);
+                          }}
+                          style={[styles.dropdownItem, {
+                            backgroundColor: branch.name === branchName ? colors.accent : 'transparent'
+                          }]}
+                        >
+                          <Text style={{
+                            color: branch.name === branchName ? '#fff' : colors.text,
+                            fontSize: 14
+                          }}>
+                            {branch.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))
+                    )}
+                  </ScrollView>
+                </View>
+              )}
               {/* Editor */}
               {loading ? (
                 <View style={{ paddingVertical: 40, alignItems: 'center' }}>
@@ -346,5 +448,16 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
   secondaryButtonText: {
     color: colors.text,
     fontWeight: '600',
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  dropdownItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
 });
