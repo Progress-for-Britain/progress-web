@@ -211,13 +211,30 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const octokit = await initializeOctokit();
     const { name, description } = req.body;
-    const { data } = await octokit.repos.createInOrg({
-      org: getOrganization(),
-      name: `policy-${name}`,
+    const owner = getOrganization();
+    const repoName = `policy-${name}`;
+
+    // Create the repository
+    const { data: repoData } = await octokit.repos.createInOrg({
+      org: owner,
+      name: repoName,
       description,
       private: false, // or true if needed
     });
-    res.json(data);
+
+    // Create an empty policy.md file
+    const initialContent = `# ${name}\n\nThis is the initial policy document.\n\nPlease edit this file to add your policy content.`;
+
+    await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo: repoName,
+      path: 'policy.md',
+      message: 'Initial commit: Add policy.md',
+      content: Buffer.from(initialContent).toString('base64'),
+      branch: 'main',
+    });
+
+    res.json(repoData);
   } catch (error) {
     console.error('Error creating policy repo:', error);
     res.status(500).json({ error: 'Failed to create policy repo' });
