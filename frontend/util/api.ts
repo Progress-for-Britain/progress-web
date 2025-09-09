@@ -1464,6 +1464,26 @@ class ApiClient {
     return response.data;
   }
 
+  async getPolicyPR(repo: string, id: string): Promise<any> {
+    const response = await this.client.get(`/api/policies/${repo}/pulls/${id}`);
+    return response.data;
+  }
+
+  async getPolicyPRReviews(repo: string, id: string): Promise<any[]> {
+    const response = await this.client.get(`/api/policies/${repo}/pulls/${id}/reviews`);
+    return response.data;
+  }
+
+  async getPolicyPRComments(repo: string, id: string): Promise<any[]> {
+    const response = await this.client.get(`/api/policies/${repo}/pulls/${id}/comments`);
+    return response.data;
+  }
+
+  async postPolicyPRComment(repo: string, id: string, body: string): Promise<any> {
+    const response = await this.client.post(`/api/policies/${repo}/pulls/${id}/comments`, { body });
+    return response.data;
+  }
+
   async editPolicy(repo: string, path: string, content: string, message: string, branchName?: string): Promise<any> {
     const response = await this.client.post(`/api/policies/${repo}/edit`, { path, content, message, branchName });
     return response.data;
@@ -1471,6 +1491,11 @@ class ApiClient {
 
   async createPolicyRepo(name: string, description?: string): Promise<any> {
     const response = await this.client.post('/api/policies', { name, description });
+    return response.data;
+  }
+
+  async getPolicyPRFiles(repo: string, id: string): Promise<any[]> {
+    const response = await this.client.get(`/api/policies/${repo}/pulls/${id}/files`);
     return response.data;
   }
 }

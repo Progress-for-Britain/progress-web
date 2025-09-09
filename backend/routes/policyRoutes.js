@@ -1,7 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
 const { authenticateToken, requireAdmin, requireWriterOrAdmin } = require('../middleware/auth');
 
 // Initialize Octokit with GitHub App authentication
@@ -11,12 +9,10 @@ const initializeOctokit = async () => {
     const { Octokit } = await import('@octokit/rest');
     const { createAppAuth } = await import('@octokit/auth-app');
 
-    if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_INSTALLATION_ID) {
-      throw new Error('GitHub App configuration missing. Please set GITHUB_APP_ID and GITHUB_INSTALLATION_ID environment variables, and ensure policy-access.private-key.pem exists.');
+    if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_INSTALLATION_ID || !process.env.GITHUB_PRIVATE_KEY) {
+      throw new Error('GitHub App configuration missing. Please set GITHUB_APP_ID, GITHUB_INSTALLATION_ID, and GITHUB_PRIVATE_KEY environment variables.');
     }
-    // Read private key from file
-    const privateKeyPath = path.join(__dirname, '../policy-access.private-key.pem');
-    const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+    const privateKey = process.env.GITHUB_PRIVATE_KEY;
     octokit = new Octokit({
       authStrategy: createAppAuth,
       auth: {
@@ -112,6 +108,95 @@ router.get('/:repo/pulls', authenticateToken, requireWriterOrAdmin, async (req, 
   }
 });
 
+// Get specific PR details
+router.get('/:repo/pulls/:id', authenticateToken, requireWriterOrAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo, id } = req.params;
+    const { data } = await octokit.pulls.get({
+      owner: getOrganization(),
+      repo,
+      pull_number: parseInt(id),
+    });
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching PR:', error);
+    res.status(500).json({ error: 'Failed to fetch PR' });
+  }
+});
+
+// Get PR reviews
+router.get('/:repo/pulls/:id/reviews', authenticateToken, requireWriterOrAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo, id } = req.params;
+    const { data } = await octokit.pulls.listReviews({
+      owner: getOrganization(),
+      repo,
+      pull_number: parseInt(id),
+    });
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching PR reviews:', error);
+    res.status(500).json({ error: 'Failed to fetch PR reviews' });
+  }
+});
+
+// Get PR comments
+router.get('/:repo/pulls/:id/comments', authenticateToken, requireWriterOrAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo, id } = req.params;
+    const { data } = await octokit.issues.listComments({
+      owner: getOrganization(),
+      repo,
+      issue_number: parseInt(id),
+    });
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching PR comments:', error);
+    res.status(500).json({ error: 'Failed to fetch PR comments' });
+  }
+});
+
+// Get PR files changed
+router.get('/:repo/pulls/:id/files', authenticateToken, requireWriterOrAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo, id } = req.params;
+    const { data } = await octokit.pulls.listFiles({
+      owner: getOrganization(),
+      repo,
+      pull_number: parseInt(id),
+    });
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching PR files:', error);
+    res.status(500).json({ error: 'Failed to fetch PR files' });
+  }
+});
+
+// Post a comment on PR
+router.post('/:repo/pulls/:id/comments', authenticateToken, requireWriterOrAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo, id } = req.params;
+    const { body } = req.body;
+    const userName = `${req.user.firstName} ${req.user.lastName}`;
+    const bodyWithUser = `${userName}: ${body}`;
+    const { data } = await octokit.issues.createComment({
+      owner: getOrganization(),
+      repo,
+      issue_number: parseInt(id),
+      body: bodyWithUser,
+    });
+    res.json(data);
+  } catch (error) {
+    console.error('Error posting PR comment:', error);
+    res.status(500).json({ error: 'Failed to post PR comment' });
+  }
+});
+
 // Get content of a specific policy file
 router.get('/:repo/:path(*)', async (req, res) => {
   try {
@@ -134,7 +219,6 @@ router.get('/:repo/:path(*)', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch policy content' });
   }
 });
-
 
 // Edit and propose changes (create branch, commit, PR)
 router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, res) => {
