@@ -1,7 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
 const { authenticateToken, requireAdmin, requireWriterOrAdmin } = require('../middleware/auth');
 
 // Initialize Octokit with GitHub App authentication
@@ -11,12 +9,10 @@ const initializeOctokit = async () => {
     const { Octokit } = await import('@octokit/rest');
     const { createAppAuth } = await import('@octokit/auth-app');
 
-    if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_INSTALLATION_ID) {
-      throw new Error('GitHub App configuration missing. Please set GITHUB_APP_ID and GITHUB_INSTALLATION_ID environment variables, and ensure policy-access.private-key.pem exists.');
+    if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_INSTALLATION_ID || !process.env.GITHUB_PRIVATE_KEY) {
+      throw new Error('GitHub App configuration missing. Please set GITHUB_APP_ID, GITHUB_INSTALLATION_ID, and GITHUB_PRIVATE_KEY environment variables.');
     }
-    // Read private key from file
-    const privateKeyPath = path.join(__dirname, '../policy-access.private-key.pem');
-    const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+    const privateKey = process.env.GITHUB_PRIVATE_KEY;
     octokit = new Octokit({
       authStrategy: createAppAuth,
       auth: {
