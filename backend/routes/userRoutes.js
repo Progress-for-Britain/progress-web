@@ -23,7 +23,8 @@ const {
 const {
   authenticateToken,
   requireAdmin,
-  requireOwnerOrAdmin
+  requireOwnerOrAdmin,
+  requireRole
 } = require('../middleware/auth');
 
 // Public routes
@@ -31,7 +32,8 @@ router.post('/register', createUser);
 router.post('/login', loginUser);
 
 // Protected routes
-router.get('/', authenticateToken, requireAdmin, getAllUsers);
+// Allow onboarding team to view user list (read-only)
+router.get('/', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), getAllUsers);
 router.get('/:id', authenticateToken, requireOwnerOrAdmin, getUserById);
 router.put('/:id', authenticateToken, requireOwnerOrAdmin, updateUser);
 router.delete('/:id', authenticateToken, requireOwnerOrAdmin, deleteUser);
@@ -50,7 +52,7 @@ router.get('/me/activity', authenticateToken, getUserActivity);
 router.get('/me/upcoming-events', authenticateToken, getUserUpcomingEvents);
 
 // Admin user management routes
-router.get('/management/stats', authenticateToken, requireAdmin, getUserManagementStats);
+router.get('/management/stats', authenticateToken, requireRole(['ADMIN', 'ONBOARDING']), getUserManagementStats);
 router.get('/:id/events', authenticateToken, requireAdmin, getUserEventAssignments);
 router.put('/:id/role', authenticateToken, requireAdmin, updateUserRole);
 router.post('/assign-event', authenticateToken, requireAdmin, assignUserToEvent);

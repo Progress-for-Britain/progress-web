@@ -19,6 +19,7 @@ const newsRoutes = require('./routes/newsRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const pendingUserRoutes = require('./routes/pendingUserRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const policyRoutes = require('./routes/policyRoutes');
 
 // Import test user seeding utility
 const { seedAllTestUsers } = require('./utils/seedTestUser');
@@ -33,6 +34,7 @@ app.use('/api/news', newsRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/pending-users', pendingUserRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/policies', policyRoutes);
 
 // Serve static files from the /public folder
 app.use('/public', express.static(path.join(__dirname, 'public')));

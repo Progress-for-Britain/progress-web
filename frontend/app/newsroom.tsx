@@ -86,7 +86,8 @@ export default function Newsroom() {
     }
   };
 
-  const canCreatePost = user?.role === 'ADMIN' || user?.role === 'WRITER';
+  const canCreatePost =
+    (user?.roles && (user.roles.includes('ADMIN') || user.roles.includes('WRITER')));
 
   const categories = [
     { id: 'all', label: 'All News' },

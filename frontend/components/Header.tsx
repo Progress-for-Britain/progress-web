@@ -345,6 +345,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         { href: "/", icon: "home", label: "Home" },
         { href: "/about", icon: "information-circle", label: "About" },
         { href: "/our-approach", icon: "analytics", label: "Our Approach" },
+        { href: "/policy", icon: "document-text", label: "Policies" },
         { href: "/join", icon: "people", label: "Join Us", variant: "primary" as const },
         { href: "/login", icon: "log-in", label: "Login" },
       ];
@@ -353,11 +354,13 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
       const baseItems: NavigationItem[] = [
         { href: "/account", icon: "person", label: "Account" },
         { href: "/newsroom", icon: "newspaper", label: "Newsroom" },
+        { href: "/policy", icon: "document-text", label: "Policies" },
         { href: "/events", icon: "calendar", label: "Events" },
       ];
 
       // Insert admin link after Events if user is admin
-      if (user?.role === 'ADMIN') {
+      const hasAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('ONBOARDING');
+      if (hasAdmin) {
         baseItems.push({ href: "/user-management", icon: "people", label: "User Management" });
       }
 
@@ -369,7 +372,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
 
       return baseItems;
     }
-  }, [isAuthenticated, user?.role, handleLogoutRequest]);
+  }, [isAuthenticated, user?.role, user?.roles, handleLogoutRequest]);
 
   return (
     <View>

@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from "@expo/vector-icons";
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import { api, PendingUser, User } from '../util/api';
+import { api, PendingUser, User, Role } from '../util/api';
 import { format } from 'date-fns';
 
 interface EventAssignment {
@@ -65,18 +65,14 @@ export default function UserManagement() {
 
   // Redirect if not authenticated (but wait for loading to complete)
   React.useEffect(() => {
-    if (!isLoading && (!isAuthenticated || !user || user.role !== 'ADMIN')) {
+    const isAdmin = (user?.roles && (user.roles.includes('ADMIN') || user.roles.includes('ONBOARDING')));
+    if (!isLoading && (!isAuthenticated || !user || !isAdmin)) {
       Alert.alert('Access Denied', 'You must be an admin to access this page.');
       router.push('/');
       return;
     }
+    loadData();
   }, [isAuthenticated, isLoading, user]);
-
-  useEffect(() => {
-    if (isAuthenticated && user && user.role === 'ADMIN') {
-      loadData();
-    }
-  }, [isAuthenticated, user]);
 
   const loadData = async () => {
     setLoading(true);
@@ -156,7 +152,7 @@ export default function UserManagement() {
     if (!selectedUser || !newRole) return;
 
     try {
-      const response = await api.updateUserRole(selectedUser.id, newRole);
+      const response = await api.updateUserRole(selectedUser.id, newRole as Role);
       Alert.alert('Success', 'User role updated successfully');
       setShowRoleModal(false);
       setShowUserModal(false);
@@ -251,6 +247,8 @@ export default function UserManagement() {
     switch (role) {
       case 'ADMIN': return '#dc2626';
       case 'WRITER': return '#d946ef';
+      case 'EVENT_MANAGER': return '#7c3aed';
+      case 'ONBOARDING': return '#f97316';
       case 'VOLUNTEER': return '#059669';
       case 'MEMBER': return '#0ea5e9';
       default: return '#6b7280';
@@ -1181,7 +1179,7 @@ export default function UserManagement() {
                 Change User Role
               </Text>
               
-              {['ADMIN', 'WRITER', 'VOLUNTEER', 'MEMBER'].map((role) => (
+              {['ADMIN', 'ONBOARDING', 'EVENT_MANAGER', 'WRITER', 'VOLUNTEER', 'MEMBER'].map((role) => (
                 <TouchableOpacity
                   key={role}
                   onPress={() => setNewRole(role)}

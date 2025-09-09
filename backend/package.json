@@ -11,6 +11,8 @@
     "dev:seed": "SEED_TEST_USERS=true nodemon server.js"
   },
   "dependencies": {
+    "@octokit/auth-app": "^8.1.0",
+    "@octokit/rest": "^22.0.0",
     "@prisma/client": "^6.14.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -21,8 +23,8 @@
     "node-cron": "^4.2.1",
     "path": "^0.12.7",
     "prisma": "^6.14.0",
-    "stripe": "^18.5.0",
-    "resend": "^6.0.2"
+    "resend": "^6.0.2",
+    "stripe": "^18.5.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
