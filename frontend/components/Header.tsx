@@ -354,6 +354,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
       const baseItems: NavigationItem[] = [
         { href: "/account", icon: "person", label: "Account" },
         { href: "/newsroom", icon: "newspaper", label: "Newsroom" },
+        { href: "/policy", icon: "document-text", label: "Policies" },
         { href: "/events", icon: "calendar", label: "Events" },
       ];
 
