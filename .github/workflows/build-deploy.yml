@@ -2,7 +2,8 @@ name: Build & Deploy
 
 on:
   push:
-    branches: []
+    branches: [ "build-file-not-needed" ]
+
 
 jobs:
   build-and-deploy:

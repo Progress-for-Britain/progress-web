@@ -12,13 +12,20 @@ const initializeOctokit = async () => {
     if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_PRIVATE_KEY || !process.env.GITHUB_INSTALLATION_ID) {
       throw new Error('GitHub App configuration missing. Please set GITHUB_APP_ID, GITHUB_PRIVATE_KEY, and GITHUB_INSTALLATION_ID environment variables.');
     }
-    
+    // Support private keys provided with escaped newlines (\n)
+    const privateKey = process.env.GITHUB_PRIVATE_KEY.replace(/\\n/g, '\n');
     octokit = new Octokit({
       authStrategy: createAppAuth,
       auth: {
         appId: process.env.GITHUB_APP_ID,
-        privateKey: process.env.GITHUB_PRIVATE_KEY,
-        installationId: process.env.GITHUB_INSTALLATION_ID,
+        privateKey,
+        installationId: Number(process.env.GITHUB_INSTALLATION_ID),
+      },
+      request: {
+        // Ensure latest API version header is sent
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
       },
     });
   }
@@ -38,37 +45,34 @@ router.get('/', async (req, res) => {
   try {
     const octokit = await initializeOctokit();
     const org = getOrganization();
-    
-    const response = await octokit.repos.listForOrg({
-      org,
-      type: 'all',
-    });
-    
+    let repos = [];
+    try {
+      const response = await octokit.repos.listForOrg({
+        org,
+        type: 'all',
+      });
+      repos = response.data;
+    } catch (err) {
+      // Fallback if value provided is a user, not an org
+      const status = err?.status || err?.response?.status;
+      if (status === 404 || status === 422) {
+        const response = await octokit.repos.listForUser({
+          username: org,
+          type: 'owner',
+        });
+        repos = response.data;
+      } else {
+        throw err;
+      }
+    }
     // Filter repos that are policies, e.g., name starts with 'policy-'
-    const policyRepos = response.data.filter(repo => repo.name.startsWith('policy-'));
+    const policyRepos = repos.filter(repo => repo.name.startsWith('policy-'));
     res.json(policyRepos);
   } catch (error) {
-    console.error('Error fetching policy repos:', error);
-    res.status(500).json({ error: 'Failed to fetch policies: ' + error.message });
-  }
-});
-
-// Get content of a specific policy file
-router.get('/:repo/:path(*)', async (req, res) => {
-  try {
-    const octokit = await initializeOctokit();
-    const { repo, path } = req.params;
-    const { data } = await octokit.repos.getContent({
-      owner: getOrganization(),
-      repo,
-      path,
-    });
-    // Decode base64 content
-    const content = Buffer.from(data.content, 'base64').toString('utf-8');
-    res.json({ content, sha: data.sha });
-  } catch (error) {
-    console.error('Error fetching policy content:', error);
-    res.status(500).json({ error: 'Failed to fetch policy content' });
+    const status = error?.status || error?.response?.status;
+    const message = error?.response?.data?.message || error?.message || 'Unknown error';
+    console.error('Error fetching policy repos:', { status, message });
+    res.status(500).json({ error: `Failed to fetch policies: ${message}` });
   }
 });
 
@@ -104,6 +108,30 @@ router.get('/:repo/pulls', authenticateToken, requireWriterOrAdmin, async (req, 
     res.status(500).json({ error: 'Failed to fetch PRs' });
   }
 });
+
+// Get content of a specific policy file
+router.get('/:repo/:path(*)', async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo, path } = req.params;
+    const { data } = await octokit.repos.getContent({
+      owner: getOrganization(),
+      repo,
+      path,
+    });
+    // If directory listing is returned, pass through
+    if (Array.isArray(data)) {
+      return res.json(data);
+    }
+    // Decode base64 content
+    const content = Buffer.from(data.content, 'base64').toString('utf-8');
+    res.json({ content, sha: data.sha });
+  } catch (error) {
+    console.error('Error fetching policy content:', error);
+    res.status(500).json({ error: 'Failed to fetch policy content' });
+  }
+});
+
 
 // Edit and propose changes (create branch, commit, PR)
 router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, res) => {
@@ -178,6 +206,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     const octokit = await initializeOctokit();
     const { name, description } = req.body;
     const { data } = await octokit.repos.createInOrg({
+      org: getOrganization(),
       name: `policy-${name}`,
       description,
       private: false, // or true if needed

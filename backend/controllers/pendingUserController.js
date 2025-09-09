@@ -51,7 +51,7 @@ const submitApplication = async (req, res) => {
       
       if (!socialMediaHandle) missingFields.push(requiredVolunteerFields.socialMediaHandle);
       if (isBritishCitizen === undefined || isBritishCitizen === null) missingFields.push(requiredVolunteerFields.isBritishCitizen);
-      if (livesInUK === undefined || livesInUK === null) missingFields.push(requiredVolunteerFields.livesInUK);
+      if (livesInUK === undefined || isBritishCitizen === null) missingFields.push(requiredVolunteerFields.livesInUK);
       if (!briefBio) missingFields.push(requiredVolunteerFields.briefBio);
       if (!briefCV) missingFields.push(requiredVolunteerFields.briefCV);
       if (!signedNDA) missingFields.push(requiredVolunteerFields.signedNDA);
@@ -310,7 +310,7 @@ const approveApplication = async (req, res) => {
     });
 
     // Send acceptance email
-    const emailResult = await sendAcceptanceEmail(pendingUser.email, pendingUser.firstName);
+    const emailResult = await sendAcceptanceEmail(pendingUser.email, pendingUser.firstName, accessCode);
     if (!emailResult.success) {
       console.error('Failed to send acceptance email:', emailResult.error);
       // Note: We don't fail the approval if email fails
@@ -692,6 +692,13 @@ const updateApplicationStatus = async (req, res) => {
 
         return updatedPendingUser;
       });
+
+      // Send acceptance email
+      const emailResult = await sendAcceptanceEmail(pendingUser.email, pendingUser.firstName, accessCode);
+      if (!emailResult.success) {
+        console.error('Failed to send acceptance email:', emailResult.error);
+        // Note: We don't fail the approval if email fails
+      }
 
       return res.json({
         success: true,
