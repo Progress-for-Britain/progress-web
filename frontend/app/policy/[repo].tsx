@@ -12,7 +12,7 @@ import { useAuth } from '../../util/auth-context';
 import { api } from '../../util/api';
 
 interface Branch { name: string }
-interface PullRequest { id: string; title: string; state: string; html_url: string }
+interface PullRequest { id: string; title: string; state: string; html_url: string; number: number }
 
 export default function PolicyContent() {
   const router = useRouter();
@@ -26,7 +26,6 @@ export default function PolicyContent() {
 
   const [content, setContent] = useState('');
   const [title, setTitle] = useState(repo || '');
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [prs, setPrs] = useState<PullRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +56,6 @@ export default function PolicyContent() {
             api.getPolicyPRs(String(repo))
           ]);
           if (!mounted) return;
-          setBranches(b);
           setPrs(p);
         }
       } catch (e) {
@@ -121,7 +119,7 @@ export default function PolicyContent() {
                   <View key={pr.id} style={styles.listItem}>
                     <Text style={commonStyles.text}>{pr.title}</Text>
                     <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                      <TouchableOpacity onPress={() => Linking.openURL(pr.html_url)}>
+                      <TouchableOpacity onPress={() => router.push(`/policy/${repo}/pr/${pr.number}`)}>
                         <Text style={styles.openText}>View</Text>
                       </TouchableOpacity>
                     </View>

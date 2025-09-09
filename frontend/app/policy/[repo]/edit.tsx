@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState, Suspense } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
 import Head from 'expo-router/head';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import Markdown from 'react-native-markdown-display';
 
 import { useTheme } from '../../../util/theme-context';
 import { useResponsive } from '../../../util/useResponsive';
@@ -22,6 +21,28 @@ if (isWeb) {
   });
 }
 
+interface Heading {
+  level: number;
+  text: string;
+  line: number;
+}
+
+const parseHeadings = (content: string): Heading[] => {
+  const lines = content.split('\n');
+  const headings: Heading[] = [];
+  lines.forEach((line, index) => {
+    const match = line.match(/^(#{1,6})\s+(.*)$/);
+    if (match) {
+      headings.push({
+        level: match[1].length,
+        text: match[2].trim(),
+        line: index
+      });
+    }
+  });
+  return headings;
+};
+
 export default function PolicyEditor() {
   const router = useRouter();
   const { repo } = useLocalSearchParams<{ repo: string }>();
@@ -32,6 +53,9 @@ export default function PolicyEditor() {
   const colors = getColors(isDark);
   const styles = getStyles(colors, isMobile);
   const scrollRef = useRef<any>(null);
+  // Holds the EasyMDE instance on web so we can access CodeMirror APIs
+  const easyMdeRef = useRef<any>(null);
+  const textInputRef = useRef<TextInput>(null);
 
   const [content, setContent] = useState('');
   const [commitMessage, setCommitMessage] = useState('Update policy.md');
@@ -39,22 +63,26 @@ export default function PolicyEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isPreview, setIsPreview] = useState(false);
+  const [showOutline, setShowOutline] = useState(true);
 
   const isWriter = user?.roles?.includes('WRITER') || user?.roles?.includes('ADMIN');
 
+  const headings = useMemo(() => parseHeadings(content), [content]);
+
   // Memoize SimpleMDE options so the editor isn't re-initialized on each render
   const mdeOptions = useMemo(() => ({
-    spellChecker: true,
+    spellChecker: false,
     // Disable autofocus to avoid auto-scroll to editor on load
     autofocus: false,
     status: false,
     minHeight: '400px',
     placeholder: 'Edit policy markdown…',
     toolbar: [
-      'bold', 'italic', 'heading', '|',
-      'quote', 'unordered-list', 'ordered-list', '|',
-      'link', 'table', '|', 'preview', 'side-by-side', 'fullscreen'
+      'bold', 'italic', 'strikethrough', 'heading', '|',
+      'code', 'quote', 'unordered-list', 'ordered-list', 'clean-block', '|',
+      'link', 'image', 'table', 'horizontal-rule', '|',
+      'undo', 'redo', '|',
+      'preview', 'side-by-side', 'fullscreen', '|', 'guide'
     ],
   }), []);
 
@@ -124,135 +152,125 @@ export default function PolicyEditor() {
         <Head>
           <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css" />
           <title>Policy Editor</title>
+          {/* Temporary highlight for scrolled-to heading lines */}
+          <style>{`
+            .CodeMirror .cm-line-highlight { 
+              background-color: rgba(255, 230, 0, 0.35);
+            }
+          `}</style>
         </Head>
       )}
-
-      <ScrollView ref={scrollRef} contentContainerStyle={{ paddingHorizontal: isMobile ? 16 : 32, paddingBottom: 100 }}>
-        <View style={{ marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700' }}>Policy Editor: {repo}</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity style={[styles.secondaryButton]} onPress={() => router.replace(`/policy/${repo}`)}>
-              <Text style={styles.secondaryButtonText}>Back to View</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.primaryButton]} onPress={handleSave} disabled={saving}>
-              <Text style={styles.primaryButtonText}>{saving ? 'Saving…' : 'Save & Create PR'}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Mode toggle */}
-        <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
-          <TouchableOpacity
-            style={[styles.modeButton, !isPreview && styles.modeButtonActive]}
-            onPress={() => setIsPreview(false)}
-          >
-            <Text style={[styles.modeButtonText, !isPreview && styles.modeButtonTextActive]}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.modeButton, isPreview && styles.modeButtonActive]}
-            onPress={() => setIsPreview(true)}
-          >
-            <Text style={[styles.modeButtonText, isPreview && styles.modeButtonTextActive]}>Preview</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Commit controls */}
-        <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 8, marginBottom: 12 }}>
-          <TextInput
-            style={[styles.input, { flex: 2 }]}
-            placeholder="Commit message"
-            placeholderTextColor={colors.textSecondary}
-            value={commitMessage}
-            onChangeText={setCommitMessage}
-          />
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Branch name (optional)"
-            placeholderTextColor={colors.textSecondary}
-            value={branchName}
-            onChangeText={setBranchName}
-          />
-        </View>
-
-        {/* Editor/Preview */}
-        {loading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator color={colors.accent} />
-            <Text style={{ color: colors.text, marginTop: 8 }}>Loading content…</Text>
-          </View>
-        ) : isPreview ? (
-          <View style={styles.previewContainer}>
-            <ScrollView style={{ flex: 1 }}>
-              <Markdown
-                style={{
-                  body: { color: colors.text, fontSize: 16 },
-                  heading1: { color: colors.text, borderBottomColor: colors.border, borderBottomWidth: 1, paddingBottom: 8 },
-                  heading2: { color: colors.text },
-                  heading3: { color: colors.text },
-                  heading4: { color: colors.text },
-                  heading5: { color: colors.text },
-                  heading6: { color: colors.text },
-                  hr: { backgroundColor: colors.border },
-                  strong: { color: colors.text },
-                  em: { color: colors.text },
-                  s: { color: colors.textSecondary },
-                  blockquote: { backgroundColor: colors.surface, borderLeftColor: colors.accent, borderLeftWidth: 4, paddingLeft: 16 },
-                  bullet_list: {},
-                  ordered_list: {},
-                  list_item: { color: colors.text },
-                  code_inline: { backgroundColor: colors.surface, color: colors.text, fontFamily: 'monospace' },
-                  code_block: { backgroundColor: colors.surface, color: colors.text, fontFamily: 'monospace', padding: 12, borderRadius: 8 },
-                  fence: { backgroundColor: colors.surface, color: colors.text, fontFamily: 'monospace', padding: 12, borderRadius: 8 },
-                  table: { borderColor: colors.border },
-                  thead: {},
-                  tbody: {},
-                  th: { backgroundColor: colors.surface, color: colors.text, fontWeight: 'bold', borderColor: colors.border },
-                  td: { color: colors.text, borderColor: colors.border },
-                  link: { color: colors.accent },
-                  image: {},
-                  text: { color: colors.text },
-                  paragraph: { color: colors.text },
-                }}
-              >
-                {content || '*No content to preview*'}
-              </Markdown>
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: isMobile ? 'column' : 'row', flex: 1, paddingHorizontal: isMobile ? 16 : 32 }}>
+          {/* Outline */}
+          {showOutline && (
+            <View style={{ width: isMobile ? '100%' : 200, marginBottom: isMobile ? 16 : 0, marginRight: isMobile ? 0 : 16 }}>
+              <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>Outline</Text>
+              <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                {headings.map((heading, index) => (
+                  <TouchableOpacity key={index} onPress={() => {
+                    if (isWeb && easyMdeRef.current && easyMdeRef.current.codemirror) {
+                      try {
+                        const cm = easyMdeRef.current.codemirror;
+                        // Place cursor at heading and align it to top of editor viewport
+                        cm.focus();
+                        cm.setCursor({ line: heading.line, ch: 0 });
+                        const top = cm.charCoords({ line: heading.line, ch: 0 }, 'local').top;
+                        cm.scrollTo(null, top);
+                        // Brief highlight on the target line
+                        const cls = 'cm-line-highlight';
+                        cm.addLineClass(heading.line, 'background', cls);
+                        setTimeout(() => {
+                          try { cm.removeLineClass(heading.line, 'background', cls); } catch {}
+                        }, 900);
+                      } catch {}
+                    } else if (!isWeb && textInputRef.current) {
+                      const lines = content.split('\n');
+                      const pos = lines.slice(0, heading.line).reduce((acc, line) => acc + line.length + 1, 0);
+                      textInputRef.current.setNativeProps({ selection: { start: pos, end: pos } });
+                    }
+                  }} style={{ paddingVertical: 4, paddingLeft: heading.level * 10 }}>
+                    <Text style={{ color: colors.text, fontSize: 14, fontWeight: heading.level === 1 ? 'bold' : 'normal' }}>{heading.text}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+          {/* Editor part */}
+          <View style={{ flex: 1 }}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+              <View style={{ marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ color: colors.text, fontSize: 22, fontWeight: '700' }}>Policy Editor: {repo}</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TouchableOpacity style={[styles.secondaryButton]} onPress={() => setShowOutline(!showOutline)}>
+                    <Text style={styles.secondaryButtonText}>{showOutline ? 'Hide Outline' : 'Show Outline'}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.secondaryButton]} onPress={() => router.replace(`/policy/${repo}`)}>
+                    <Text style={styles.secondaryButtonText}>Back to View</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.primaryButton]} onPress={handleSave} disabled={saving}>
+                    <Text style={styles.primaryButtonText}>{saving ? 'Saving…' : 'Save & Create PR'}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              {/* Commit controls */}
+              <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 8, marginBottom: 12 }}>
+                <TextInput
+                  style={[styles.input, { flex: 2 }]}
+                  placeholder="Commit message"
+                  placeholderTextColor={colors.textSecondary}
+                  value={commitMessage}
+                  onChangeText={setCommitMessage}
+                />
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Branch name (optional)"
+                  placeholderTextColor={colors.textSecondary}
+                  value={branchName}
+                  onChangeText={setBranchName}
+                />
+              </View>
+              {/* Editor */}
+              {loading ? (
+                <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                  <ActivityIndicator color={colors.accent} />
+                  <Text style={{ color: colors.text, marginTop: 8 }}>Loading content…</Text>
+                </View>
+              ) : isWeb && WebMDE ? (
+                <View style={styles.editorWebContainer}>
+                  {/* @ts-ignore */}
+                  <WebMDE
+                    value={content}
+                    onChange={(v: string) => setContent(v)}
+                    options={mdeOptions}
+                    // Capture the EasyMDE and CodeMirror instances for programmatic control
+                    // @ts-ignore - prop is provided by react-simplemde-editor
+                    getMdeInstance={(inst: any) => { easyMdeRef.current = inst; }}
+                    // @ts-ignore - some versions also expose the underlying CodeMirror instance directly
+                    getCodemirrorInstance={(cm: any) => {
+                      if (!easyMdeRef.current) easyMdeRef.current = { codemirror: cm };
+                      else easyMdeRef.current.codemirror = cm;
+                    }}
+                  />
+                </View>
+              ) : (
+                <TextInput
+                  ref={textInputRef}
+                  style={styles.editorInput}
+                  multiline
+                  value={content}
+                  onChangeText={setContent}
+                  placeholder="Edit policy markdown…"
+                  placeholderTextColor={colors.textSecondary}
+                />
+              )}
+              {error && (
+                <Text style={{ color: colors.error, marginTop: 12 }}>{error}</Text>
+              )}
             </ScrollView>
           </View>
-        ) : isWeb && WebMDE ? (
-          <View style={styles.editorWebContainer}>
-            {/* @ts-ignore */}
-            <WebMDE
-              value={content}
-              onChange={(v: string) => setContent(v)}
-              options={mdeOptions}
-            />
-          </View>
-        ) : (
-          <TextInput
-            style={styles.editorInput}
-            multiline
-            value={content}
-            onChangeText={setContent}
-            placeholder="Edit policy markdown…"
-            placeholderTextColor={colors.textSecondary}
-          />
-        )}
-
-        {error && (
-          <Text style={{ color: colors.error, marginTop: 12 }}>{error}</Text>
-        )}
-
-        {/* Bottom actions for mobile */}
-        <View style={{ height: 24 }} />
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity style={[styles.secondaryButton, { flex: 1 }]} onPress={() => router.replace(`/policy/${repo}`)}>
-            <Text style={styles.secondaryButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.primaryButton, { flex: 1 }]} onPress={handleSave} disabled={saving}>
-            <Text style={styles.primaryButtonText}>{saving ? 'Saving…' : 'Save & Create PR'}</Text>
-          </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -285,14 +303,6 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
     textAlignVertical: 'top',
     fontFamily: 'monospace',
     fontSize: 16,
-  },
-  previewContainer: {
-    minHeight: 400,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: 16,
   },
   modeButton: {
     paddingVertical: 8,
