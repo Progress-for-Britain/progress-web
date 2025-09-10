@@ -183,15 +183,15 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
       flex: 1,
     },
     content: {
-      maxWidth: 800,
+      maxWidth: isMobile ? width : 800,
       marginTop: 50,
-      marginHorizontal: 'auto',
+      marginHorizontal: isMobile ? 0 : 'auto',
       paddingHorizontal: isMobile ? 16 : 20,
       position: 'relative',
       zIndex: 2,
       ...(Platform.OS === 'web' && {
-        marginLeft: 'auto',
-        marginRight: 'auto',
+        marginLeft: isMobile ? 0 : 'auto',
+        marginRight: isMobile ? 0 : 'auto',
       }),
     },
     title: {
