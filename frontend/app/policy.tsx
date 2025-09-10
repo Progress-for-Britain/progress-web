@@ -154,6 +154,8 @@ export default function Policy() {
               <FlatList
                 data={filteredRepos}
                 keyExtractor={(item) => item.id}
+                // Force remount when column count changes to avoid RN web error
+                key={`cols-${isMobile ? 1 : 2}`}
                 numColumns={isMobile ? 1 : 2}
                 renderItem={({item}) => (
                   <TouchableOpacity

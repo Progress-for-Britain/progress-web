@@ -1595,7 +1595,8 @@ export const batchApiCalls = async <T>(
 
 // Service Worker integration hints
 export const registerServiceWorker = async () => {
-  if ('serviceWorker' in navigator && isMobileWeb) {
+  const enableSW = (typeof process !== 'undefined' && (process.env as any)?.EXPO_PUBLIC_ENABLE_SW) === 'true';
+  if ('serviceWorker' in navigator && isMobileWeb && enableSW) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
       console.log('Service Worker registered:', registration);

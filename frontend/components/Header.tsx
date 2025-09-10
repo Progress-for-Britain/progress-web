@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Platform, Animated, Modal, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Animated, Modal, Easing, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter, usePathname, useFocusEffect } from 'expo-router';
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
@@ -88,7 +88,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
     if (onPress) {
       onPress();
     } else if (href) {
-      router.replace(href as any);
+      router.push(href as any);
     }
   }, [isMobile, onMenuToggle, router]);
 
@@ -284,25 +284,43 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
     const ButtonComponent = isMobileMenu ? Animated.View : View;
     const TouchableComponent = TouchableOpacity;
 
-    return (
+    const touchableStyles = useMemo(() => (
+      StyleSheet.flatten([
+        buttonStyles,
+        {
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginHorizontal: isMobileMenu ? 0 : 4,
+          marginVertical: isMobileMenu ? 6 : 0,
+          ...(Platform.OS === 'web' && { cursor: 'pointer' } as any),
+          ...(isMobileMenu && {
+            backgroundColor: variant === 'default' ? 'rgba(255, 255, 255, 0.05)' : undefined,
+          }),
+        },
+        (variant !== 'default') && {
+          ...getOptimizedShadow('medium', isDark, variant === 'primary' ? '#660033' : (isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)')),
+        }
+      ])
+    ), [buttonStyles, isMobileMenu, variant, isDark]);
+
+    const content = (
       <TouchableComponent
-        onPress={() => handleNavigation(href, onPress)}
-        style={[
-          buttonStyles,
-          {
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginHorizontal: isMobileMenu ? 0 : 4,
-            marginVertical: isMobileMenu ? 6 : 0,
-            ...(Platform.OS === 'web' && { cursor: 'pointer' }),
-            ...(isMobileMenu && {
-              backgroundColor: variant === 'default' ? 'rgba(255, 255, 255, 0.05)' : undefined,
-            }),
-          },
-          (variant !== 'default') && {
-            ...getOptimizedShadow('medium', isDark, variant === 'primary' ? '#660033' : (isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)')),
+        onPress={() => {
+          // Always close mobile menu on press
+          if (isMobile) {
+            setIsMobileMenuOpen(false);
+            onMenuToggle?.(false);
           }
-        ]}
+          if (onPress) {
+            onPress();
+          } else if (!href) {
+            // no-op, Link will handle navigation when href is present
+          } else if (!Platform.select({ web: true, default: false })) {
+            // On native when not using Link wrapping, navigate
+            handleNavigation(href, undefined);
+          }
+        }}
+        style={touchableStyles}
       >
         <ButtonComponent 
           style={[
@@ -340,6 +358,17 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         </ButtonComponent>
       </TouchableComponent>
     );
+
+    if (href) {
+      // Use Link without prefetch to avoid background data/module loads
+      return (
+        <Link href={href as any} asChild>
+          {content}
+        </Link>
+      );
+    }
+
+    return content;
   });
 
   // Memoized navigation items to prevent recreation
@@ -404,21 +433,22 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
               width: '100%'
             }}>
             {/* Progress brand name */}
-            <TouchableOpacity 
-              onPress={() => router.replace('/')} 
-              style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
-            >
-              <Text style={{ 
-                fontSize: isMobile ? 18 : 22, 
-                fontWeight: '700', 
-                color: colors.text,
-                lineHeight: isMobile ? 22 : 26,
-                fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
-                letterSpacing: 1,
-              }}>
-                PROGRESS
-              </Text>
-            </TouchableOpacity>
+            <Link href="/" asChild>
+              <TouchableOpacity 
+                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+              >
+                <Text style={{ 
+                  fontSize: isMobile ? 18 : 22, 
+                  fontWeight: '700', 
+                  color: colors.text,
+                  lineHeight: isMobile ? 22 : 26,
+                  fontFamily: Platform.OS === 'web' ? "'Montserrat', sans-serif" : undefined,
+                  letterSpacing: 1,
+                }}>
+                  PROGRESS
+                </Text>
+              </TouchableOpacity>
+            </Link>
 
             {/* Desktop Navigation */}
             {!isMobile && (
