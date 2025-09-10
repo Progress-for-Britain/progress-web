@@ -159,9 +159,13 @@ export default function PolicyEditor() {
 
   const handleSave = async () => {
     if (!repo) return;
+    if (branchName === 'main') {
+      Alert.alert('Error', 'Cannot commit to main branch. Please use a different branch name.');
+      return;
+    }
     try {
       setSaving(true);
-      await api.editPolicy(String(repo), 'policy.md', content, commitMessage || 'Update policy.md', selectedBranch);
+      await api.editPolicy(String(repo), 'policy.md', content, commitMessage || 'Update policy.md', branchName);
       Alert.alert('Success', 'Policy updated and PR created!');
       router.replace(`/policy/${repo}`);
     } catch (e) {
@@ -312,16 +316,15 @@ export default function PolicyEditor() {
                         <TouchableOpacity
                           key={branch.name}
                           onPress={() => {
-                            setBranchName(branch.name);
                             setSelectedBranch(branch.name);
                             setShowBranchDropdown(false);
                           }}
                           style={[styles.dropdownItem, {
-                            backgroundColor: branch.name === branchName ? colors.accent : 'transparent'
+                            backgroundColor: branch.name === selectedBranch ? colors.accent : 'transparent'
                           }]}
                         >
                           <Text style={{
-                            color: branch.name === branchName ? '#fff' : colors.text,
+                            color: branch.name === selectedBranch ? '#fff' : colors.text,
                             fontSize: 14
                           }}>
                             {branch.name}
