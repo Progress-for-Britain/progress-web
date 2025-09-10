@@ -11,7 +11,23 @@ import { getCommonStyles, getColors } from '../../util/commonStyles';
 import { useAuth } from '../../util/auth-context';
 import { api } from '../../util/api';
 
-interface PullRequest { id: string; title: string; state: string; html_url: string; number: number }
+interface PullRequest { 
+  id: string; 
+  title: string; 
+  state: string; 
+  html_url: string; 
+  number: number; 
+  draft?: boolean;
+  created_at: string;
+  updated_at: string;
+  user: {
+    login: string;
+    avatar_url: string;
+  };
+  head: {
+    ref: string;
+  };
+}
 
 export default function PolicyContent() {
   const router = useRouter();
@@ -114,17 +130,89 @@ export default function PolicyContent() {
               </View>
 
               <View style={styles.section}>
-                <Text style={[commonStyles.text, styles.sectionTitle]}>Pull Requests</Text>
-                {prs.map((pr) => (
-                  <View key={pr.id} style={styles.listItem}>
-                    <Text style={commonStyles.text}>{pr.title}</Text>
-                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                      <TouchableOpacity onPress={() => router.push(`/policy/${repo}/pr/${pr.number}`)}>
-                        <Text style={styles.openText}>View</Text>
-                      </TouchableOpacity>
-                    </View>
+                <View style={styles.sectionHeader}>
+                  <Text style={[commonStyles.text, styles.sectionTitle]}>Pull Requests</Text>
+                  <Text style={styles.prCount}>{prs.length} {prs.length === 1 ? 'PR' : 'PRs'}</Text>
+                </View>
+                
+                {prs.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <MaterialIcons name="description" size={48} color={colors.textSecondary} />
+                    <Text style={[commonStyles.text, styles.emptyStateTitle]}>No Pull Requests</Text>
+                    <Text style={[commonStyles.text, styles.emptyStateText]}>
+                      There are no open pull requests for this policy.
+                    </Text>
                   </View>
-                ))}
+                ) : (
+                  prs.map((pr) => (
+                    <View key={pr.id} style={styles.prCard}>
+                      <View style={styles.prHeader}>
+                        <View style={styles.prTitleRow}>
+                          <Text style={styles.prNumber}>#{pr.number}</Text>
+                          <Text style={styles.prTitle}>{pr.title}</Text>
+                        </View>
+                        <View style={styles.prStatusRow}>
+                          <View style={[styles.statusBadge, { 
+                            backgroundColor: pr.state === 'open' ? colors.success : colors.error 
+                          }]}>
+                            <MaterialIcons 
+                              name={pr.state === 'open' ? 'radio-button-checked' : 'radio-button-unchecked'} 
+                              size={14} 
+                              color="#fff" 
+                            />
+                            <Text style={styles.statusText}>
+                              {pr.state === 'open' ? 'Open' : 'Closed'}
+                            </Text>
+                          </View>
+                          {pr.draft && (
+                            <View style={styles.draftBadge}>
+                              <MaterialIcons name="edit" size={14} color="#fff" />
+                              <Text style={styles.draftText}>Draft</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+
+                      <View style={styles.prMeta}>
+                        <View style={styles.prMetaItem}>
+                          <MaterialIcons name="person" size={16} color={colors.textSecondary} />
+                          <Text style={styles.prMetaText}>
+                            {pr.user.login.includes('[bot]') 
+                              ? pr.title.replace(/'s changes$/, '') 
+                              : pr.user.login}
+                          </Text>
+                        </View>
+                        <View style={styles.prMetaItem}>
+                          <MaterialIcons name="call-split" size={16} color={colors.textSecondary} />
+                          <Text style={styles.prMetaText}>{pr.head.ref}</Text>
+                        </View>
+                        <View style={styles.prMetaItem}>
+                          <MaterialIcons name="schedule" size={16} color={colors.textSecondary} />
+                          <Text style={styles.prMetaText}>
+                            {new Date(pr.created_at).toLocaleDateString()}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.prActions}>
+                        <TouchableOpacity 
+                          style={styles.prActionButton}
+                          onPress={() => router.push(`/policy/${repo}/pr/${pr.number}`)}
+                        >
+                          <MaterialIcons name="visibility" size={16} color={colors.accent} />
+                          <Text style={styles.prActionText}>View Details</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={styles.prActionButton}
+                          onPress={() => Linking.openURL(pr.html_url)}
+                        >
+                          <MaterialIcons name="open-in-new" size={16} color={colors.accent} />
+                          <Text style={styles.prActionText}>Open in GitHub</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
               </View>
             </>
           )}
@@ -167,6 +255,120 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
     fontSize: isMobile ? 18 : 20,
     fontWeight: 'bold',
     marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  prCount: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    marginTop: 4,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  prCard: {
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: colors.surface,
+  },
+  prHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  prTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  prNumber: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: colors.accent,
+  },
+  prTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  prStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  draftBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.warning,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  draftText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  prMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  prMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  prMetaText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  prActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  prActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  prActionText: {
+    fontSize: 14,
+    color: colors.accent,
+    fontWeight: 'bold',
   },
   listItem: {
     padding: 12,

@@ -1487,8 +1487,8 @@ class ApiClient {
     return response.data;
   }
 
-  async editPolicy(repo: string, path: string, content: string, message: string, branchName?: string): Promise<any> {
-    const response = await this.client.post(`/api/policies/${repo}/edit`, { path, content, message, branchName });
+  async editPolicy(repo: string, path: string, content: string, message: string, branchName?: string, draft?: boolean): Promise<any> {
+    const response = await this.client.post(`/api/policies/${repo}/edit`, { path, content, message, branchName, draft });
     return response.data;
   }
 
@@ -1499,6 +1499,11 @@ class ApiClient {
 
   async getPolicyPRFiles(repo: string, id: string): Promise<any[]> {
     const response = await this.client.get(`/api/policies/${repo}/pulls/${id}/files`);
+    return response.data;
+  }
+
+  async updatePolicyPR(repo: string, id: string, updates: { draft?: boolean }): Promise<any> {
+    const response = await this.client.patch(`/api/policies/${repo}/pulls/${id}`, updates);
     return response.data;
   }
 }

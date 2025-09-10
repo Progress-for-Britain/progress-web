@@ -230,7 +230,7 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
   try {
     const octokit = await initializeOctokit();
     const { repo } = req.params;
-    const { path, content, message, branchName } = req.body;
+    const { path, content, message, branchName, draft } = req.body;
     const owner = getOrganization();
     const { firstName, lastName } = req.user;
     const userName = `${firstName} ${lastName}`;
@@ -324,6 +324,7 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
         head: targetBranch,
         base: 'main',
         body: message || `Policy update by ${userName}`,
+        draft: draft || false,
       });
     }
 
@@ -331,6 +332,36 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
   } catch (error) {
     console.error('Error editing policy:', error);
     res.status(500).json({ error: 'Failed to edit policy' });
+  }
+});
+
+// Update PR status (draft to open, etc.)
+router.patch('/:repo/pulls/:id', authenticateToken, requireWriterOrAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo, id } = req.params;
+    const { draft } = req.body;
+    
+    const updateData = {};
+    if (draft !== undefined) {
+      updateData.draft = draft;
+    }
+    
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No valid updates provided' });
+    }
+    
+    const { data } = await octokit.pulls.update({
+      owner: getOrganization(),
+      repo,
+      pull_number: parseInt(id),
+      ...updateData
+    });
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error updating PR:', error);
+    res.status(500).json({ error: 'Failed to update PR' });
   }
 });
 
