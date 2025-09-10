@@ -27,7 +27,8 @@ const useActiveRoute = (href?: string) => {
       pathname === href || 
       (href === '/events' && pathname.startsWith('/events/')) ||
       (href === '/newsroom' && pathname.startsWith('/news/')) ||
-      (href === '/account' && pathname.startsWith('/account'))
+      (href === '/account' && pathname.startsWith('/account')) ||
+      (href === '/policy' && pathname.startsWith('/policy/'))
     );
   }, [pathname, href]);
 };
@@ -40,6 +41,9 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { isMobile } = useResponsive();
   const colors = getColors(isDark);
+  const [menuContentHeight, setMenuContentHeight] = useState(0);
+  const expandedPaddingTop = 8;
+  const expandedPaddingBottom = 20;
   
   // Single animation value for mobile menu - much more performant
   const menuAnim = useRef(new Animated.Value(0)).current;
@@ -144,7 +148,7 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
     <TouchableOpacity
       onPress={toggleTheme}
       style={{
-        marginRight: 16,
+        marginLeft: 15,
         padding: 8,
         borderRadius: 20,
         backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
@@ -449,6 +453,90 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         </View>
       </SafeAreaView>
 
+      {/* Hidden measurer for mobile menu content height */}
+      {isMobile && (
+        <View
+          style={{ position: 'absolute', left: 0, right: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }}
+          onLayout={(e) => setMenuContentHeight(e.nativeEvent.layout.height)}
+        >
+          <View style={{ paddingHorizontal: 16, paddingTop: expandedPaddingTop, paddingBottom: expandedPaddingBottom }}>
+            <View 
+              style={{
+                height: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                marginBottom: 16,
+                marginHorizontal: -16,
+              }}
+            />
+            {navigationItems.map((item, index) => (
+              <NavButton 
+                key={item.href || item.label} 
+                href={item.href} 
+                onPress={item.onPress}
+                icon={item.icon}
+                variant={item.variant}
+                isMobileMenu
+                animationDelay={index * 50}
+              >
+                {item.label}
+              </NavButton>
+            ))}
+            <View style={{ paddingTop: 8 }}>
+              <TouchableOpacity
+                onPress={toggleTheme}
+                activeOpacity={0.85}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: 14,
+                  paddingHorizontal: 18,
+                  marginHorizontal: -12,
+                  marginBottom: 10,
+                  marginTop: 8,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(177,0,36,0.12)',
+                  ...getOptimizedShadow('light', isDark, isDark ? 'rgba(177, 0, 36, 0.08)' : 'rgba(177, 0, 36, 0.04)'),
+                }}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(177,0,36,0.08)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 14,
+                  }}
+                >
+                  <Ionicons
+                    name={isDark ? "moon" : "sunny"}
+                    size={20}
+                    color={isDark ? "#FFD700" : "#B10024"}
+                  />
+                </View>
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: colors.text,
+                  flex: 1,
+                  letterSpacing: 0.2,
+                }}>
+                  {isDark ? 'Dark Mode' : 'Light Mode'}
+                </Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={colors.textSecondary}
+                  style={{ marginLeft: 8 }}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
       {/* Mobile Menu Dropdown - optimized */}
       {isMobile && (
         <Animated.View
@@ -459,20 +547,14 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
             ...getOptimizedShadow('heavy', isDark, Platform.OS === 'web' && isMobile ? 
               (isDark ? 'rgba(0, 0, 0, 0.98)' : 'rgba(255, 255, 255, 0.98)') : 
               (isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.95)')),
-            height: menuAnim.interpolate({
+            maxHeight: menuAnim.interpolate({
               inputRange: [0, 1],
-              outputRange: [0, 480],
+              outputRange: [0, Math.max(1, menuContentHeight)],
             }),
             opacity: menuAnim,
             overflow: 'hidden',
-            paddingTop: menuAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 8],
-            }),
-            paddingBottom: menuAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 20],
-            }),
+            paddingTop: expandedPaddingTop,
+            paddingBottom: expandedPaddingBottom,
           }}
         >
           <View>
