@@ -14,6 +14,8 @@ interface Repository {
   id: string;
   name: string;
   displayName?: string;
+  tags?: string[];
+  relatedPolicies?: string[];
 }
 
 export default function Policy() {
@@ -33,6 +35,8 @@ export default function Policy() {
   const [newRepoDescription, setNewRepoDescription] = useState('');
   const [creating, setCreating] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const isAdmin = user?.roles?.includes('ADMIN');
 
   // Load repos on mount
@@ -44,17 +48,40 @@ export default function Policy() {
     try {
       setLoading(true);
       const data = await api.getPolicyRepos();
-      // Fetch titles for each repo
+      // Fetch titles and metadata for each repo
       const reposWithTitles = await Promise.all(data.map(async (repo) => {
+        let title = repo.name;
+        let tags: string[] = [];
+        let relatedPolicies: string[] = [];
+        
         try {
-          const contentData = await api.getPolicyContent(repo.name, 'policy.md');
-          const lines = contentData.content.split('\n');
+          // Fetch policy.md for title
+          const policyContent = await api.getPolicyContent(repo.name, 'policy.md');
+          const lines = policyContent.content.split('\n');
           const firstHeading = lines.find(line => line.startsWith('# '));
-          const title = firstHeading ? firstHeading.replace(/^#+\s*/, '') : repo.name;
-          return { ...repo, displayName: title };
+          title = firstHeading ? firstHeading.replace(/^#+\s*/, '') : repo.name;
         } catch {
-          return { ...repo, displayName: repo.name };
+          // If policy.md doesn't exist, use repo name
         }
+        
+        try {
+          // Fetch README.md for tags and related policies
+          const readmeContent = await api.getPolicyContent(repo.name, 'README.md');
+          const lines = readmeContent.content.split('\n');
+          
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (line.toLowerCase().startsWith('tags:')) {
+              tags = line.substring(5).split(',').map(tag => tag.trim()).filter(tag => tag);
+            } else if (line.toLowerCase().startsWith('related policies:')) {
+              relatedPolicies = line.substring(16).split(',').map(policy => policy.trim()).filter(policy => policy);
+            }
+          }
+        } catch {
+          // If README.md doesn't exist, tags and relatedPolicies remain empty
+        }
+        
+        return { ...repo, displayName: title, tags, relatedPolicies };
       }));
       setRepos(reposWithTitles);
     } catch (error) {
@@ -63,6 +90,15 @@ export default function Policy() {
       setLoading(false);
     }
   };
+
+  // Filter repos based on search query
+  const filteredRepos = repos.filter(repo => {
+    const query = searchQuery.toLowerCase();
+    const title = (repo.displayName || repo.name).toLowerCase();
+    const name = repo.name.toLowerCase();
+    const tags = repo.tags?.join(' ').toLowerCase() || '';
+    return title.includes(query) || name.includes(query) || tags.includes(query);
+  });
 
   const createRepo = async () => {
     if (!newRepoName.trim()) {
@@ -95,6 +131,17 @@ export default function Policy() {
             <Text style={[commonStyles.text, styles.heroSubtext]}>Our guiding principles and policies</Text>
           </View>
 
+          {/* Search input */}
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search policies by title, name, or tags..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <MaterialIcons name="search" size={24} color={colors.text} style={styles.searchIcon} />
+          </View>
+
           {/* Repo list */}
           <View style={styles.section}>
             <Text style={[commonStyles.text, styles.sectionTitle]}>Select a Policy</Text>
@@ -105,7 +152,7 @@ export default function Policy() {
               </View>
             ) : (
               <FlatList
-                data={repos}
+                data={filteredRepos}
                 keyExtractor={(item) => item.id}
                 numColumns={isMobile ? 1 : 2}
                 renderItem={({item}) => (
@@ -117,6 +164,14 @@ export default function Policy() {
                   >
                     <MaterialIcons name="policy" size={32} color={colors.accent} />
                     <Text style={[commonStyles.text, styles.repoCardText]}>{item.displayName || item.name}</Text>
+                    {item.tags && item.tags.length > 0 && (
+                      <View style={styles.tagsContainer}>
+                        {item.tags.slice(0, 3).map((tag, index) => (
+                          <Text key={index} style={styles.tag}>{tag}</Text>
+                        ))}
+                        {item.tags.length > 3 && <Text style={styles.moreTags}>+{item.tags.length - 3} more</Text>}
+                      </View>
+                    )}
                   </TouchableOpacity>
                 )}
               />
@@ -224,5 +279,42 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: isMobile ? 20 : 40,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: colors.surface,
+  },
+  searchIcon: {
+    marginLeft: 8,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  tag: {
+    backgroundColor: colors.accent,
+    color: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginRight: 4,
+    marginBottom: 4,
+    fontSize: isMobile ? 12 : 14,
+  },
+  moreTags: {
+    color: colors.text,
+    fontSize: isMobile ? 12 : 14,
+    marginTop: 4,
   },
 });

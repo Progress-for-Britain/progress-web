@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Linking, TextInput, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
@@ -10,6 +10,15 @@ import { useResponsive } from '../../util/useResponsive';
 import { getCommonStyles, getColors } from '../../util/commonStyles';
 import { useAuth } from '../../util/auth-context';
 import { api } from '../../util/api';
+
+// Define interfaces for our data types
+interface Repository {
+  id: string;
+  name: string;
+  displayName?: string;
+  tags?: string[];
+  relatedPolicies?: string[];
+}
 
 interface PullRequest { 
   id: string; 
@@ -29,6 +38,40 @@ interface PullRequest {
   };
 }
 
+const tagColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'];
+
+const getTagColor = (tag: string, index: number) => {
+  // Use a simple hash of the tag name for consistent colors
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) {
+    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return tagColors[Math.abs(hash) % tagColors.length];
+};
+
+const standardTags = [
+  'environment',
+  'economy',
+  'health',
+  'education',
+  'security',
+  'transport',
+  'housing',
+  'welfare',
+  'justice',
+  'international',
+  'climate',
+  'energy',
+  'taxation',
+  'employment',
+  'immigration',
+  'defence',
+  'foreign policy',
+  'social care',
+  'pensions',
+  'digital',
+];
+
 export default function PolicyContent() {
   const router = useRouter();
   const { repo } = useLocalSearchParams<{ repo: string }>();
@@ -44,6 +87,12 @@ export default function PolicyContent() {
   const [prs, setPrs] = useState<PullRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allRepos, setAllRepos] = useState<Repository[]>([]);
+  const [relatedRepos, setRelatedRepos] = useState<Repository[]>([]);
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [currentTags, setCurrentTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
+  const [currentRepo, setCurrentRepo] = useState<Repository | null>(null);
 
   const isWriter = user?.roles?.includes('WRITER') || user?.roles?.includes('ADMIN');
 
@@ -86,6 +135,66 @@ export default function PolicyContent() {
     return () => { mounted = false };
   }, [repo, user]);
 
+  useEffect(() => {
+    async function fetchAllRepos() {
+      try {
+        const data = await api.getPolicyRepos();
+        const reposWithTitles = await Promise.all(data.map(async (repo) => {
+          let title = repo.name;
+          let tags: string[] = [];
+          let relatedPolicies: string[] = [];
+          
+          try {
+            // Fetch policy.md for title
+            const policyContent = await api.getPolicyContent(repo.name, 'policy.md');
+            const lines = policyContent.content.split('\n');
+            const firstHeading = lines.find(line => line.startsWith('# '));
+            title = firstHeading ? firstHeading.replace(/^#+\s*/, '') : repo.name;
+          } catch {
+            // If policy.md doesn't exist, use repo name
+          }
+          
+          try {
+            // Fetch README.md for tags and related policies
+            const readmeContent = await api.getPolicyContent(repo.name, 'README.md');
+            const lines = readmeContent.content.split('\n');
+            
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (line.toLowerCase().startsWith('tags:')) {
+                tags = line.substring(5).split(',').map(tag => tag.trim()).filter(tag => tag);
+              } else if (line.toLowerCase().startsWith('related policies:')) {
+                relatedPolicies = line.substring(16).split(',').map(policy => policy.trim()).filter(policy => policy);
+              }
+            }
+          } catch {
+            // If README.md doesn't exist, tags and relatedPolicies remain empty
+          }
+          
+          return { ...repo, displayName: title, tags, relatedPolicies };
+        }));
+        setAllRepos(reposWithTitles);
+        
+        // Find current repo and compute related
+        const current = reposWithTitles.find(r => r.name === repo);
+        if (current) {
+          setCurrentRepo(current);
+          setCurrentTags(current.tags || []);
+          if (current.tags && current.tags.length > 0) {
+            const related: Repository[] = reposWithTitles.filter((r: Repository) => 
+              r.name !== repo && r.tags && r.tags.some((tag: string) => current.tags!.includes(tag))
+            );
+            setRelatedRepos(related);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching all repos:', error);
+      }
+    }
+    
+    if (repo) fetchAllRepos();
+  }, [repo]);
+
   return (
     <>
       <SEOHead pageKey="policy" />
@@ -101,6 +210,100 @@ export default function PolicyContent() {
               <Text style={[commonStyles.text, styles.backText]}>Back to Policies</Text>
             </TouchableOpacity>
           </View>
+
+          {user?.roles?.includes('ADMIN') && (
+            <View style={styles.section}>
+              <Text style={[commonStyles.text, styles.sectionTitle]}>Manage Tags</Text>
+              {isEditingTags ? (
+                <View>
+                  <Text style={styles.editTagsText}>Standard Tags:</Text>
+                  <View style={styles.standardTagsContainer}>
+                    {standardTags.map((tag) => (
+                      <TouchableOpacity
+                        key={tag}
+                        style={[
+                          styles.standardTag,
+                          currentTags.includes(tag) && styles.selectedTag
+                        ]}
+                        onPress={() => {
+                          if (currentTags.includes(tag)) {
+                            setCurrentTags(currentTags.filter(t => t !== tag));
+                          } else {
+                            setCurrentTags([...currentTags, tag]);
+                          }
+                        }}
+                      >
+                        <Text style={[
+                          styles.standardTagText,
+                          currentTags.includes(tag) && styles.selectedTagText
+                        ]}>
+                          {tag}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <Text style={styles.editTagsText}>Custom Tags:</Text>
+                  <TextInput
+                    style={styles.tagInput}
+                    placeholder="Add custom tag and press Enter"
+                    value={newTag}
+                    onChangeText={setNewTag}
+                    onSubmitEditing={() => {
+                      if (newTag.trim() && !currentTags.includes(newTag.trim())) {
+                        setCurrentTags([...currentTags, newTag.trim()]);
+                        setNewTag('');
+                      }
+                    }}
+                  />
+                  <Text style={styles.editTagsText}>Current Tags:</Text>
+                  <View style={styles.tagsContainer}>
+                    {currentTags.map((tag, index) => (
+                      <TouchableOpacity key={index} onPress={() => setCurrentTags(currentTags.filter(t => t !== tag))}>
+                        <Text style={[styles.tag, { backgroundColor: getTagColor(tag, index) }]}>{tag} ✕</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <View style={styles.editButtons}>
+                    <TouchableOpacity style={styles.saveButton} onPress={async () => {
+                      try {
+                        await api.setPolicyTags(repo!, currentTags);
+                        setIsEditingTags(false);
+                        // Refresh related repos
+                        const updatedCurrent = { ...currentRepo, tags: currentTags };
+                        setAllRepos(prev => prev.map(r => 
+                          r.name === repo 
+                            ? { ...updatedCurrent, id: updatedCurrent.id || r.id } as Repository 
+                            : r
+                        ));
+                        const related = allRepos.filter(r => 
+                          r.name !== repo && r.tags && r.tags.some(tag => currentTags.includes(tag))
+                        );
+                        setRelatedRepos(related);
+                      } catch (error) {
+                        Alert.alert('Error', 'Failed to update tags');
+                      }
+                    }}>
+                      <Text style={styles.saveButtonText}>Save</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.cancelButton} onPress={() => setIsEditingTags(false)}>
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View>
+                  <View style={styles.tagsContainer}>
+                    {currentTags.length > 0 ? currentTags.map((tag, index) => (
+                      <Text key={index} style={[styles.tag, { backgroundColor: getTagColor(tag, index) }]}>{tag}</Text>
+                    )) : <Text style={styles.noTagsText}>No tags set</Text>}
+                  </View>
+                  <TouchableOpacity style={styles.editTagsButton} onPress={() => setIsEditingTags(true)}>
+                    <Text style={styles.editTagsButtonText}>Edit Tags</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
 
           <View style={styles.section}>
             {loading ? (
@@ -217,6 +420,24 @@ export default function PolicyContent() {
             </>
           )}
 
+          {relatedRepos.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[commonStyles.text, styles.sectionTitle]}>Related Policies</Text>
+              {relatedRepos.map((relRepo) => (
+                <TouchableOpacity key={relRepo.id} style={styles.relatedCard} onPress={() => router.push(`/policy/${relRepo.name}`)}>
+                  <Text style={styles.relatedTitle}>{relRepo.displayName || relRepo.name}</Text>
+                  {relRepo.tags && relRepo.tags.length > 0 && (
+                    <View style={styles.tagsContainer}>
+                      {relRepo.tags.slice(0, 3).map((tag, index) => (
+                        <Text key={index} style={[styles.tag, { backgroundColor: getTagColor(tag, index) }]}>{tag}</Text>
+                      ))}
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
           <View style={{ height: 100 }} />
         </ScrollView>
       </View>
@@ -245,7 +466,7 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
     fontSize: isMobile ? 16 : 18,
     fontStyle: 'italic',
     marginTop: 8,
-    opacity: 0.8,
+    opacity: .8,
   },
   section: {
     marginBottom: 40,
@@ -279,7 +500,7 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
     textAlign: 'center',
-    opacity: 0.8,
+    opacity: .8,
   },
   prCard: {
     padding: 16,
@@ -381,7 +602,7 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
   },
   prState: {
     fontSize: 12,
-    opacity: 0.7,
+    opacity: .7,
   },
   openText: {
     color: colors.accent,
@@ -393,7 +614,7 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
     gap: 8,
   },
   loadingText: {
-    opacity: 0.8,
+    opacity: .8,
   },
   errorBox: {
     flexDirection: 'row',
@@ -429,6 +650,107 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
   editButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  relatedCard: {
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: colors.surface,
+  },
+  relatedTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  editTagsText: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  tagInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+  },
+  editButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  saveButton: {
+    backgroundColor: colors.accent,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  cancelButton: {
+    backgroundColor: colors.error,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  editTagsButton: {
+    backgroundColor: colors.accent,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  editTagsButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  noTagsText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  standardTagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  standardTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  selectedTag: {
+    backgroundColor: colors.accent,
+  },
+  standardTagText: {
+    fontSize: 12,
+    color: colors.text,
+  },
+  selectedTagText: {
+    color: '#fff',
   },
 });
 

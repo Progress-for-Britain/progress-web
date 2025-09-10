@@ -1506,6 +1506,11 @@ class ApiClient {
     const response = await this.client.patch(`/api/policies/${repo}/pulls/${id}`, updates);
     return response.data;
   }
+
+  async setPolicyTags(repo: string, tags: string[]): Promise<any> {
+    const response = await this.client.post(`/api/policies/${repo}/tags`, { tags });
+    return response.data;
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

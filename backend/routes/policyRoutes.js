@@ -400,4 +400,60 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
+// Set tags for a repo (admin only)
+router.post('/:repo/tags', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo } = req.params;
+    const { tags } = req.body; // tags should be an array of strings
+    const owner = getOrganization();
+    const userName = `${req.user.firstName} ${req.user.lastName}`;
+
+    // Fetch current README.md content
+    let currentContent = '';
+    let sha = null;
+    try {
+      const { data } = await octokit.repos.getContent({
+        owner,
+        repo,
+        path: 'README.md',
+      });
+      currentContent = Buffer.from(data.content, 'base64').toString('utf-8');
+      sha = data.sha;
+    } catch (e) {
+      // README.md doesn't exist, create it
+      currentContent = '';
+    }
+
+    // Update or add tags line
+    const lines = currentContent.split('\n');
+    const tagsLineIndex = lines.findIndex(line => line.toLowerCase().startsWith('tags:'));
+    const newTagsLine = `Tags: ${tags.join(', ')}`;
+
+    if (tagsLineIndex !== -1) {
+      lines[tagsLineIndex] = newTagsLine;
+    } else {
+      // Add tags line at the beginning
+      lines.unshift(newTagsLine);
+    }
+
+    const updatedContent = lines.join('\n');
+
+    // Commit the updated README.md
+    const { data: commitData } = await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path: 'README.md',
+      message: `Update tags by ${userName}`,
+      content: Buffer.from(updatedContent).toString('base64'),
+      sha,
+    });
+
+    res.json({ success: true, commit: commitData });
+  } catch (error) {
+    console.error('Error setting tags:', error);
+    res.status(500).json({ error: 'Failed to set tags' });
+  }
+});
+
 module.exports = router;
