@@ -10,6 +10,19 @@ const derivePrimaryRole = (roles) => {
   return 'MEMBER';
 };
 
+// Helper function to detect device type from user agent
+const getDeviceType = (userAgent) => {
+  if (!userAgent) return 'Unknown';
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone') || ua.includes('blackberry') || ua.includes('windows phone')) {
+    return 'Mobile';
+  } else if (ua.includes('tablet') || ua.includes('ipad') || ua.includes('kindle') || ua.includes('playbook')) {
+    return 'Tablet';
+  } else {
+    return 'Desktop';
+  }
+};
+
 // Get all users (admin only)
 const getAllUsers = async (req, res) => {
   try {
@@ -253,7 +266,10 @@ const createUser = async (req, res) => {
       data: {
         token: refreshToken,
         expiresAt: refreshTokenExpiresAt,
-        userId: result.id
+        userId: result.id,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        deviceType: getDeviceType(req.get('User-Agent'))
       }
     });
 
@@ -440,7 +456,10 @@ const loginUser = async (req, res) => {
       data: {
         token: refreshToken,
         expiresAt: refreshTokenExpiresAt,
-        userId: user.id
+        userId: user.id,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        deviceType: getDeviceType(req.get('User-Agent'))
       }
     });
 
