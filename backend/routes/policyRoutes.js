@@ -342,23 +342,54 @@ router.patch('/:repo/pulls/:id', authenticateToken, requireWriterOrAdmin, async 
     const { repo, id } = req.params;
     const { draft } = req.body;
     
-    const updateData = {};
     if (draft !== undefined) {
-      updateData.draft = draft;
-    }
-    
-    if (Object.keys(updateData).length === 0) {
+      // Get the PR to obtain the node_id for GraphQL
+      const { data: pr } = await octokit.pulls.get({
+        owner: getOrganization(),
+        repo,
+        pull_number: parseInt(id),
+      });
+      const pullRequestId = pr.node_id;
+      
+      if (draft) {
+        // Convert to draft
+        await octokit.graphql(`
+          mutation($pullRequestId: ID!) {
+            convertPullRequestToDraft(input: { pullRequestId: $pullRequestId }) {
+              pullRequest {
+                id
+              }
+            }
+          }
+        `, {
+          pullRequestId,
+        });
+      } else {
+        // Mark as ready for review
+        await octokit.graphql(`
+          mutation($pullRequestId: ID!) {
+            markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) {
+              pullRequest {
+                id
+              }
+            }
+          }
+        `, {
+          pullRequestId,
+        });
+      }
+    } else {
       return res.status(400).json({ error: 'No valid updates provided' });
     }
     
-    const { data } = await octokit.pulls.update({
+    // Fetch the updated PR data
+    const { data: updatedPr } = await octokit.pulls.get({
       owner: getOrganization(),
       repo,
       pull_number: parseInt(id),
-      ...updateData
     });
     
-    res.json(data);
+    res.json(updatedPr);
   } catch (error) {
     console.error('Error updating PR:', error);
     res.status(500).json({ error: 'Failed to update PR' });

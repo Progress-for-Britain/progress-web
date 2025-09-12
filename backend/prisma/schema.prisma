@@ -18,6 +18,8 @@ model User {
   address                 String?
   discordUsername         String?                  @unique
   discordLinkedAt         DateTime?
+  refreshToken            String?                  @unique
+  refreshTokenExpiresAt   DateTime?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   eventParticipants       EventParticipant[]

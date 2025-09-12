@@ -243,7 +243,21 @@ const createUser = async (req, res) => {
       return user;
     });
 
-    // Generate JWT token for auto-login
+    // Generate refresh token
+    const crypto = require('crypto');
+    const refreshToken = crypto.randomBytes(64).toString('hex');
+    const refreshTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+    // Update user with refresh token
+    await prisma.user.update({
+      where: { id: result.id },
+      data: {
+        refreshToken,
+        refreshTokenExpiresAt
+      }
+    });
+
+    // Generate JWT token for auto-login (short-lived)
     const token = jwt.sign(
       { 
         userId: result.id, 
@@ -254,7 +268,7 @@ const createUser = async (req, res) => {
         lastName: result.lastName
       },
       process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
+      { expiresIn: '15m' } // 15 minutes
     );
 
     res.status(201).json({
@@ -262,7 +276,8 @@ const createUser = async (req, res) => {
       message: 'User created successfully',
       data: {
         user: { ...result, role: derivePrimaryRole(result.roles) },
-        token
+        token,
+        refreshToken
       }
     });
   } catch (error) {
@@ -415,7 +430,21 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Generate JWT token
+    // Generate refresh token
+    const crypto = require('crypto');
+    const refreshToken = crypto.randomBytes(64).toString('hex');
+    const refreshTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+    // Store refresh token in DB
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        refreshToken,
+        refreshTokenExpiresAt
+      }
+    });
+
+    // Generate JWT access token (short-lived)
     const token = jwt.sign(
       { 
         userId: user.id, 
@@ -426,7 +455,7 @@ const loginUser = async (req, res) => {
         lastName: user.lastName
       },
       process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
+      { expiresIn: '15m' } // 15 minutes
     );
 
     res.json({
@@ -441,7 +470,8 @@ const loginUser = async (req, res) => {
           firstName: user.firstName,
           lastName: user.lastName
         },
-        token
+        token,
+        refreshToken
       }
     });
   } catch (error) {
@@ -449,6 +479,80 @@ const loginUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Login failed',
+      error: error.message
+    });
+  }
+};
+
+// User logout
+const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    
+    if (refreshToken) {
+      await prisma.user.updateMany({
+        where: { refreshToken },
+        data: { refreshToken: null, refreshTokenExpiresAt: null }
+      });
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error during logout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Logout failed',
+      error: error.message
+    });
+  }
+};
+
+// Refresh access token
+const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token required'
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { refreshToken }
+    });
+
+    if (!user || user.refreshTokenExpiresAt < new Date()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid or expired refresh token'
+      });
+    }
+
+    // Generate new access token
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: derivePrimaryRole(user.roles),
+        roles: Array.isArray(user.roles) ? user.roles : [],
+        firstName: user.firstName,
+        lastName: user.lastName
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '15m' }
+    );
+
+    res.json({
+      success: true,
+      data: { token }
+    });
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Token refresh failed',
       error: error.message
     });
   }
@@ -1335,6 +1439,8 @@ module.exports = {
   updateUser,
   deleteUser,
   loginUser,
+  logout,
+  refreshToken,
   getNotificationPreferences,
   updateNotificationPreferences,
   getPrivacySettings,
