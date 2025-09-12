@@ -121,9 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await refresh();
         console.log('Token refreshed successfully');
       } catch (error) {
-        console.log('Failed to refresh token, logging out and redirecting to login');
+        console.log('Failed to refresh token, logging out and redirecting to home');
         await logout();
-        router.replace('/login');
+        router.replace('/');
       }
     });
   }, []);

@@ -248,12 +248,12 @@ const createUser = async (req, res) => {
     const refreshToken = crypto.randomBytes(64).toString('hex');
     const refreshTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    // Update user with refresh token
-    await prisma.user.update({
-      where: { id: result.id },
+    // Create refresh token record
+    await prisma.refreshToken.create({
       data: {
-        refreshToken,
-        refreshTokenExpiresAt
+        token: refreshToken,
+        expiresAt: refreshTokenExpiresAt,
+        userId: result.id
       }
     });
 
@@ -435,12 +435,12 @@ const loginUser = async (req, res) => {
     const refreshToken = crypto.randomBytes(64).toString('hex');
     const refreshTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    // Store refresh token in DB
-    await prisma.user.update({
-      where: { id: user.id },
+    // Create refresh token record
+    await prisma.refreshToken.create({
       data: {
-        refreshToken,
-        refreshTokenExpiresAt
+        token: refreshToken,
+        expiresAt: refreshTokenExpiresAt,
+        userId: user.id
       }
     });
 
@@ -490,9 +490,8 @@ const logout = async (req, res) => {
     const { refreshToken } = req.body;
     
     if (refreshToken) {
-      await prisma.user.updateMany({
-        where: { refreshToken },
-        data: { refreshToken: null, refreshTokenExpiresAt: null }
+      await prisma.refreshToken.deleteMany({
+        where: { token: refreshToken }
       });
     }
     
@@ -519,16 +518,19 @@ const refreshToken = async (req, res) => {
       });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { refreshToken }
+    const refreshTokenRecord = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: { user: true }
     });
 
-    if (!user || user.refreshTokenExpiresAt < new Date()) {
+    if (!refreshTokenRecord || refreshTokenRecord.expiresAt < new Date()) {
       return res.status(403).json({
         success: false,
         message: 'Invalid or expired refresh token'
       });
     }
+
+    const user = refreshTokenRecord.user;
 
     // Generate new access token
     const token = jwt.sign(
