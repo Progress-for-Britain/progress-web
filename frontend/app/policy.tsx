@@ -289,7 +289,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     paddingHorizontal: isMobile ? 20 : 40,
   },
   searchInput: {
-    flex: 1,
+    width: 644,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
