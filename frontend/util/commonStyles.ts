@@ -16,8 +16,6 @@ export const injectWebAuroraStyles = (isDark: boolean = true) => {
     
     if (isDark) {
       style.textContent = `
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-        
         @keyframes aurora {
           0%, 100% {
             background-position: 0% 50%, 0% 50%;
@@ -56,12 +54,19 @@ export const injectWebAuroraStyles = (isDark: boolean = true) => {
           background-attachment: fixed;
           mix-blend-mode: difference;
         }
+
+        @media (prefers-reduced-motion: reduce) {
+          .web-aurora {
+            animation: none !important;
+          }
+          .web-aurora::after {
+            background-attachment: initial !important;
+          }
+        }
       `;
     } else {
       // Light mode aurora
       style.textContent = `
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-        
         @keyframes aurora-light {
           0%, 100% {
             background-position: 0% 50%, 0% 50%;
@@ -101,6 +106,15 @@ export const injectWebAuroraStyles = (isDark: boolean = true) => {
           background-attachment: fixed;
           mix-blend-mode: overlay;
           opacity: 0.7;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .web-aurora {
+            animation: none !important;
+          }
+          .web-aurora::after {
+            background-attachment: initial !important;
+          }
         }
       `;
     }
@@ -183,15 +197,15 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
       flex: 1,
     },
     content: {
-      maxWidth: 800,
+      maxWidth: isMobile ? width : 800,
       marginTop: 50,
-      marginHorizontal: 'auto',
+      marginHorizontal: isMobile ? 0 : 'auto',
       paddingHorizontal: isMobile ? 16 : 20,
       position: 'relative',
       zIndex: 2,
       ...(Platform.OS === 'web' && {
-        marginLeft: 'auto',
-        marginRight: 'auto',
+        marginLeft: isMobile ? 0 : 'auto',
+        marginRight: isMobile ? 0 : 'auto',
       }),
     },
     title: {

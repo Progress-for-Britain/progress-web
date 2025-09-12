@@ -13,6 +13,14 @@ const { completeEvents } = require('./scripts/completeEvents');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Allowed origins for CORS
+const allowedOrigins = [
+  'http://localhost:8081',
+  'https://progress-web-hazel.vercel.app',
+  'https://progressforbritain',
+  'https://www.progressforbritain.org'
+];
+
 // Import routes
 const userRoutes = require('./routes/userRoutes');
 const newsRoutes = require('./routes/newsRoutes');
@@ -25,7 +33,7 @@ const policyRoutes = require('./routes/policyRoutes');
 const { seedAllTestUsers } = require('./utils/seedTestUser');
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // API Routes

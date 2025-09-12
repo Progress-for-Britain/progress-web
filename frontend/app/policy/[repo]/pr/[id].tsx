@@ -18,6 +18,7 @@ interface PullRequest {
   body: string;
   state: string;
   html_url: string;
+  draft?: boolean;
   user: {
     login: string;
     avatar_url: string;
@@ -93,6 +94,7 @@ export default function PRDetail() {
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [postingComment, setPostingComment] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const isWriter = user?.roles?.includes('WRITER') || user?.roles?.includes('ADMIN');
 
@@ -157,6 +159,21 @@ export default function PRDetail() {
     }
   };
 
+  const handleUpdatePRStatus = async () => {
+    if (!repo || !id || !pr) return;
+    setUpdatingStatus(true);
+    try {
+      const updatedPR = await api.updatePolicyPR(repo, id, { draft: false });
+      setPr(prev => prev ? { ...prev, draft: false } : null);
+      setError(null);
+    } catch (e) {
+      console.error('Error updating PR status:', e);
+      setError('Failed to update PR status');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
@@ -199,9 +216,27 @@ export default function PRDetail() {
                       Opened by {pr.user.login} on {formatDate(pr.created_at)}
                     </Text>
                   </View>
-                  <TouchableOpacity onPress={() => Linking.openURL(pr.html_url)}>
-                    <Text style={styles.openText}>View on GitHub</Text>
-                  </TouchableOpacity>
+                  <View style={styles.prActions}>
+                    {isWriter && pr.draft && (
+                      <TouchableOpacity 
+                        style={[styles.statusButton, updatingStatus && styles.disabledButton]}
+                        onPress={handleUpdatePRStatus}
+                        disabled={updatingStatus}
+                      >
+                        {updatingStatus ? (
+                          <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                          <>
+                            <MaterialIcons name="publish" size={16} color="#fff" />
+                            <Text style={styles.statusButtonText}>Mark as Ready</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity onPress={() => Linking.openURL(pr.html_url)}>
+                      <Text style={styles.openText}>View on GitHub</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 <View style={styles.section}>
@@ -349,6 +384,23 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     marginBottom: 4,
+  },
+  prActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  statusButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.accent,
+    padding: 8,
+    borderRadius: 8,
+  },
+  statusButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   prBody: {
     marginBottom: 20,

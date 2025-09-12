@@ -230,7 +230,7 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
   try {
     const octokit = await initializeOctokit();
     const { repo } = req.params;
-    const { path, content, message, branchName } = req.body;
+    const { path, content, message, branchName, draft } = req.body;
     const owner = getOrganization();
     const { firstName, lastName } = req.user;
     const userName = `${firstName} ${lastName}`;
@@ -324,6 +324,7 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
         head: targetBranch,
         base: 'main',
         body: message || `Policy update by ${userName}`,
+        draft: draft || false,
       });
     }
 
@@ -331,6 +332,67 @@ router.post('/:repo/edit', authenticateToken, requireWriterOrAdmin, async (req, 
   } catch (error) {
     console.error('Error editing policy:', error);
     res.status(500).json({ error: 'Failed to edit policy' });
+  }
+});
+
+// Update PR status (draft to open, etc.)
+router.patch('/:repo/pulls/:id', authenticateToken, requireWriterOrAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo, id } = req.params;
+    const { draft } = req.body;
+    
+    if (draft !== undefined) {
+      // Get the PR to obtain the node_id for GraphQL
+      const { data: pr } = await octokit.pulls.get({
+        owner: getOrganization(),
+        repo,
+        pull_number: parseInt(id),
+      });
+      const pullRequestId = pr.node_id;
+      
+      if (draft) {
+        // Convert to draft
+        await octokit.graphql(`
+          mutation($pullRequestId: ID!) {
+            convertPullRequestToDraft(input: { pullRequestId: $pullRequestId }) {
+              pullRequest {
+                id
+              }
+            }
+          }
+        `, {
+          pullRequestId,
+        });
+      } else {
+        // Mark as ready for review
+        await octokit.graphql(`
+          mutation($pullRequestId: ID!) {
+            markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) {
+              pullRequest {
+                id
+              }
+            }
+          }
+        `, {
+          pullRequestId,
+        });
+      }
+    } else {
+      return res.status(400).json({ error: 'No valid updates provided' });
+    }
+    
+    // Fetch the updated PR data
+    const { data: updatedPr } = await octokit.pulls.get({
+      owner: getOrganization(),
+      repo,
+      pull_number: parseInt(id),
+    });
+    
+    res.json(updatedPr);
+  } catch (error) {
+    console.error('Error updating PR:', error);
+    res.status(500).json({ error: 'Failed to update PR' });
   }
 });
 
@@ -366,6 +428,62 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error creating policy repo:', error);
     res.status(500).json({ error: 'Failed to create policy repo' });
+  }
+});
+
+// Set tags for a repo (admin only)
+router.post('/:repo/tags', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo } = req.params;
+    const { tags } = req.body; // tags should be an array of strings
+    const owner = getOrganization();
+    const userName = `${req.user.firstName} ${req.user.lastName}`;
+
+    // Fetch current README.md content
+    let currentContent = '';
+    let sha = null;
+    try {
+      const { data } = await octokit.repos.getContent({
+        owner,
+        repo,
+        path: 'README.md',
+      });
+      currentContent = Buffer.from(data.content, 'base64').toString('utf-8');
+      sha = data.sha;
+    } catch (e) {
+      // README.md doesn't exist, create it
+      currentContent = '';
+    }
+
+    // Update or add tags line
+    const lines = currentContent.split('\n');
+    const tagsLineIndex = lines.findIndex(line => line.toLowerCase().startsWith('tags:'));
+    const newTagsLine = `Tags: ${tags.join(', ')}`;
+
+    if (tagsLineIndex !== -1) {
+      lines[tagsLineIndex] = newTagsLine;
+    } else {
+      // Add tags line at the beginning
+      lines.unshift(newTagsLine);
+    }
+
+    const updatedContent = lines.join('\n');
+
+    // Commit the updated README.md
+    const { data: commitData } = await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path: 'README.md',
+      message: `Update tags by ${userName}`,
+      content: Buffer.from(updatedContent).toString('base64'),
+      sha,
+    });
+
+    res.json({ success: true, commit: commitData });
+  } catch (error) {
+    console.error('Error setting tags:', error);
+    res.status(500).json({ error: 'Failed to set tags' });
   }
 });
 

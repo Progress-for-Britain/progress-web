@@ -415,6 +415,7 @@ export interface AuthResponse {
       createdAt?: string;
     };
     token: string;
+    refreshToken: string;
   };
 }
 
@@ -585,6 +586,7 @@ const requestBatcher = new RequestBatcher();
 
 class ApiClient {
   private client: AxiosInstance;
+  private onUnauthorized?: () => Promise<void>;
 
   constructor(baseURL: string) {
     this.client = axios.create({
@@ -623,7 +625,7 @@ class ApiClient {
     // Add response interceptor for error handling with mobile-specific handling
     this.client.interceptors.response.use(
       (response: AxiosResponse) => response,
-      (error) => {
+      async (error) => {
         if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
           throw new Error('Connection timeout - please check your network and try again');
         }
@@ -634,6 +636,14 @@ class ApiClient {
                               error.response.data?.error || 
                               error.response.data || 
                               `HTTP ${error.response.status}`;
+          
+          // Handle expired token
+          if (error.response.status === 403 && errorMessage.includes('Invalid or expired token')) {
+            if (this.onUnauthorized) {
+              await this.onUnauthorized();
+            }
+          }
+          
           throw new Error(errorMessage);
         } else if (error.request) {
           // Request was made but no response received - common on mobile
@@ -644,6 +654,10 @@ class ApiClient {
         }
       }
     );
+  }
+
+  setOnUnauthorized(callback: () => Promise<void>) {
+    this.onUnauthorized = callback;
   }
 
   setToken(token: string | null) {
@@ -829,9 +843,14 @@ class ApiClient {
     });
   }
 
-  async logout(): Promise<void> {
-    // Note: Backend doesn't have logout endpoint, just clear token locally
+  async logout(data?: { refreshToken: string }): Promise<void> {
+    await this.client.post('/api/users/logout', data);
     this.setToken(null);
+  }
+
+  async refresh(refreshToken: string): Promise<{ token: string }> {
+    const response = await this.client.post('/api/users/refresh', { refreshToken });
+    return response.data.data;
   }
 
   async getProfile(): Promise<User> {
@@ -1487,8 +1506,8 @@ class ApiClient {
     return response.data;
   }
 
-  async editPolicy(repo: string, path: string, content: string, message: string, branchName?: string): Promise<any> {
-    const response = await this.client.post(`/api/policies/${repo}/edit`, { path, content, message, branchName });
+  async editPolicy(repo: string, path: string, content: string, message: string, branchName?: string, draft?: boolean): Promise<any> {
+    const response = await this.client.post(`/api/policies/${repo}/edit`, { path, content, message, branchName, draft });
     return response.data;
   }
 
@@ -1499,6 +1518,16 @@ class ApiClient {
 
   async getPolicyPRFiles(repo: string, id: string): Promise<any[]> {
     const response = await this.client.get(`/api/policies/${repo}/pulls/${id}/files`);
+    return response.data;
+  }
+
+  async updatePolicyPR(repo: string, id: string, updates: { draft?: boolean }): Promise<any> {
+    const response = await this.client.patch(`/api/policies/${repo}/pulls/${id}`, updates);
+    return response.data;
+  }
+
+  async setPolicyTags(repo: string, tags: string[]): Promise<any> {
+    const response = await this.client.post(`/api/policies/${repo}/tags`, { tags });
     return response.data;
   }
 }
@@ -1585,7 +1614,8 @@ export const batchApiCalls = async <T>(
 
 // Service Worker integration hints
 export const registerServiceWorker = async () => {
-  if ('serviceWorker' in navigator && isMobileWeb) {
+  const enableSW = (typeof process !== 'undefined' && (process.env as any)?.EXPO_PUBLIC_ENABLE_SW) === 'true';
+  if ('serviceWorker' in navigator && isMobileWeb && enableSW) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
       console.log('Service Worker registered:', registration);

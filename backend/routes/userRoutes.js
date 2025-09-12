@@ -7,6 +7,8 @@ const {
   updateUser,
   deleteUser,
   loginUser,
+  logout,
+  refreshToken,
   getNotificationPreferences,
   updateNotificationPreferences,
   getPrivacySettings,
@@ -30,6 +32,8 @@ const {
 // Public routes
 router.post('/register', createUser);
 router.post('/login', loginUser);
+router.post('/logout', logout);
+router.post('/refresh', refreshToken);
 
 // Protected routes
 // Allow onboarding team to view user list (read-only)

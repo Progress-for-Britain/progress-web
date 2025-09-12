@@ -1,9 +1,9 @@
 import { Stack } from "expo-router";
+import Head from "expo-router/head";
 import { View, Platform } from "react-native";
 import { usePathname } from "expo-router";
 import { AuthProvider } from "../util/auth-context";
 import { ThemeProvider, useTheme } from "../util/theme-context";
-import { useAuth } from "../util/auth-context";
 import { AuroraBackground } from "../util/auroraComponents";
 import { getCommonStyles } from "../util/commonStyles";
 import { useResponsive } from "../util/useResponsive";
@@ -15,7 +15,6 @@ import { useEffect } from "react";
 function RootLayoutNav() {
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
-  const { isAuthenticated } = useAuth();
   const pathname = usePathname();
   const commonStyles = getCommonStyles(isDark, isMobile, width);
   
@@ -25,7 +24,7 @@ function RootLayoutNav() {
       const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3005';
       const websiteUrl = API_BASE_URL.replace(':3005', '').replace('http://', '').replace('https://', '');
       
-      console.log(`
+        console.log(`
 █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓
 ░                                        ░
 ░              ████████                  ░
@@ -42,7 +41,7 @@ function RootLayoutNav() {
 █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓
 
 Curious? Join us at ${websiteUrl}
-      `);
+        `);
     }
   }, []); // Empty dependency array ensures this runs only once
   
@@ -56,56 +55,21 @@ Curious? Join us at ${websiteUrl}
   
   return (
     <View style={[{ flex: 1 }, commonStyles.appContainer]}>
+      {/* Global web font links */}
+      {Platform.OS === 'web' && (
+        <Head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+          />
+        </Head>
+      )}
       {/* Background aurora effect - only for unauthenticated routes and non-mobile platforms */}
       {shouldShowAurora && <AuroraBackground />}
       
-      {/* Preload icons by rendering them invisibly - this forces the font files to download */}
-      {Platform.OS === 'web' && (
-        <View style={{ position: 'absolute', left: -9999, top: -9999, opacity: 0 }}>
-          {/* Our Approach Page Icons */}
-          <MaterialIcons name="timeline" size={1} />
-          <MaterialIcons name="psychology" size={1} />
-          <MaterialIcons name="policy" size={1} />
-          <FontAwesome5 name="users" size={1} />
-          
-          {/* About Page Icons */}
-          <MaterialIcons name="trending-up" size={1} />
-          <MaterialIcons name="people" size={1} />
-          <MaterialIcons name="account-balance" size={1} />
-          <FontAwesome5 name="flag" size={1} />
-          
-          {/* Join Page Icons */}
-          <Ionicons name="checkmark" size={1} />
-          <Ionicons name="information-circle" size={1} />
-          <Ionicons name="close" size={1} />
-          <Ionicons name="alert-circle" size={1} />
-          <FontAwesome5 name="user-plus" size={1} />
-          <Ionicons name="cloud-done" size={1} />
-          <Ionicons name="warning-outline" size={1} />
-          
-          {/* Events Page Icons */}
-          <Ionicons name="calendar-outline" size={1} />
-          <Ionicons name="time-outline" size={1} />
-          <Ionicons name="people-outline" size={1} />
-          <Ionicons name="close-circle" size={1} />
-          <Ionicons name="create-outline" size={1} />
-          <Ionicons name="calendar" size={1} />
-          <Ionicons name="add" size={1} />
-          
-          {/* Newsroom Page Icons */}
-          <MaterialIcons name="star" size={1} />
-          <Ionicons name="newspaper" size={1} />
-          <Ionicons name="search" size={1} />
-          <Ionicons name="newspaper-outline" size={1} />
-          <Ionicons name="time" size={1} />
-          
-          {/* Account Page Icons */}
-          <Ionicons name="chevron-forward" size={1} />
-          <Ionicons name="person-circle" size={1} />
-          <MaterialIcons name="analytics" size={1} />
-          <Ionicons name="rocket" size={1} />
-        </View>
-      )}
+      {/* Removed offscreen icon preloading to avoid extra work */}
       
       {!isEditorRoute && <Header />}
       <View style={{ flex: 1 }}>

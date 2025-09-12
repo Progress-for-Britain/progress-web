@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 import { api, User, LoginRequest, RegisterRequest } from './api';
 
 interface AuthContextType {
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const TOKEN_KEY = 'progress-auth-token';
 const USER_DATA_KEY = 'progress-user-data';
+const REFRESH_TOKEN_KEY = 'progress-refresh-token';
 
 // Hybrid storage helper that uses SecureStore on mobile, AsyncStorage on web
 const isSecureStoreSupported = Platform.OS !== 'web';
@@ -102,11 +104,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isStorageReady, setIsStorageReady] = useState(false);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const router = useRouter();
 
   const isAuthenticated = !!user;
 
   useEffect(() => {
     loadStoredAuth();
+  }, []);
+
+  // Set up the unauthorized callback after component mounts
+  useEffect(() => {
+    api.setOnUnauthorized(async () => {
+      try {
+        console.log('Token expired, attempting to refresh');
+        await refresh();
+        console.log('Token refreshed successfully');
+      } catch (error) {
+        console.log('Failed to refresh token, logging out and redirecting to home');
+        await logout();
+        router.replace('/');
+      }
+    });
   }, []);
 
   const loadStoredAuth = async () => {
@@ -125,15 +144,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const [token, userDataString] = await Promise.all([
+      const [token, userDataString, storedRefreshToken] = await Promise.all([
         secureStorageGet(TOKEN_KEY, true), // Use SecureStore for token (sensitive)
-        secureStorageGet(USER_DATA_KEY, false) // Use AsyncStorage for user data (not sensitive)
+        secureStorageGet(USER_DATA_KEY, false), // Use AsyncStorage for user data (not sensitive)
+        secureStorageGet(REFRESH_TOKEN_KEY, true) // Use SecureStore for refresh token (sensitive)
       ]);
 
       if (token && userDataString) {
         try {
           const userData = JSON.parse(userDataString);
           api.setToken(token);
+          setRefreshToken(storedRefreshToken);
           // If roles are missing in stored data, refresh from API to get roles[]
           if (!userData.roles || !Array.isArray(userData.roles)) {
             try {
@@ -155,7 +176,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Clear corrupted data
           await Promise.all([
             secureStorageRemove(TOKEN_KEY, true),
-            secureStorageRemove(USER_DATA_KEY, false)
+            secureStorageRemove(USER_DATA_KEY, false),
+            secureStorageRemove(REFRESH_TOKEN_KEY, true)
           ]);
         }
       }
@@ -164,7 +186,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear potentially corrupted data
       await Promise.all([
         secureStorageRemove(TOKEN_KEY, true),
-        secureStorageRemove(USER_DATA_KEY, false)
+        secureStorageRemove(USER_DATA_KEY, false),
+        secureStorageRemove(REFRESH_TOKEN_KEY, true)
       ]);
     } finally {
       setIsLoading(false);
@@ -185,16 +208,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         address: response.data.user.address || null,
         createdAt: response.data.user.createdAt || new Date().toISOString(),
         role: response.data.user.role as any,
-        roles: (response.data.user as any).roles || [response.data.user.role]
+        roles: (response.data.user as any).roles || [response.data.user.role],
+        constituency: (response.data.user as any).constituency || null
       };
       
       // Store token and user data with mobile-optimized storage
       await Promise.all([
         secureStorageSet(TOKEN_KEY, response.data.token, true), // Secure storage for token
+        secureStorageSet(REFRESH_TOKEN_KEY, response.data.refreshToken, true), // Secure storage for refresh token
         secureStorageSet(USER_DATA_KEY, JSON.stringify(fullUser), false) // Regular storage for user data
       ]);
 
       api.setToken(response.data.token);
+      setRefreshToken(response.data.refreshToken);
       setUser(fullUser);
     } catch (error) {
       console.error('Login failed:', error);
@@ -216,16 +242,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         address: response.data.user.address || null,
         createdAt: response.data.user.createdAt || new Date().toISOString(),
         role: response.data.user.role as any,
-        roles: (response.data.user as any).roles || [response.data.user.role]
+        roles: (response.data.user as any).roles || [response.data.user.role],
+        constituency: (response.data.user as any).constituency || null
       };
       
       // Store token and user data with mobile-optimized storage
       await Promise.all([
         secureStorageSet(TOKEN_KEY, response.data.token, true), // Secure storage for token
+        secureStorageSet(REFRESH_TOKEN_KEY, response.data.refreshToken, true), // Secure storage for refresh token
         secureStorageSet(USER_DATA_KEY, JSON.stringify(fullUser), false) // Regular storage for user data
       ]);
 
       api.setToken(response.data.token);
+      setRefreshToken(response.data.refreshToken);
       setUser(fullUser);
     } catch (error) {
       console.error('Registration failed:', error);
@@ -235,17 +264,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await api.logout();
+      if (refreshToken) {
+        await api.logout({ refreshToken });
+      } else {
+        await api.logout();
+      }
     } catch (error) {
       console.error('Logout API call failed:', error);
     } finally {
       // Always clear local data regardless of API call result
       await Promise.all([
         secureStorageRemove(TOKEN_KEY, true),
-        secureStorageRemove(USER_DATA_KEY, false)
+        secureStorageRemove(USER_DATA_KEY, false),
+        secureStorageRemove(REFRESH_TOKEN_KEY, true)
       ]);
       api.setToken(null);
       setUser(null);
+      setRefreshToken(null);
     }
   };
 
@@ -265,6 +300,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Failed to refresh user:', error);
       // On refresh failure, logout to maintain consistency
       await logout();
+      throw error;
+    }
+  };
+
+  const refresh = async () => {
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    try {
+      const { token } = await api.refresh(refreshToken);
+      api.setToken(token);
+      await secureStorageSet(TOKEN_KEY, token, true);
+      console.log('Token refreshed successfully');
+    } catch (error) {
+      console.error('Failed to refresh token:', error);
       throw error;
     }
   };

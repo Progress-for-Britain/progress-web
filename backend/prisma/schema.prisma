@@ -28,6 +28,7 @@ model User {
   privacySettings         PrivacySettings?
   reactions               Reaction[]
   volunteerHours          VolunteerHours[]
+  refreshTokens           RefreshToken[]
 
   @@map("users")
 }
@@ -239,6 +240,20 @@ model DiscordVerificationCode {
   createdAt      DateTime  @default(now())
 
   @@map("discord_verification_codes")
+}
+
+model RefreshToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  userId      String
+  ipAddress   String?
+  userAgent   String?
+  deviceType  String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }
 
 enum UserRole {

@@ -165,7 +165,7 @@ export default function PolicyEditor() {
     }
     try {
       setSaving(true);
-      await api.editPolicy(String(repo), 'policy.md', content, commitMessage || 'Update policy.md', branchName);
+      await api.editPolicy(String(repo), 'policy.md', content, commitMessage || 'Update policy.md', branchName, true);
       Alert.alert('Success', 'Policy updated and PR created!');
       router.replace(`/policy/${repo}`);
     } catch (e) {
