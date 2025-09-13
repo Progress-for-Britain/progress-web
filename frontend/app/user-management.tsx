@@ -46,6 +46,7 @@ export default function UserManagement() {
   const [stats, setStats] = useState<any>({});
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [responseMessage, setResponseMessage] = useState<{success: boolean, message: string} | null>(null);
   
   // Volunteer edit form data
   const [volunteerEditData, setVolunteerEditData] = useState({
@@ -154,12 +155,18 @@ export default function UserManagement() {
 
     try {
       const response = await api.updateUserRole(selectedUser.id, newRole as Role);
-      Alert.alert('Success', 'User role updated successfully');
+      setResponseMessage({
+        success: true,
+        message: 'User role updated successfully'
+      });
       setShowRoleModal(false);
       setShowUserModal(false);
       loadUsers();
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update user role');
+      setResponseMessage({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to update user role'
+      });
     }
   };
 
@@ -168,11 +175,17 @@ export default function UserManagement() {
 
     try {
       const response = await api.approveApplication(selectedPendingUser.id, { reviewNotes });
-      Alert.alert('Success', `Application approved! Access code: ${response.data.accessCode}`);
+      setResponseMessage({
+        success: true,
+        message: `Application approved successfully! Access code: ${response.data.accessCode}`
+      });
       setShowPendingModal(false);
       loadPendingUsers();
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to approve application');
+      setResponseMessage({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to approve application'
+      });
     }
   };
 
@@ -181,11 +194,17 @@ export default function UserManagement() {
 
     try {
       await api.rejectApplication(selectedPendingUser.id, { reviewNotes });
-      Alert.alert('Success', 'Application rejected');
+      setResponseMessage({
+        success: true,
+        message: 'Application rejected successfully'
+      });
       setShowPendingModal(false);
       loadPendingUsers();
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to reject application');
+      setResponseMessage({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to reject application'
+      });
     }
   };
 
@@ -203,12 +222,18 @@ export default function UserManagement() {
         successMessage += `! Access code: ${response.data.accessCode}`;
       }
       
-      Alert.alert('Success', successMessage);
+      setResponseMessage({
+        success: true,
+        message: successMessage
+      });
       setShowStatusModal(false);
       setStatusNotes('');
       loadPendingUsers();
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update application status');
+      setResponseMessage({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to update application status'
+      });
     }
   };
 
@@ -224,11 +249,17 @@ export default function UserManagement() {
 
     try {
       await api.assignUserToEvent(selectedUser.id, selectedEvent);
-      Alert.alert('Success', 'User assigned to event successfully');
+      setResponseMessage({
+        success: true,
+        message: 'User assigned to event successfully'
+      });
       setShowAssignModal(false);
       loadUserEventAssignments(selectedUser.id);
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to assign user to event');
+      setResponseMessage({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to assign user to event'
+      });
     }
   };
 
@@ -237,10 +268,16 @@ export default function UserManagement() {
 
     try {
       await api.unassignUserFromEvent(selectedUser.id, eventId);
-      Alert.alert('Success', 'User unassigned from event successfully');
+      setResponseMessage({
+        success: true,
+        message: 'User unassigned from event successfully'
+      });
       loadUserEventAssignments(selectedUser.id);
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to unassign user from event');
+      setResponseMessage({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to unassign user from event'
+      });
     }
   };
 
@@ -340,14 +377,20 @@ export default function UserManagement() {
       // Call API to update volunteer details
       await api.updatePendingUserVolunteerDetails(selectedPendingUser.id, volunteerEditData);
       
-      Alert.alert('Success', 'Volunteer details updated successfully');
+      setResponseMessage({
+        success: true,
+        message: 'Volunteer details updated successfully'
+      });
       setShowEditVolunteerModal(false);
       
       // Refresh the pending users data
       await loadPendingUsers();
     } catch (error) {
       console.error('Error updating volunteer details:', error);
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update volunteer details');
+      setResponseMessage({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to update volunteer details'
+      });
     }
   };
 
@@ -399,6 +442,54 @@ export default function UserManagement() {
               Manage users, approve applications, and assign roles
             </Text>
           </View>
+
+          {/* Response Message Banner */}
+          {responseMessage && (
+            <View style={{
+              marginHorizontal: 20,
+              marginBottom: 20,
+              padding: 16,
+              borderRadius: 12,
+              backgroundColor: responseMessage.success ? '#d1fae5' : '#fee2e2',
+              borderWidth: 1,
+              borderColor: responseMessage.success ? '#a7f3d0' : '#fecaca',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <Ionicons 
+                  name={responseMessage.success ? "checkmark-circle" : "close-circle"} 
+                  size={20} 
+                  color={responseMessage.success ? '#059669' : '#dc2626'} 
+                  style={{ marginRight: 12 }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ 
+                    fontSize: 14, 
+                    fontWeight: '600', 
+                    color: responseMessage.success ? '#059669' : '#dc2626',
+                    marginBottom: 2
+                  }}>
+                    {responseMessage.success ? 'Success' : 'Error'}
+                  </Text>
+                  <Text style={{ 
+                    fontSize: 14, 
+                    color: responseMessage.success ? '#065f46' : '#991b1b',
+                    lineHeight: 20
+                  }}>
+                    {responseMessage.message}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => setResponseMessage(null)}
+                style={{ padding: 4 }}
+              >
+                <Ionicons name="close" size={16} color={responseMessage.success ? '#059669' : '#dc2626'} />
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Stats Cards */}
           <View style={{ 
@@ -570,16 +661,31 @@ export default function UserManagement() {
                           {user.email}
                         </Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                          <View style={{
-                            backgroundColor: getRoleColor(user.role),
-                            paddingHorizontal: 8,
-                            paddingVertical: 4,
-                            borderRadius: 6
-                          }}>
-                            <Text style={{ fontSize: 12, fontWeight: '600', color: '#ffffff' }}>
-                              {user.role}
-                            </Text>
-                          </View>
+                          {user.roles && user.roles.length > 0 ? (
+                            user.roles.map((role, index) => (
+                              <View key={index} style={{
+                                backgroundColor: getRoleColor(role),
+                                paddingHorizontal: 6,
+                                paddingVertical: 2,
+                                borderRadius: 4
+                              }}>
+                                <Text style={{ fontSize: 10, fontWeight: '600', color: '#ffffff' }}>
+                                  {role.replace('_', ' ')}
+                                </Text>
+                              </View>
+                            ))
+                          ) : (
+                            <View style={{
+                              backgroundColor: getRoleColor(user.role),
+                              paddingHorizontal: 8,
+                              paddingVertical: 4,
+                              borderRadius: 6
+                            }}>
+                              <Text style={{ fontSize: 12, fontWeight: '600', color: '#ffffff' }}>
+                                {user.role}
+                              </Text>
+                            </View>
+                          )}
                           {user.constituency && (
                             <View style={{
                               backgroundColor: '#e0f2fe',

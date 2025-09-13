@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "seed:test-users": "node scripts/seed-test-users.js",
     "complete:events": "node scripts/completeEvents.js",
+    "cleanup:records": "node scripts/cleanupOldRecords.js",
     "dev:seed": "SEED_TEST_USERS=true nodemon server.js",
     "write-key": "node scripts/write-key.js"
   },
