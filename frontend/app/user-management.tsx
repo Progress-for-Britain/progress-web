@@ -693,6 +693,11 @@ export default function UserManagement() {
                         <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>
                           {pendingUser.email}
                         </Text>
+                        {pendingUser.status === 'APPROVED' && pendingUser.accessCode && (
+                          <Text style={{ fontSize: 12, color: '#059669', fontWeight: '600', marginBottom: 4 }}>
+                            Access Code: {pendingUser.accessCode}
+                          </Text>
+                        )}
                         <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                           <View style={{
                             backgroundColor: getStatusColor(pendingUser.status),
@@ -1206,16 +1211,11 @@ export default function UserManagement() {
                     justifyContent: 'center'
                   }}>
                     {newRole === role && (
-                      <View style={{ 
-                        width: 8, 
-                        height: 8, 
-                        borderRadius: 4, 
-                        backgroundColor: '#ffffff' 
-                      }} />
+                      <Ionicons name="checkmark" size={12} color="#ffffff" />
                     )}
                   </View>
                   <Text style={{ fontSize: 16, color: '#111827', fontWeight: '600' }}>
-                    {role}
+                    {role.replace('_', ' ')}
                   </Text>
                 </TouchableOpacity>
               ))}
