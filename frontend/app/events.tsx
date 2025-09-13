@@ -11,9 +11,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import api, { Event } from '../util/api';
+import api from '../util/api';
 import { CreateEventModal } from '../components/createEventModal';
 import { EditEventModal } from '../components/editEventModal';
+import { Event } from '../util/types';
 
 export default function Events() {
   const { user, isAuthenticated, isLoading } = useAuth();

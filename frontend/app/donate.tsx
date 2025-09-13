@@ -8,8 +8,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSpring,
-  withRepeat
+  withSpring
 } from "react-native-reanimated";
 import Head from 'expo-router/head';;
 import Footer from '../components/Footer';

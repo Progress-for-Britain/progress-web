@@ -22,7 +22,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { getEvent, registerForEvent, unregisterFromEvent } from '../../util/api';
 import { useAuth } from '../../util/auth-context';
-import type { Event, EventType } from '../../util/api';
+import { Event } from '../../util/types';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 

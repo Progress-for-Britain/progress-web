@@ -17,7 +17,8 @@ import { useAuth } from '../util/auth-context';
 import { useTheme } from '../util/theme-context';
 import { getCommonStyles, getColors } from '../util/commonStyles';
 import { useResponsive } from '../util/useResponsive';
-import { api, NotificationPreferences, UpdateNotificationPreferencesRequest, PrivacySettings, UpdatePrivacySettingsRequest } from '../util/api';
+import { api } from '../util/api';
+import { NotificationPreferences, PrivacySettings, UpdateNotificationPreferencesRequest, UpdatePrivacySettingsRequest } from '../util/types';
 
 export default function Settings() {
   const { user, refreshUser, logout } = useAuth();

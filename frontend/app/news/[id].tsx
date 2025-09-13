@@ -10,7 +10,8 @@ import Animated, {
   withSpring
 } from 'react-native-reanimated';
 import { useAuth } from '../../util/auth-context';
-import { api, Post } from '../../util/api';
+import { api } from '../../util/api';
+import { Post } from '../../util/types';
 
 export default function ArticlePage() {
   const { id } = useLocalSearchParams<{ id: string }>();

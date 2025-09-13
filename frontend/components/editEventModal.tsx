@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, Platform, ScrollView, Alert, TextInput, M
 import { Ionicons } from '@expo/vector-icons';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import api, { Event } from '../util/api';
+import api from '../util/api';
+import { Event } from '../util/types';
 
 interface EditEventModalProps {
   visible: boolean;

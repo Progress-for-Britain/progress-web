@@ -3,7 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { api, User, LoginRequest, RegisterRequest } from './api';
+import { api } from './api';
+import { User, LoginRequest, RegisterRequest } from './types';
 
 interface AuthContextType {
   user: User | null;

@@ -5,8 +5,9 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from "@expo/vector-icons";
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import { api, PendingUser, User, Role } from '../util/api';
+import { api} from '../util/api';
 import { format } from 'date-fns';
+import { User, PendingUser, Role } from '../util/types';
 
 interface EventAssignment {
   id: string;
