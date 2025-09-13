@@ -1,588 +1,46 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios';
-import { Platform } from 'react-native';
-
-// Detect if running on mobile web
-const isMobileWeb = typeof window !== 'undefined' && 
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || 'http://localhost:3005';
-
-// Mobile web optimizations
-const MOBILE_CONFIG = {
-  timeout: isMobileWeb ? 15000 : 30000, // Shorter timeout for mobile
-  retryDelay: isMobileWeb ? 500 : 1000,
-  maxRetries: isMobileWeb ? 2 : 3,
-  enableCompression: true,
-  enableCaching: true,
-};
-
-export type Role = 'ADMIN' | 'WRITER' | 'MEMBER' | 'VOLUNTEER' | 'ONBOARDING' | 'EVENT_MANAGER';
-
-export interface User {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  constituency: string | null;
-  role: Role;
-  roles?: Role[];
-  address: string | null;
-  createdAt: string;
-  updatedAt?: string;
-  payments?: Payment[];
-  notificationPreferences?: NotificationPreferences;
-  privacySettings?: PrivacySettings;
-}
-
-export interface NotificationPreferences {
-  id: string;
-  userId: string;
-  emailNewsletter: boolean;
-  eventNotifications: boolean;
-  donationReminders: boolean;
-  pushNotifications: boolean;
-  smsUpdates: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PrivacySettings {
-  id: string;
-  userId: string;
-  publicProfile: boolean;
-  shareActivity: boolean;
-  allowMessages: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UpdateNotificationPreferencesRequest {
-  emailNewsletter?: boolean;
-  eventNotifications?: boolean;
-  donationReminders?: boolean;
-  pushNotifications?: boolean;
-  smsUpdates?: boolean;
-}
-
-export interface UpdatePrivacySettingsRequest {
-  publicProfile?: boolean;
-  shareActivity?: boolean;
-  allowMessages?: boolean;
-}
-
-export interface Payment {
-  id: string;
-  customerId: string | null;
-  subscriptionId: string | null;
-  billingCycle: string | null;
-  status: string;
-  amount: number;
-  currency: string;
-  startDate: string | null;
-  endDate: string | null;
-  nextBillingDate: string | null;
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  firstName?: string;
-  lastName?: string;
-  address?: string;
-  role?: Role;
-  accessCode?: string;
-}
-
-export interface UpdateUserRequest {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  address?: string;
-  role?: Role;
-  roles?: Role[];
-  constituency?: string;
-}
-
-// Pending User interfaces
-export interface PendingUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  constituency?: string;
-  interests: string[];
-  volunteer: boolean;
-  newsletter: boolean;
-  status: 'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED';
-  accessCode?: string;
-  reviewedBy?: string;
-  reviewNotes?: string;
-  approvedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  
-  // Volunteer-specific fields
-  socialMediaHandle?: string;
-  isBritishCitizen?: boolean;
-  livesInUK?: boolean;
-  briefBio?: string;
-  briefCV?: string;
-  otherAffiliations?: string;
-  interestedIn?: string[];
-  canContribute?: string[];
-  signedNDA?: boolean;
-  gdprConsent?: boolean;
-}
-
-export interface SubmitApplicationRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  constituency?: string;
-  interests?: string[];
-  volunteer?: boolean;
-  newsletter?: boolean;
-  
-  // Volunteer-specific fields (only required if volunteer = true)
-  socialMediaHandle?: string;
-  isBritishCitizen?: boolean;
-  livesInUK?: boolean;
-  briefBio?: string;
-  briefCV?: string;
-  otherAffiliations?: string;
-  interestedIn?: string[];
-  canContribute?: string[];
-  signedNDA?: boolean;
-  gdprConsent?: boolean;
-}
-
-export interface ValidateAccessCodeRequest {
-  code: string;
-  email: string;
-}
-
-export interface ValidateAccessCodeResponse {
-  success: boolean;
-  message: string;
-  data: {
-    email: string;
-    firstName: string;
-    lastName: string;
-    volunteer: boolean;
-    role: string;
-  };
-}
-
-export interface ApproveApplicationRequest {
-  reviewNotes?: string;
-}
-
-export interface RejectApplicationRequest {
-  reviewNotes?: string;
-}
-
-export interface UpdateApplicationStatusRequest {
-  status: 'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED';
-  reviewNotes?: string;
-}
-
-// News/Posts interfaces
-export interface Post {
-  id: string;
-  title: string;
-  content: string;
-  excerpt: string | null;
-  category: 'NEWS' | 'POLICY' | 'CAMPAIGNS' | 'EVENTS' | 'VICTORIES' | 'PRESS';
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
-  featured: boolean;
-  readTime: number | null;
-  imageUrl: string | null;
-  tags: string[];
-  publishedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  authorId: string;
-  author: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    role: string;
-  };
-  reactionCounts: { [emoji: string]: number };
-  _count: {
-    reactions: number;
-  };
-}
-
-export interface Reaction {
-  id: string;
-  emoji: string;
-  createdAt: string;
-  userId: string;
-  postId: string;
-  user: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-  };
-}
-
-export interface CreatePostRequest {
-  title: string;
-  content: string;
-  excerpt?: string;
-  category?: 'NEWS' | 'POLICY' | 'CAMPAIGNS' | 'EVENTS' | 'VICTORIES' | 'PRESS';
-  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
-  featured?: boolean;
-  readTime?: number;
-  imageUrl?: string;
-  tags?: string[];
-}
-
-export interface UpdatePostRequest {
-  title?: string;
-  content?: string;
-  excerpt?: string;
-  category?: 'NEWS' | 'POLICY' | 'CAMPAIGNS' | 'EVENTS' | 'VICTORIES' | 'PRESS';
-  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
-  featured?: boolean;
-  readTime?: number;
-  imageUrl?: string;
-  tags?: string[];
-}
-
-export interface PostsResponse {
-  posts: Post[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-export interface ReactionSummary {
-  emoji: string;
-  count: number;
-  users: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-  }[];
-}
-
-// Events interfaces
-export interface Event {
-  id: string;
-  title: string;
-  description: string;
-  eventType: 'RALLY' | 'MEETING' | 'FUNDRAISER' | 'CAMPAIGN' | 'VOLUNTEER' | 'TRAINING' | 'CONFERENCE' | 'SOCIAL';
-  status: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
-  location: string | null;
-  address: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  capacity: number | null;
-  isVirtual: boolean;
-  virtualLink: string | null;
-  startDate: string;
-  endDate: string;
-  imageUrl: string | null;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-  createdById: string;
-  createdBy: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-  };
-  participants?: EventParticipant[];
-  _count?: {
-    participants: number;
-  };
-  participationStatus?: 'REGISTERED' | 'CONFIRMED' | 'ATTENDED' | 'NO_SHOW' | 'CANCELLED';
-  registeredAt?: string;
-}
-
-export interface EventParticipant {
-  id: string;
-  status: 'REGISTERED' | 'CONFIRMED' | 'ATTENDED' | 'NO_SHOW' | 'CANCELLED';
-  notes: string | null;
-  registeredAt: string;
-  checkedInAt: string | null;
-  userId: string;
-  eventId: string;
-  user: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-  };
-}
-
-export interface VolunteerHours {
-  id: string;
-  hours: number;
-  description: string | null;
-  date: string;
-  approved: boolean;
-  approvedBy: string | null;
-  notes: string | null;
-  userId: string;
-  eventId: string | null;
-  event: {
-    title: string;
-  } | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateEventRequest {
-  title: string;
-  description: string;
-  eventType: 'RALLY' | 'MEETING' | 'FUNDRAISER' | 'CAMPAIGN' | 'VOLUNTEER' | 'TRAINING' | 'CONFERENCE' | 'SOCIAL';
-  status?: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
-  location?: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  capacity?: number;
-  isVirtual?: boolean;
-  virtualLink?: string;
-  startDate: string;
-  endDate: string;
-  imageUrl?: string;
-  tags?: string[];
-}
-
-export interface LogVolunteerHoursRequest {
-  hours: number;
-  description?: string;
-  date: string;
-  eventId?: string;
-}
-
-export interface UserStats {
-  eventsParticipated: number;
-  totalVolunteerHours: number;
-  totalDonated: number;
-  thisMonth: {
-    eventsParticipated: number;
-    volunteerHours: number;
-    donationAmount: number;
-  };
-}
-
-export interface UserActivity {
-  type: 'event' | 'donation' | 'volunteer';
-  title: string;
-  description: string;
-  date: string;
-  icon: string;
-  color: string;
-}
-
-export interface EventsResponse {
-  events: Event[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-    itemsPerPage: number;
-  };
-}
-
-export interface AuthResponse {
-  success: boolean;
-  message: string;
-  data: {
-    user: {
-      id: string;
-      email: string;
-      role: Role;
-      roles?: Role[];
-      firstName: string | null;
-      lastName: string | null;
-      address?: string | null;
-      createdAt?: string;
-    };
-    token: string;
-    refreshToken: string;
-  };
-}
-
-// Request deduplication for mobile efficiency
-class RequestDeduplicator {
-  private pendingRequests = new Map<string, Promise<any>>();
-
-  async dedupe<T>(key: string, requestFn: () => Promise<T>): Promise<T> {
-    if (this.pendingRequests.has(key)) {
-      return this.pendingRequests.get(key)!;
-    }
-
-    const promise = requestFn().finally(() => {
-      this.pendingRequests.delete(key);
-    });
-
-    this.pendingRequests.set(key, promise);
-    return promise;
-  }
-}
-
-const requestDeduplicator = new RequestDeduplicator();
-
-// Connection quality detection for mobile
-const getConnectionQuality = (): 'slow' | 'fast' | 'unknown' => {
-  if (typeof navigator !== 'undefined' && 'connection' in navigator) {
-    const connection = (navigator as any).connection;
-    if (connection) {
-      const effectiveType = connection.effectiveType;
-      if (effectiveType === 'slow-2g' || effectiveType === '2g') return 'slow';
-      if (effectiveType === '3g') return 'slow';
-      if (effectiveType === '4g') return 'fast';
-    }
-  }
-  return 'unknown';
-};
-
-// Offline detection
-const isOnline = (): boolean => {
-  return typeof navigator !== 'undefined' ? navigator.onLine : true;
-};
-
-// Network status monitoring for mobile
-class NetworkMonitor {
-  private listeners: Array<(online: boolean) => void> = [];
-  private isOnline: boolean;
-
-  constructor() {
-    this.isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
-    
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => this.handleOnline());
-      window.addEventListener('offline', () => this.handleOffline());
-    }
-  }
-
-  private handleOnline() {
-    this.isOnline = true;
-    this.listeners.forEach(listener => listener(true));
-  }
-
-  private handleOffline() {
-    this.isOnline = false;
-    this.listeners.forEach(listener => listener(false));
-  }
-
-  getStatus(): boolean {
-    return this.isOnline;
-  }
-
-  addListener(callback: (online: boolean) => void) {
-    this.listeners.push(callback);
-    return () => {
-      this.listeners = this.listeners.filter(listener => listener !== callback);
-    };
-  }
-}
-
-const networkMonitor = new NetworkMonitor();
-
-// Enhanced caching for mobile
-class MobileCache {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
-
-  set(key: string, data: any, ttl: number = 300000): void { // 5 minutes default
-    this.cache.set(key, { data, timestamp: Date.now(), ttl });
-  }
-
-  get<T>(key: string): T | null {
-    const item = this.cache.get(key);
-    if (!item) return null;
-
-    if (Date.now() - item.timestamp > item.ttl) {
-      this.cache.delete(key);
-      return null;
-    }
-
-    return item.data;
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-
-  // Clean expired entries
-  cleanup(): void {
-    const now = Date.now();
-    for (const [key, item] of this.cache.entries()) {
-      if (now - item.timestamp > item.ttl) {
-        this.cache.delete(key);
-      }
-    }
-  }
-}
-
-const mobileCache = new MobileCache();
-
-// Request batching for mobile efficiency
-class RequestBatcher {
-  private batchQueue: Array<{
-    id: string;
-    request: () => Promise<any>;
-    resolve: (value: any) => void;
-    reject: (error: any) => void;
-  }> = [];
-  private batchTimeout: ReturnType<typeof setTimeout> | null = null;
-  private readonly BATCH_DELAY = 50; // 50ms batch window
-
-  add<T>(request: () => Promise<T>): Promise<T> {
-    return new Promise((resolve, reject) => {
-      const id = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      this.batchQueue.push({ id, request, resolve, reject });
-
-      if (!this.batchTimeout) {
-        this.batchTimeout = setTimeout(() => this.processBatch(), this.BATCH_DELAY);
-      }
-    });
-  }
-
-  private async processBatch(): Promise<void> {
-    const batch = [...this.batchQueue];
-    this.batchQueue = [];
-    this.batchTimeout = null;
-
-    // Process batch in parallel with concurrency limit
-    const concurrencyLimit = 3;
-    const results = [];
-
-    for (let i = 0; i < batch.length; i += concurrencyLimit) {
-      const chunk = batch.slice(i, i + concurrencyLimit);
-      const chunkPromises = chunk.map(async (item) => {
-        try {
-          const result = await item.request();
-          item.resolve(result);
-          return { success: true, id: item.id };
-        } catch (error) {
-          item.reject(error);
-          return { success: false, id: item.id, error };
-        }
-      });
-
-      results.push(...await Promise.all(chunkPromises));
-    }
-  }
-}
-
-const requestBatcher = new RequestBatcher();
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import {
+  Role,
+  User,
+  NotificationPreferences,
+  PrivacySettings,
+  UpdateNotificationPreferencesRequest,
+  UpdatePrivacySettingsRequest,
+  LoginRequest,
+  RegisterRequest,
+  UpdateUserRequest,
+  PendingUser,
+  SubmitApplicationRequest,
+  ValidateAccessCodeRequest,
+  ValidateAccessCodeResponse,
+  ApproveApplicationRequest,
+  RejectApplicationRequest,
+  UpdateApplicationStatusRequest,
+  Post,
+  Reaction,
+  CreatePostRequest,
+  UpdatePostRequest,
+  PostsResponse,
+  ReactionSummary,
+  Event,
+  EventParticipant,
+  VolunteerHours,
+  CreateEventRequest,
+  LogVolunteerHoursRequest,
+  UserStats,
+  UserActivity,
+  EventsResponse,
+  AuthResponse
+} from './types';
+import { API_BASE_URL, MOBILE_CONFIG } from './config';
+import {
+  requestDeduplicator,
+  getConnectionQuality,
+  isOnline,
+  networkMonitor,
+  mobileCache,
+  monitorApiPerformance
+} from './utils';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -624,7 +82,7 @@ class ApiClient {
 
     // Add response interceptor for error handling with mobile-specific handling
     this.client.interceptors.response.use(
-      (response: AxiosResponse) => response,
+      (response) => response,
       async (error) => {
         if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
           throw new Error('Connection timeout - please check your network and try again');
@@ -1533,7 +991,21 @@ class ApiClient {
 }
 
 export const api = new ApiClient(API_BASE_URL);
-export default api;
+
+// Initialize network monitoring and background sync
+if (typeof window !== 'undefined') {
+  // Start background sync processing when coming online
+  networkMonitor.addListener((online) => {
+    if (online) {
+      api.processBackgroundSync();
+    }
+  });
+}
+
+// Initialize mobile optimizations
+if (typeof window !== 'undefined') {
+  monitorApiPerformance();
+}
 
 // Export convenience functions
 export const getEvents = (params?: {
@@ -1549,24 +1021,6 @@ export const createEvent = (eventData: CreateEventRequest) => api.createEvent(ev
 export const registerForEvent = (eventId: string) => api.registerForEvent(eventId);
 export const unregisterFromEvent = (eventId: string) => api.cancelEventRegistration(eventId);
 export const logVolunteerHours = (hoursData: LogVolunteerHoursRequest) => api.logVolunteerHours(hoursData);
-
-// Export type alias for compatibility
-export type EventType = Event['eventType'];
-
-// Initialize network monitoring and background sync
-if (typeof window !== 'undefined') {
-  // Start background sync processing when coming online
-  networkMonitor.addListener((online) => {
-    if (online) {
-      api.processBackgroundSync();
-    }
-  });
-
-  // Periodic cache cleanup
-  setInterval(() => {
-    mobileCache.cleanup();
-  }, 300000); // Clean every 5 minutes
-}
 
 // Enhanced API methods with mobile optimizations
 export const getEventsOptimized = (params?: {
@@ -1603,50 +1057,4 @@ export const getPostsOptimized = (params?: {
   });
 };
 
-// Batch multiple API calls for better mobile performance
-export const batchApiCalls = async <T>(
-  calls: Array<() => Promise<T>>
-): Promise<T[]> => {
-  return requestBatcher.add(async () => {
-    return Promise.all(calls.map(call => call()));
-  });
-};
-
-// Service Worker integration hints
-export const registerServiceWorker = async () => {
-  const enableSW = (typeof process !== 'undefined' && (process.env as any)?.EXPO_PUBLIC_ENABLE_SW) === 'true';
-  if ('serviceWorker' in navigator && isMobileWeb && enableSW) {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered:', registration);
-      
-      // Handle updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New content available, notify user
-              console.log('New content available, please refresh');
-            }
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Service Worker registration failed:', error);
-    }
-  }
-};
-
-// Performance monitoring for mobile
-export const monitorApiPerformance = () => {
-  if (!isMobileWeb) return;
-
-  api.enablePerformanceMonitoring();
-};
-
-// Initialize mobile optimizations
-if (isMobileWeb) {
-  monitorApiPerformance();
-  registerServiceWorker();
-}
+export default api;

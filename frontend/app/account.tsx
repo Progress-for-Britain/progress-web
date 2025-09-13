@@ -13,7 +13,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
-import api, { UserStats, UserActivity } from '../util/api';
+import api from '../util/api';
+import { UserActivity, UserStats } from '../util/types';
 
 export default function Account() {
   const { user, isAuthenticated, isLoading } = useAuth();
