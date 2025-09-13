@@ -300,7 +300,6 @@ const approveApplication = async (req, res) => {
           firstName: pendingUser.firstName,
           lastName: pendingUser.lastName,
           constituency: pendingUser.constituency,
-          role: pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER',
           roles: [pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER'],
           expiresAt
         }
@@ -461,10 +460,10 @@ const validateAccessCode = async (req, res) => {
         lastName: accessCodeRecord.lastName || pendingUser.lastName,
         constituency: accessCodeRecord.constituency || pendingUser.constituency,
         volunteer: pendingUser.volunteer,
-        role: accessCodeRecord.role || (pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER'),
-        roles: (Array.isArray(accessCodeRecord.roles) && accessCodeRecord.roles.length)
-          ? accessCodeRecord.roles
-          : [accessCodeRecord.role || (pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER')]
+        role: (Array.isArray(accessCodeRecord.roles) && accessCodeRecord.roles.length)
+          ? accessCodeRecord.roles[0]
+          : (pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER'),
+        roles: accessCodeRecord.roles || [pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER']
       }
     });
   } catch (error) {
@@ -684,7 +683,6 @@ const updateApplicationStatus = async (req, res) => {
             firstName: pendingUser.firstName,
             lastName: pendingUser.lastName,
             constituency: pendingUser.constituency,
-            role: pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER',
             roles: [pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER'],
             expiresAt
           }
