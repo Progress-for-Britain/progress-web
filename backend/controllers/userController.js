@@ -437,12 +437,44 @@ const deleteUser = async (req, res) => {
 // User login
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, captchaToken } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: 'Email and password are required'
+      });
+    }
+
+    // Verify captcha if provided
+    if (captchaToken) {
+      try {
+        const axios = require('axios');
+        const captchaResponse = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', null, {
+          params: {
+            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET,
+            response: captchaToken
+          }
+        });
+
+        if (!captchaResponse.data.success) {
+          return res.status(400).json({
+            success: false,
+            message: 'Captcha verification failed. Please try again.'
+          });
+        }
+      } catch (error) {
+        console.error('Captcha verification error:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Captcha verification failed. Please try again.'
+        });
+      }
+    } else {
+      // If captcha is required but not provided, fail
+      return res.status(400).json({
+        success: false,
+        message: 'Captcha verification is required.'
       });
     }
 

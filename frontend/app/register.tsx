@@ -10,6 +10,8 @@ import { api } from '../util/api';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import useResponsive from '../util/useResponsive';
+import { Turnstile } from '@marsidev/react-turnstile';
+import Constants from 'expo-constants';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -33,6 +35,7 @@ export default function Register() {
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
   const [accessCodeFocused, setAccessCodeFocused] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const { register, isStorageReady } = useAuth();
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
@@ -64,6 +67,12 @@ export default function Register() {
       return;
     }
 
+    // Validate captcha before validating access code
+    if (!captchaToken) {
+      setErrorMessage('Please complete the security verification before validating your access code.');
+      return;
+    }
+
     // For now, we'll need to ask for email temporarily to validate
     // In a future update, we could modify the backend to validate code without email
     const email = prompt('Please enter your email address to validate the access code:');
@@ -74,7 +83,7 @@ export default function Register() {
 
     setIsValidatingCode(true);
     try {
-      const response = await api.validateAccessCode({ code: accessCode, email });
+      const response = await api.validateAccessCode({ code: accessCode, email, captchaToken });
       
       if (response.success) {
         setCodeValidated(true);
@@ -136,6 +145,12 @@ export default function Register() {
     // Check if storage is ready before attempting registration
     if (!isStorageReady) {
       setErrorMessage('Device storage is not ready. Please ensure you have sufficient storage space and try again.');
+      return;
+    }
+
+    // Validate captcha
+    if (!captchaToken) {
+      setErrorMessage('Please complete the security verification to continue.');
       return;
     }
 
@@ -230,107 +245,18 @@ export default function Register() {
                 </Text>
               ) : null}
 
-              <View style={{ marginBottom: isMobile ? 16 : 20 }}>
-                <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
-                  Password
-                </Text>
-                <View style={{ position: 'relative' }}>
-                  <TextInput
-                    value={formData.password}
-                    onChangeText={(value) => updateField('password', value)}
-                    placeholder="Create a password"
-                    placeholderTextColor={colors.textSecondary}
-                    secureTextEntry={!isPasswordVisible}
-                    autoComplete="current-password"
-                    textContentType="password"
-                    onFocus={() => setPasswordFocused(true)}
-                    onBlur={() => setPasswordFocused(false)}
-                    style={[
-                      commonStyles.textInput,
-                      {
-                        borderColor: passwordFocused || formData.password ? colors.accent : colors.border,
-                        fontSize: isMobile ? 16 : 18,
-                        paddingVertical: isMobile ? 14 : 16,
-                        paddingRight: 55,
-                        ...(Platform.OS === 'web' && { 
-                          outline: 'none',
-                          transition: 'all 0.2s ease',
-                          boxShadow: passwordFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
-                        } as any)
-                      }
-                    ]}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                    style={{
-                      position: 'absolute',
-                      right: 15,
-                      top: '50%',
-                      transform: [{ translateY: -17 }],
-                      padding: 6,
-                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
-                    }}
-                    activeOpacity={0.6}
-                  >
-                    <Ionicons
-                      name={isPasswordVisible ? 'eye' : 'eye-off'}
-                      size={22}
-                      color={colors.textSecondary}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={{ marginBottom: isMobile ? 20 : 28 }}>
-                <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
-                  Confirm Password
-                </Text>
-                <View style={{ position: 'relative' }}>
-                  <TextInput
-                    value={formData.confirmPassword}
-                    onChangeText={(value) => updateField('confirmPassword', value)}
-                    placeholder="Confirm your password"
-                    placeholderTextColor={colors.textSecondary}
-                    secureTextEntry={!isConfirmPasswordVisible}
-                    autoComplete="current-password"
-                    textContentType="password"
-                    onFocus={() => setConfirmPasswordFocused(true)}
-                    onBlur={() => setConfirmPasswordFocused(false)}
-                    onSubmitEditing={() => handleRegister()}
-                    style={[
-                      commonStyles.textInput,
-                      {
-                        borderColor: confirmPasswordFocused || formData.confirmPassword ? colors.accent : colors.border,
-                        fontSize: isMobile ? 16 : 18,
-                        paddingVertical: isMobile ? 14 : 16,
-                        paddingRight: 55,
-                        ...(Platform.OS === 'web' && { 
-                          outline: 'none',
-                          transition: 'all 0.2s ease',
-                          boxShadow: confirmPasswordFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
-                        } as any)
-                      }
-                    ]}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
-                    style={{
-                      position: 'absolute',
-                      right: 15,
-                      top: '50%',
-                      transform: [{ translateY: -17 }],
-                      padding: 6,
-                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
-                    }}
-                    activeOpacity={0.6}
-                  >
-                    <Ionicons
-                      name={isConfirmPasswordVisible ? 'eye' : 'eye-off'}
-                      size={22}
-                      color={colors.textSecondary}
-                    />
-                  </TouchableOpacity>
-                </View>
+              {/* Cloudflare Turnstile Captcha */}
+              <View style={{ marginBottom: isMobile ? 20 : 28, alignItems: 'center' }}>
+                <Turnstile
+                  siteKey={Constants.expoConfig?.extra?.cloudflareTurnstileSiteKey || "YOUR_CLOUDFLARE_SITE_KEY"}
+                  onSuccess={(token: string) => setCaptchaToken(token)}
+                  onError={(error) => console.error('Captcha error:', error)}
+                  onExpire={() => setCaptchaToken(null)}
+                  options={{
+                    theme: isDark ? 'dark' : 'light',
+                    size: 'normal'
+                  }}
+                />
               </View>
 
               {/* Access Code Section */}
@@ -480,6 +406,109 @@ export default function Register() {
                     Don't have an access code? You need to submit a membership application first at our join page.
                   </Text>
                 )}
+              </View>
+
+              <View style={{ marginBottom: isMobile ? 16 : 20 }}>
+                <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
+                  Password
+                </Text>
+                <View style={{ position: 'relative' }}>
+                  <TextInput
+                    value={formData.password}
+                    onChangeText={(value) => updateField('password', value)}
+                    placeholder="Create a password"
+                    placeholderTextColor={colors.textSecondary}
+                    secureTextEntry={!isPasswordVisible}
+                    autoComplete="current-password"
+                    textContentType="password"
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                    style={[
+                      commonStyles.textInput,
+                      {
+                        borderColor: passwordFocused || formData.password ? colors.accent : colors.border,
+                        fontSize: isMobile ? 16 : 18,
+                        paddingVertical: isMobile ? 14 : 16,
+                        paddingRight: 55,
+                        ...(Platform.OS === 'web' && { 
+                          outline: 'none',
+                          transition: 'all 0.2s ease',
+                          boxShadow: passwordFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                        } as any)
+                      }
+                    ]}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                    style={{
+                      position: 'absolute',
+                      right: 15,
+                      top: '50%',
+                      transform: [{ translateY: -17 }],
+                      padding: 6,
+                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                    }}
+                    activeOpacity={0.6}
+                  >
+                    <Ionicons
+                      name={isPasswordVisible ? 'eye' : 'eye-off'}
+                      size={22}
+                      color={colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={{ marginBottom: isMobile ? 20 : 28 }}>
+                <Text style={[commonStyles.inputLabel, { fontSize: isMobile ? 16 : 18, marginBottom: 10 }]}>
+                  Confirm Password
+                </Text>
+                <View style={{ position: 'relative' }}>
+                  <TextInput
+                    value={formData.confirmPassword}
+                    onChangeText={(value) => updateField('confirmPassword', value)}
+                    placeholder="Confirm your password"
+                    placeholderTextColor={colors.textSecondary}
+                    secureTextEntry={!isConfirmPasswordVisible}
+                    autoComplete="current-password"
+                    textContentType="password"
+                    onFocus={() => setConfirmPasswordFocused(true)}
+                    onBlur={() => setConfirmPasswordFocused(false)}
+                    onSubmitEditing={() => handleRegister()}
+                    style={[
+                      commonStyles.textInput,
+                      {
+                        borderColor: confirmPasswordFocused || formData.confirmPassword ? colors.accent : colors.border,
+                        fontSize: isMobile ? 16 : 18,
+                        paddingVertical: isMobile ? 14 : 16,
+                        paddingRight: 55,
+                        ...(Platform.OS === 'web' && { 
+                          outline: 'none',
+                          transition: 'all 0.2s ease',
+                          boxShadow: confirmPasswordFocused ? `0 0 0 3px ${colors.accent}33` : 'none',
+                        } as any)
+                      }
+                    ]}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
+                    style={{
+                      position: 'absolute',
+                      right: 15,
+                      top: '50%',
+                      transform: [{ translateY: -17 }],
+                      padding: 6,
+                      ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                    }}
+                    activeOpacity={0.6}
+                  >
+                    <Ionicons
+                      name={isConfirmPasswordVisible ? 'eye' : 'eye-off'}
+                      size={22}
+                      color={colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View
