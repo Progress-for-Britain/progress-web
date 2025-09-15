@@ -112,8 +112,14 @@ DISCORD_WRITER_ROLE_ID=
 DISCORD_VOLUNTEER_ROLE_ID=
 DISCORD_MEMBER_ROLE_ID=
 
-# Cloudflare Turnstile (join form captcha)
-CLOUDFLARE_TURNSTILE_SECRET_KEY=...
+# Cloudflare Turnstile (captcha)
+# Use your server-side secret (starts with 1x...)
+CLOUDFLARE_TURNSTILE_SECRET_KEY=1x..................................
+# Optional alternative names also supported by the server util:
+# CLOUDFLARE_TURNSTILE_SECRET or TURNSTILE_SECRET(_KEY)
+
+# Frontend uses a site key (public, starts with 0x...) from app.json:
+# frontend/app.json → expo.extra.cloudflareTurnstileSiteKey
 
 # GitHub App (policy management)
 GITHUB_APP_ID=123456

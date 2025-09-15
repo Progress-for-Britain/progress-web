@@ -1,7 +1,7 @@
 const prisma = require('../utils/prisma');
 const crypto = require('crypto');
 const { sendFormSubmissionEmail, sendAcceptanceEmail } = require('../utils/email');
-const axios = require('axios');
+const { verifyTurnstileToken } = require('../utils/turnstile');
 
 // Submit membership application (join page)
 const submitApplication = async (req, res) => {
@@ -32,23 +32,10 @@ const submitApplication = async (req, res) => {
 
     // Verify captcha if provided
     if (captchaToken) {
-      try {
-        const captchaResponse = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', null, {
-          params: {
-            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
-            response: captchaToken
-          }
-        });
-
-        if (!captchaResponse.data.success) {
-          return res.status(400).json({
-            success: false,
-            message: 'Captcha verification failed. Please try again.'
-          });
-        }
-      } catch (error) {
-        console.error('Captcha verification error:', error);
-        return res.status(500).json({
+      const verify = await verifyTurnstileToken(captchaToken);
+      if (!verify.success) {
+        console.error('Captcha verification failed:', verify.error || verify.errorCodes);
+        return res.status(400).json({
           success: false,
           message: 'Captcha verification failed. Please try again.'
         });
@@ -439,23 +426,10 @@ const validateAccessCode = async (req, res) => {
 
     // Verify captcha if provided
     if (captchaToken) {
-      try {
-        const captchaResponse = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', null, {
-          params: {
-            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
-            response: captchaToken
-          }
-        });
-
-        if (!captchaResponse.data.success) {
-          return res.status(400).json({
-            success: false,
-            message: 'Captcha verification failed. Please try again.'
-          });
-        }
-      } catch (error) {
-        console.error('Captcha verification error:', error);
-        return res.status(500).json({
+      const verify = await verifyTurnstileToken(captchaToken);
+      if (!verify.success) {
+        console.error('Captcha verification failed:', verify.error || verify.errorCodes);
+        return res.status(400).json({
           success: false,
           message: 'Captcha verification failed. Please try again.'
         });
