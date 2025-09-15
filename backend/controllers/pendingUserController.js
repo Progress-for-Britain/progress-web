@@ -1,6 +1,7 @@
 const prisma = require('../utils/prisma');
 const crypto = require('crypto');
 const { sendFormSubmissionEmail, sendAcceptanceEmail } = require('../utils/email');
+const axios = require('axios');
 
 // Submit membership application (join page)
 const submitApplication = async (req, res) => {
@@ -24,8 +25,41 @@ const submitApplication = async (req, res) => {
       interestedIn,
       canContribute,
       signedNDA,
-      gdprConsent
+      gdprConsent,
+      // Captcha token
+      captchaToken
     } = req.body;
+
+    // Verify captcha if provided
+    if (captchaToken) {
+      try {
+        const captchaResponse = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', null, {
+          params: {
+            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET,
+            response: captchaToken
+          }
+        });
+
+        if (!captchaResponse.data.success) {
+          return res.status(400).json({
+            success: false,
+            message: 'Captcha verification failed. Please try again.'
+          });
+        }
+      } catch (error) {
+        console.error('Captcha verification error:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Captcha verification failed. Please try again.'
+        });
+      }
+    } else {
+      // If captcha is required but not provided, fail
+      return res.status(400).json({
+        success: false,
+        message: 'Captcha verification is required.'
+      });
+    }
 
     // Validate required fields
     if (!firstName || !lastName || !email) {
