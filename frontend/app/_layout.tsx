@@ -64,6 +64,8 @@ Curious? Join us at ${websiteUrl}
             href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
             rel="stylesheet"
           />
+          {/* Cloudflare Web Analytics */}
+          <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "38c4f7c92a6f4feeb11e928a81207ea8"}'></script>
         </Head>
       )}
       {/* Background aurora effect - only for unauthenticated routes and non-mobile platforms */}
