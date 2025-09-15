@@ -36,6 +36,7 @@ export default function Register() {
   const [accessCodeFocused, setAccessCodeFocused] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
   const { register, isStorageReady } = useAuth();
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
@@ -151,6 +152,11 @@ export default function Register() {
     // Validate captcha
     if (!captchaToken) {
       setErrorMessage('Please complete the security verification to continue.');
+      return;
+    }
+
+    if (!isTermsAccepted) {
+      setErrorMessage('You must accept the terms and privacy policy');
       return;
     }
 
@@ -511,6 +517,18 @@ export default function Register() {
                 </View>
               </View>
 
+              <View style={{ marginBottom: isMobile ? 16 : 20, flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => setIsTermsAccepted(!isTermsAccepted)} style={{ marginRight: 10 }}>
+                  <Ionicons name={isTermsAccepted ? 'checkbox' : 'square-outline'} size={24} color={colors.accent} />
+                </TouchableOpacity>
+                <Text style={{ color: colors.text, fontSize: isMobile ? 14 : 16 }}>
+                  By creating your account, you agree to our{' '}
+                  <Link href="/privacy-policy" style={{ color: colors.accent }}>Privacy Policy</Link>
+                  {' '}and{' '}
+                  <Link href="/terms-of-service" style={{ color: colors.accent }}>Terms of Service</Link>
+                </Text>
+              </View>
+
               <View
                 style={{
                   marginBottom: 20,
@@ -532,17 +550,17 @@ export default function Register() {
               >
                 <TouchableOpacity
                   onPress={handleRegister}
-                  disabled={isLoading || !codeValidated || !formData.accessCode}
+                  disabled={isLoading || !codeValidated || !formData.accessCode || !isTermsAccepted}
                   style={{
                     borderRadius: isMobile ? 8 : 10,
                     overflow: 'hidden',
                     ...(Platform.OS === 'web' && { 
-                      cursor: (isLoading || !codeValidated || !formData.accessCode) ? 'not-allowed' : 'pointer',
+                      cursor: (isLoading || !codeValidated || !formData.accessCode || !isTermsAccepted) ? 'not-allowed' : 'pointer',
                     } as any)
                   }}
                 >
                   <LinearGradient
-                    colors={(isLoading || !codeValidated || !formData.accessCode) ? [colors.textSecondary, colors.textSecondary] : gradients.primary}
+                    colors={(isLoading || !codeValidated || !formData.accessCode || !isTermsAccepted) ? [colors.textSecondary, colors.textSecondary] : gradients.primary}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={{
@@ -559,19 +577,10 @@ export default function Register() {
                         ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" })
                       }}
                     >
-                      {isLoading ? 'Creating Account...' : !formData.accessCode ? 'Access Code Required' : !codeValidated ? 'Validate Access Code First' : 'Create Account'}
+                      {isLoading ? 'Creating Account...' : !formData.accessCode ? 'Access Code Required' : !codeValidated ? 'Validate Access Code First' : !isTermsAccepted ? 'Accept Terms to Continue' : 'Create Account'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
-              </View>
-
-              <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: isMobile ? 14 : 18, ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
-                  Don't have an access code?{' '}
-                </Text>
-                <Link href="/join" style={{ color: colors.accent, fontSize: isMobile ? 14 : 18, fontWeight: '500', ...(Platform.OS === 'web' && { fontFamily: "'Montserrat', sans-serif" }) }}>
-                  Apply for membership
-                </Link>
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>

@@ -606,6 +606,26 @@ export default function Account() {
                         color="#10b981"
                         delay={500}
                       />
+
+                      <QuickActionCard
+                        icon="document-text"
+                        iconLibrary="Ionicons"
+                        title="Privacy Policy"
+                        description="Review our privacy policy and how we protect your personal information"
+                        onPress={() => router.replace('/privacy-policy')}
+                        color="#6b7280"
+                        delay={550}
+                      />
+
+                      <QuickActionCard
+                        icon="shield-checkmark"
+                        iconLibrary="Ionicons"
+                        title="Terms of Service"
+                        description="Read our terms of service and user agreement"
+                        onPress={() => router.replace('/terms-of-service')}
+                        color="#6b7280"
+                        delay={600}
+                      />
                     </View>
                   </View>
                 </View>
