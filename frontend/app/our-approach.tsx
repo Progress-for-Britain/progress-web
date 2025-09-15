@@ -3,7 +3,6 @@ import { View, Text, Platform, StyleSheet, ScrollView, TouchableOpacity } from "
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from 'expo-router';  
-import SEOHead from '../components/SEOHead';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -19,7 +18,6 @@ export default function OurApproach() {
   
   return (
     <>
-      <SEOHead pageKey="our-approach" />
       <View style={commonStyles.appContainer}>
 
         {/* Our Approach Page Content */}

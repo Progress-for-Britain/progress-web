@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, TextInput, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import SEOHead from '../components/SEOHead';
 import { getCommonStyles, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -123,7 +122,6 @@ export default function Policy() {
 
   return (
     <>
-      <SEOHead pageKey="policy" />
       <View style={commonStyles.appContainer}>
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>

@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { View, Text, Platform, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import SEOHead from '../components/SEOHead';
 import { getCommonStyles, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -25,7 +24,6 @@ export default function Home() {
 
   return (
     <>
-      <SEOHead pageKey="home" />
       <View style={commonStyles.appContainer}>
         {/* Home Page Content */}
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>

@@ -3,8 +3,6 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
-
-import SEOHead from '../../components/SEOHead';
 import { useTheme } from '../../util/theme-context';
 import { useResponsive } from '../../util/useResponsive';
 import { getCommonStyles, getColors } from '../../util/commonStyles';
@@ -197,7 +195,6 @@ export default function PolicyContent() {
 
   return (
     <>
-      <SEOHead pageKey="policy" />
       <View style={commonStyles.appContainer}>
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>

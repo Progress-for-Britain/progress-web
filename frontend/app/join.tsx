@@ -11,7 +11,6 @@ import Animated, {
   withRepeat
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import SEOHead from '../components/SEOHead';
 import { api } from '../util/api';
 import Footer from '../components/Footer';
 import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
@@ -468,15 +467,6 @@ export default function Join() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const toggleInterest = (interest: string) => {
-    setFormData(prev => ({
-      ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
-    }));
-  };
-
   const toggleVolunteerInterest = (interest: string) => {
     setFormData(prev => ({
       ...prev,
@@ -501,7 +491,6 @@ export default function Join() {
 
   return (
     <View style={commonStyles.appContainer}>
-      <SEOHead pageKey="join" />
       <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
 
