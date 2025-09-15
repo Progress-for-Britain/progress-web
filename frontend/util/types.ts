@@ -143,6 +143,9 @@ export interface SubmitApplicationRequest {
   canContribute?: string[];
   signedNDA?: boolean;
   gdprConsent?: boolean;
+  
+  // Captcha token for verification
+  captchaToken?: string;
 }
 
 export interface ValidateAccessCodeRequest {

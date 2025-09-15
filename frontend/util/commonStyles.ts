@@ -213,7 +213,7 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
       fontWeight: '700',
       marginBottom: 20,
       color: themeColors.text,
-      textAlign: 'center',
+      textAlign: 'left',
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
       }),
@@ -222,7 +222,7 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
       lineHeight: 24,
       fontSize: 16,
       color: themeColors.text,
-      textAlign: 'center',
+      textAlign: 'left',
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
       }),

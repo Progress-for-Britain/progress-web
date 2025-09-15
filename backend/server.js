@@ -10,6 +10,9 @@ const discordBot = require('./utils/discordBot');
 // Import the event completion function
 const { completeEvents } = require('./scripts/completeEvents');
 
+// Import the cleanup function
+const { cleanupOldRecords } = require('./scripts/cleanupOldRecords');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -82,8 +85,6 @@ app.listen(PORT, async () => {
   } else {
     console.warn('DISCORD_BOT_TOKEN not found in environment variables. Discord bot will not start.');
   }
-
-  await completeEvents();
   
   // Seed test users in development environment
   if (process.env.NODE_ENV === 'development' || process.env.SEED_TEST_USERS === 'true') {
@@ -102,6 +103,16 @@ app.listen(PORT, async () => {
       await completeEvents();
     } catch (error) {
       console.error('Error in scheduled event completion:', error);
+    }
+  });
+
+  // Schedule daily cleanup of old records at 2 AM
+  cron.schedule('0 2 * * *', async () => {
+    console.log('🧹 Running daily cleanup of old records...');
+    try {
+      await cleanupOldRecords();
+    } catch (error) {
+      console.error('Error in scheduled cleanup:', error);
     }
   });
 });

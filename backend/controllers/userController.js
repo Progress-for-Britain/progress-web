@@ -256,6 +256,28 @@ const createUser = async (req, res) => {
       return user;
     });
 
+    // Schedule cleanup of pending user and access code after 1 minute
+    if (accessCode) {
+      setTimeout(async () => {
+        try {
+          const email = accessCodeRecord.email.toLowerCase();
+          await prisma.$transaction(async (tx) => {
+            // Delete pending user
+            await tx.pendingUser.deleteMany({
+              where: { email }
+            });
+            // Delete access code
+            await tx.accessCode.deleteMany({
+              where: { code: accessCode }
+            });
+          });
+          console.log(`Cleaned up pending user and access code for email: ${email}`);
+        } catch (error) {
+          console.error('Error during cleanup:', error);
+        }
+      }, 60000); // 1 minute delay
+    }
+
     // Generate refresh token
     const crypto = require('crypto');
     const refreshToken = crypto.randomBytes(64).toString('hex');
@@ -1274,10 +1296,8 @@ const updateUserRole = async (req, res) => {
     if (roles) {
       updateData.roles = roles;
     } else if (role) {
-      // Update single role and ensure roles[] contains it
-      const current = await prisma.user.findUnique({ where: { id }, select: { roles: true } });
-      const merged = Array.from(new Set([...(current?.roles || []), role]));
-      updateData.roles = merged;
+      // Replace roles array with single role
+      updateData.roles = [role];
     }
 
     const updatedUser = await prisma.user.update({

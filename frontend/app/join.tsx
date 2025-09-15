@@ -18,6 +18,8 @@ import { getCommonStyles, getColors, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import useResponsive from '../util/useResponsive';
 import * as WebBrowser from 'expo-web-browser';
+import { Turnstile } from '@marsidev/react-turnstile';
+import Constants from 'expo-constants';
 
 export default function Join() {
   const { isDark } = useTheme();
@@ -60,6 +62,7 @@ export default function Join() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const router = useRouter();
 
   // Animation values
@@ -305,6 +308,23 @@ export default function Join() {
       return;
     }
 
+    // Validate captcha
+    if (!captchaToken) {
+      setApiError('Please complete the security verification to continue.');
+      setShowApiError(true);
+
+      // Scroll to top to show error
+      if (Platform.OS === 'web') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Auto-hide error after 6 seconds
+      setTimeout(() => {
+        setShowApiError(false);
+      }, 6000);
+      return;
+    }
+
     // Validate volunteer-specific fields if volunteer is selected
     if (volunteer) {
       const {
@@ -365,7 +385,10 @@ export default function Join() {
     try {
       if (volunteer) {
         // Submit volunteer application
-        const response = await api.submitApplication(formData);
+        const response = await api.submitApplication({
+          ...formData,
+          captchaToken
+        });
 
         if (response.success) {
           // Clear cached form data and NDA signature since application was successful
@@ -1091,6 +1114,28 @@ export default function Join() {
                     </View>
                   </View>
                 )}
+
+                {/* Cloudflare Turnstile Captcha */}
+                <View style={{ marginBottom: 24 }}>
+                  <Text style={styles.inputLabel}>
+                    Security Verification
+                  </Text>
+                  <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 12, textAlign: 'left' }]}>
+                    Please complete the security check to verify you're human.
+                  </Text>
+                  <View style={{ alignItems: 'center' }}>
+                    <Turnstile
+                      siteKey={Constants.expoConfig?.extra?.cloudflareTurnstileSiteKey || "YOUR_CLOUDFLARE_SITE_KEY"}
+                      onSuccess={(token: string) => setCaptchaToken(token)}
+                      onError={(error) => console.error('Captcha error:', error)}
+                      onExpire={() => setCaptchaToken(null)}
+                      options={{
+                        theme: isDark ? 'dark' : 'light',
+                        size: 'normal'
+                      }}
+                    />
+                  </View>
+                </View>
 
                 {/* API Error Notification */}
                 {showApiError && apiError && (
