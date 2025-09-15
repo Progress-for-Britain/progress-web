@@ -16,6 +16,7 @@
     "@octokit/auth-app": "^8.1.0",
     "@octokit/rest": "^22.0.0",
     "@prisma/client": "^6.14.0",
+    "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "discord.js": "^14.22.1",
