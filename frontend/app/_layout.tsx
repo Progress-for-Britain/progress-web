@@ -11,6 +11,7 @@ import Header from "../components/Header";
 import { useFonts } from "expo-font";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useEffect } from "react";
+import { SITE_URL } from "../util/config";
 
 function RootLayoutNav() {
   const { isDark } = useTheme();
@@ -66,6 +67,21 @@ Curious? Join us at ${websiteUrl}
           />
           {/* Cloudflare Web Analytics */}
           <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "38c4f7c92a6f4feeb11e928a81207ea8"}'></script>
+          {/* Canonical and OG URL */}
+          <link rel="canonical" href={`${SITE_URL}${pathname}`} />
+          <meta property="og:url" content={`${SITE_URL}${pathname}`} />
+          {/* Favicon */}
+          <link rel="icon" href="/favicon.png" />
+          {/* Open Graph meta tags */}
+          <meta property="og:title" content="Progress UK" />
+          <meta property="og:description" content="Progress UK - A progressive political movement unleashing potential across the UK" />
+          <meta property="og:image" content={`${SITE_URL}/favicon.png`} />
+          <meta property="og:type" content="website" />
+          {/* Twitter meta tags */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="Progress UK" />
+          <meta name="twitter:description" content="Progress UK - A progressive political movement unleashing potential across the UK" />
+          <meta name="twitter:image" content={`${SITE_URL}/favicon.png`} />
         </Head>
       )}
       {/* Background aurora effect - only for unauthenticated routes and non-mobile platforms */}

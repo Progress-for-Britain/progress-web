@@ -2,7 +2,6 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import SEOHead from '../components/SEOHead';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -17,7 +16,6 @@ export default function About() {
   
   return (
     <>
-      <SEOHead pageKey="about" />
       <View style={commonStyles.appContainer}>
 
         {/* About Page Content */}

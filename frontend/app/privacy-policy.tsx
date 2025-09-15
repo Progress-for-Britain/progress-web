@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import SEOHead from '../components/SEOHead';
 import { getCommonStyles, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -15,7 +14,6 @@ export default function PrivacyPolicy() {
 
   return (
     <>
-      <SEOHead pageKey="privacy-policy" />
       <View style={commonStyles.appContainer}>
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
