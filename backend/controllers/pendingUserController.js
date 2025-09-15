@@ -35,7 +35,7 @@ const submitApplication = async (req, res) => {
       try {
         const captchaResponse = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', null, {
           params: {
-            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET,
+            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
             response: captchaToken
           }
         });
@@ -442,7 +442,7 @@ const validateAccessCode = async (req, res) => {
       try {
         const captchaResponse = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', null, {
           params: {
-            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET,
+            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY,
             response: captchaToken
           }
         });
