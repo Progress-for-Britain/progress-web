@@ -37,6 +37,14 @@ export const SEO_DATA: Record<string, SEOData> = {
     type: 'website'
   },
 
+  'terms-of-service': {
+    title: 'Terms of Service - Progress UK',
+    description: 'Read the terms that govern your use of the Progress UK website and apps.',
+    url: `${BASE_URL}/terms-of-service`,
+    image: `${BASE_URL}/public/assets/favicon.png`,
+    type: 'website'
+  },
+
   eula: {
     title: 'End User License Agreement - Progress UK',
     description: 'The terms governing your use of the Progress UK app and services.',

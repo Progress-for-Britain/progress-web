@@ -32,9 +32,9 @@ export default function PrivacyPolicy() {
           {/* Introduction Section */}
           <View style={styles.section}>
             <Text style={[commonStyles.text, styles.bodyText]}>
-              At PROGRESS, we are committed to protecting your privacy and ensuring the security of your personal information.
-              This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our
-              mobile application and related services.
+              At PROGRESS, we are committed to protecting your privacy and keeping your data secure.
+              This Privacy Policy explains what we collect, how we use it, how long we keep it,
+              and the choices you have when you use our website, app, and related services (the “Services”).
             </Text>
           </View>
 
@@ -50,27 +50,33 @@ export default function PrivacyPolicy() {
               <Text style={[commonStyles.text, styles.sectionTitle]}>Information We Collect</Text>
             </View>
 
-            <Text style={[commonStyles.text, styles.subsectionTitle]}>Personal Information</Text>
-            <Text style={[commonStyles.text, styles.bodyText]}>
-              We may collect personal information that you provide directly to us, including:
-            </Text>
+            <Text style={[commonStyles.text, styles.subsectionTitle]}>Account and Profile</Text>
+            <Text style={[commonStyles.text, styles.bodyText]}>We collect the information you provide when you register or manage your account:</Text>
             <View style={styles.bulletList}>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Name and contact information (email, phone number)</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Address and location data</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Political interests and volunteer information</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Event participation and donation history</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Communication preferences</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• First name, last name, and email address</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Password (stored using one‑way hashing)</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Address and constituency (if provided)</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Roles and preferences (notification and privacy settings)</Text>
             </View>
 
-            <Text style={[commonStyles.text, styles.subsectionTitle]}>Automatically Collected Information</Text>
-            <Text style={[commonStyles.text, styles.bodyText]}>
-              When you use our app, we may automatically collect:
-            </Text>
+            <Text style={[commonStyles.text, styles.subsectionTitle]}>Membership, Events, and Donations</Text>
+            <Text style={[commonStyles.text, styles.bodyText]}>If you apply to join, attend events, volunteer, or donate, we collect:</Text>
             <View style={styles.bulletList}>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Device information (device type, operating system)</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Usage data and app interactions</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• IP address and location information</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Log data and crash reports</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Pending membership application details: phone (optional), interests, newsletter preference, brief bio/CV, skills you can contribute, citizenship and UK residency, other affiliations, NDA agreement, and GDPR consent (for volunteers)</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Event participation records and volunteer hours (attendance, status, notes)</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Donation/subscription records: amounts, currency, plan, billing interval, status, and Stripe customer/subscription IDs (we do not store full card details)</Text>
+            </View>
+
+            <Text style={[commonStyles.text, styles.subsectionTitle]}>Discord Linking</Text>
+            <Text style={[commonStyles.text, styles.bodyText]}>
+              If you link your Discord account, we store your Discord username and process a short‑lived verification code and Discord user ID to complete linking.
+            </Text>
+
+            <Text style={[commonStyles.text, styles.subsectionTitle]}>Technical and Authentication Data</Text>
+            <Text style={[commonStyles.text, styles.bodyText]}>To secure your account and our Services, we collect:</Text>
+            <View style={styles.bulletList}>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• IP address, user agent, and device type when issuing refresh tokens</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Login status via JSON Web Tokens (JWTs)</Text>
             </View>
           </View>
 
@@ -86,17 +92,14 @@ export default function PrivacyPolicy() {
               <Text style={[commonStyles.text, styles.sectionTitle]}>How We Use Your Information</Text>
             </View>
 
-            <Text style={[commonStyles.text, styles.bodyText]}>
-              We use the information we collect for various purposes, including:
-            </Text>
+            <Text style={[commonStyles.text, styles.bodyText]}>We use your information to:</Text>
             <View style={styles.bulletList}>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Providing and maintaining our services</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Processing donations and event registrations</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Communicating with you about our activities and events</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Personalizing your experience and content</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Improving our app and services</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Ensuring security and preventing fraud</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• Complying with legal obligations</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Provide and improve the Services</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Process donations and manage subscriptions</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Manage membership applications, roles, and event participation</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Communicate with you about updates, events, and opportunities</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Detect, prevent, and investigate fraud, abuse, or security incidents</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Comply with legal obligations</Text>
             </View>
           </View>
 
@@ -113,15 +116,32 @@ export default function PrivacyPolicy() {
             </View>
 
             <Text style={[commonStyles.text, styles.bodyText]}>
-              We do not sell, trade, or otherwise transfer your personal information to third parties, except in the following circumstances:
+              We do not sell your personal information. We share limited data with service providers to operate the Services:
             </Text>
             <View style={styles.bulletList}>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• With your explicit consent</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• To comply with legal obligations or court orders</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• To protect our rights, property, or safety</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• With trusted service providers who assist our operations (under strict confidentiality agreements)</Text>
-              <Text style={[commonStyles.text, styles.bulletPoint]}>• In connection with a business transfer or merger</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Payments: Stripe processes payments; we store customer/subscription IDs and amounts only</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Email: Resend sends transactional emails (e.g., application confirmations, verifications)</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Community: Discord linking for role access (Discord username and verification data)</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Hosting and infrastructure: database and application hosting providers</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Legal and compliance: when required by law or to protect our rights</Text>
             </View>
+          </View>
+
+          {/* Legal Bases Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialIcons
+                name="balance"
+                size={24}
+                color={colors.accent}
+                style={styles.sectionIcon}
+              />
+              <Text style={[commonStyles.text, styles.sectionTitle]}>Legal Bases</Text>
+            </View>
+            <Text style={[commonStyles.text, styles.bodyText]}>
+              Where UK/EU data protection law applies, we process data based on: performance of a contract (providing the Services),
+              your consent (e.g., newsletters or volunteer details), legitimate interests (security, service improvement), and legal obligations (tax and accounting).
+            </Text>
           </View>
 
           {/* Data Security Section */}
@@ -146,6 +166,28 @@ export default function PrivacyPolicy() {
               <Text style={[commonStyles.text, styles.bulletPoint]}>• Regular security audits and updates</Text>
               <Text style={[commonStyles.text, styles.bulletPoint]}>• Limited access to personal data on a need-to-know basis</Text>
               <Text style={[commonStyles.text, styles.bulletPoint]}>• Secure data disposal procedures</Text>
+            </View>
+          </View>
+
+          {/* Data Retention Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialIcons
+                name="schedule"
+                size={24}
+                color={colors.accent}
+                style={styles.sectionIcon}
+              />
+              <Text style={[commonStyles.text, styles.sectionTitle]}>Data Retention</Text>
+            </View>
+            <Text style={[commonStyles.text, styles.bodyText]}>
+              We keep personal data only as long as necessary for the purposes above:
+            </Text>
+            <View style={styles.bulletList}>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Refresh tokens: typically 30 days</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Pending applications: unreviewed for 90 days are removed; approved/rejected applications may be removed after ~30 days</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Donations/subscriptions: retained as required by tax and accounting laws</Text>
+              <Text style={[commonStyles.text, styles.bulletPoint]}>• Account data: retained while your account is active; deleted or anonymised upon request where feasible</Text>
             </View>
           </View>
 
@@ -191,8 +233,26 @@ export default function PrivacyPolicy() {
             </View>
 
             <Text style={[commonStyles.text, styles.bodyText]}>
-              Our app may use cookies and similar tracking technologies to enhance your experience and analyze usage patterns.
-              You can control cookie settings through your device settings or app preferences.
+              We primarily use token‑based authentication stored on your device (not third‑party advertising cookies).
+              Stripe Checkout and similar third‑party services may set essential cookies to operate their features.
+              You can control cookies through your browser or device settings.
+            </Text>
+          </View>
+
+          {/* International Transfers Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialIcons
+                name="public"
+                size={24}
+                color={colors.accent}
+                style={styles.sectionIcon}
+              />
+              <Text style={[commonStyles.text, styles.sectionTitle]}>International Transfers</Text>
+            </View>
+            <Text style={[commonStyles.text, styles.bodyText]}>
+              Our service providers may process data outside the UK/EU. Where required, we rely on appropriate safeguards (such as standard contractual clauses)
+              to protect your information.
             </Text>
           </View>
 
@@ -250,8 +310,8 @@ export default function PrivacyPolicy() {
             </Text>
             <View style={styles.contactInfo}>
               <Text style={[commonStyles.text, styles.contactText]}>• Email: privacy@progressparty.uk</Text>
-              <Text style={[commonStyles.text, styles.contactText]}>• Address: [Your Address Here]</Text>
-              <Text style={[commonStyles.text, styles.contactText]}>• Phone: [Your Phone Number Here]</Text>
+              <Text style={[commonStyles.text, styles.contactText]}>• Address: Provided upon request</Text>
+              <Text style={[commonStyles.text, styles.contactText]}>• Phone: Provided upon request</Text>
             </View>
           </View>
 
@@ -265,56 +325,57 @@ export default function PrivacyPolicy() {
 
 const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.create({
   heroSection: {
-    marginBottom: 40,
-    alignItems: 'center',
+    marginBottom: 50,
+    alignItems: 'flex-start',
   },
   lastUpdated: {
-    fontSize: isMobile ? 14 : 16,
+    fontSize: isMobile ? 15 : 17,
     opacity: 0.7,
-    marginTop: 8,
+    marginTop: 10,
   },
   bodyText: {
-    fontSize: isMobile ? 16 : 18,
-    lineHeight: isMobile ? 24 : 28,
+    fontSize: isMobile ? 17 : 19,
+    lineHeight: isMobile ? 26 : 30,
     textAlign: isMobile ? 'left' : 'justify',
   },
   section: {
-    marginBottom: 40,
+    marginBottom: 50,
     paddingHorizontal: isMobile ? 20 : 40,
+    paddingVertical: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   sectionIcon: {
     marginRight: 12,
   },
   sectionTitle: {
-    fontSize: isMobile ? 20 : 24,
+    fontSize: isMobile ? 22 : 26,
     fontWeight: 'bold',
   },
   subsectionTitle: {
-    fontSize: isMobile ? 18 : 20,
+    fontSize: isMobile ? 19 : 22,
     fontWeight: '600',
-    marginTop: 20,
-    marginBottom: 12,
+    marginTop: 25,
+    marginBottom: 15,
   },
   bulletList: {
     marginLeft: 20,
-    marginTop: 12,
+    marginTop: 15,
   },
   bulletPoint: {
-    fontSize: isMobile ? 16 : 18,
-    lineHeight: isMobile ? 24 : 28,
-    marginBottom: 8,
+    fontSize: isMobile ? 17 : 19,
+    lineHeight: isMobile ? 26 : 30,
+    marginBottom: 10,
   },
   contactInfo: {
-    marginTop: 16,
+    marginTop: 20,
   },
   contactText: {
-    fontSize: isMobile ? 16 : 18,
-    lineHeight: isMobile ? 24 : 28,
-    marginBottom: 8,
+    fontSize: isMobile ? 17 : 19,
+    lineHeight: isMobile ? 26 : 30,
+    marginBottom: 10,
   },
 });
