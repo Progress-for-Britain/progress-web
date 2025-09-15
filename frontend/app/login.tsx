@@ -9,6 +9,8 @@ import { useAuth } from '../util/auth-context';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import useResponsive from '../util/useResponsive';
+import { Turnstile } from '@marsidev/react-turnstile';
+import Constants from 'expo-constants';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -18,6 +20,7 @@ export default function Login() {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const { login, isStorageReady } = useAuth();
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
@@ -48,6 +51,12 @@ export default function Login() {
       return;
     }
 
+    // Validate captcha
+    if (!captchaToken) {
+      setErrorMessage('Please complete the security verification to continue.');
+      return;
+    }
+
     // Check if storage is ready before attempting login
     if (!isStorageReady) {
       setErrorMessage('Device storage is not ready. Please ensure you have sufficient storage space and try again.');
@@ -56,7 +65,7 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      await login({ email, password });
+      await login({ email, password, captchaToken });
       router.replace('/account');
     } catch (error) {
       let errorMessage = 'An error occurred';
@@ -230,6 +239,20 @@ export default function Login() {
                 Forgot Password?
               </Text>
             </TouchableOpacity> */}
+
+            {/* Cloudflare Turnstile Captcha */}
+            <View style={{ marginBottom: isMobile ? 20 : 28, alignItems: 'center' }}>
+              <Turnstile
+                siteKey={Constants.expoConfig?.extra?.cloudflareTurnstileSiteKey || "YOUR_CLOUDFLARE_SITE_KEY"}
+                onSuccess={(token: string) => setCaptchaToken(token)}
+                onError={(error) => console.error('Captcha error:', error)}
+                onExpire={() => setCaptchaToken(null)}
+                options={{
+                  theme: isDark ? 'dark' : 'light',
+                  size: 'normal'
+                }}
+              />
+            </View>
 
             <View
               style={{

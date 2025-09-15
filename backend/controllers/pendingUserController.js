@@ -428,12 +428,43 @@ const rejectApplication = async (req, res) => {
 // Validate access code during registration
 const validateAccessCode = async (req, res) => {
   try {
-    const { code, email } = req.body;
+    const { code, email, captchaToken } = req.body;
 
     if (!code || !email) {
       return res.status(400).json({
         success: false,
         message: 'Access code and email are required'
+      });
+    }
+
+    // Verify captcha if provided
+    if (captchaToken) {
+      try {
+        const captchaResponse = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', null, {
+          params: {
+            secret: process.env.CLOUDFLARE_TURNSTILE_SECRET,
+            response: captchaToken
+          }
+        });
+
+        if (!captchaResponse.data.success) {
+          return res.status(400).json({
+            success: false,
+            message: 'Captcha verification failed. Please try again.'
+          });
+        }
+      } catch (error) {
+        console.error('Captcha verification error:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Captcha verification failed. Please try again.'
+        });
+      }
+    } else {
+      // If captcha is required but not provided, fail
+      return res.status(400).json({
+        success: false,
+        message: 'Captcha verification is required.'
       });
     }
 

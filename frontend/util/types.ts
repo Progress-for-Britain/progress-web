@@ -68,6 +68,7 @@ export interface Payment {
 export interface LoginRequest {
   email: string;
   password: string;
+  captchaToken?: string;
 }
 
 export interface RegisterRequest {
@@ -78,6 +79,7 @@ export interface RegisterRequest {
   address?: string;
   role?: Role;
   accessCode?: string;
+  captchaToken?: string;
 }
 
 export interface UpdateUserRequest {
@@ -151,6 +153,7 @@ export interface SubmitApplicationRequest {
 export interface ValidateAccessCodeRequest {
   code: string;
   email: string;
+  captchaToken?: string;
 }
 
 export interface ValidateAccessCodeResponse {
