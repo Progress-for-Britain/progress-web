@@ -3,7 +3,7 @@ const axios = require('axios');
 // Verifies a Cloudflare Turnstile token using server-side secret
 // Looks up secret from several common env var names for flexibility
 async function verifyTurnstileToken(token) {
-  const secret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY
+  const secret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
 
   if (!secret) {
     return {
