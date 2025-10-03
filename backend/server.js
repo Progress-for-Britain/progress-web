@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
   'http://localhost:8081',
   'https://progress-web-hazel.vercel.app',
-  'https://progressforbritain',
+  'https://progressforbritain.org',
   'https://www.progressforbritain.org'
 ];
 
