@@ -185,6 +185,8 @@ export default function Register() {
       }
       
       setErrorMessage(errorMessage);
+      // Reset captcha token so user can try again with a new token (Turnstile tokens are single-use)
+      setCaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
