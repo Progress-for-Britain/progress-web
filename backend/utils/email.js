@@ -393,7 +393,7 @@ const sendAcceptanceEmail = async (email, firstName, accessCode) => {
               </div>
               
               <div style="text-align: center; margin: 32px 0;">
-                <a href="https://www.progressforbritain.org/register" class="button">Register Now</a>
+                <a href="https://progressforbritain.org/register" class="button">Register Now</a>
               </div>
               
               <p>Once registered, we'd love for you to join our Discord community:</p>

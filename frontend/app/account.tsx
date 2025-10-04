@@ -419,7 +419,8 @@ export default function Account() {
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={{ 
-                        backgroundColor: user.payments && user.payments[0]?.status === 'active' ? '#10B981' : '#F59E0B',
+                        backgroundColor: user.payments && user.payments[0]?.status === 'active' ? '#10B981' : 
+                                       (user.role === 'VOLUNTEER' || user.roles?.includes('VOLUNTEER')) ? '#8B5CF6' : '#F59E0B',
                         borderRadius: 6,
                         width: 12,
                         height: 12,
@@ -428,6 +429,7 @@ export default function Account() {
                       <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600' }}>
                         {user.payments && user.payments[0]?.status === 'active' ? 'Active Member' : 
                          user.payments && user.payments[0]?.status === 'pending' ? 'Membership Pending' : 
+                         (user.role === 'VOLUNTEER' || user.roles?.includes('VOLUNTEER')) ? 'Volunteer' : 
                          'Membership Expired'}
                       </Text>
                     </View>
