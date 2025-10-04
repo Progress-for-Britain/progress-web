@@ -36,7 +36,7 @@ export default function UserManagement() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showEditVolunteerModal, setShowEditVolunteerModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [newRole, setNewRole] = useState('');
+  const [newRole, setNewRole] = useState<string[]>([]);
   const [reviewNotes, setReviewNotes] = useState('');
   const [newStatus, setNewStatus] = useState('');
   const [statusNotes, setStatusNotes] = useState('');
@@ -139,7 +139,7 @@ export default function UserManagement() {
 
   const handleUserClick = async (user: User) => {
     setSelectedUser(user);
-    setNewRole(user.role);
+    setNewRole(user.roles && user.roles.length > 0 ? user.roles : [user.role]);
     await loadUserEventAssignments(user.id);
     setShowUserModal(true);
   };
@@ -151,13 +151,13 @@ export default function UserManagement() {
   };
 
   const updateUserRole = async () => {
-    if (!selectedUser || !newRole) return;
+    if (!selectedUser || newRole.length === 0) return;
 
     try {
-      const response = await api.updateUserRole(selectedUser.id, newRole as Role);
+      const response = await api.updateUserRole(selectedUser.id, newRole as Role[]);
       setResponseMessage({
         success: true,
-        message: 'User role updated successfully'
+        message: 'User roles updated successfully'
       });
       setShowRoleModal(false);
       setShowUserModal(false);
@@ -165,7 +165,7 @@ export default function UserManagement() {
     } catch (error) {
       setResponseMessage({
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to update user role'
+        message: error instanceof Error ? error.message : 'Failed to update user roles'
       });
     }
   };
@@ -895,7 +895,7 @@ export default function UserManagement() {
                           alignItems: 'center'
                         }}
                       >
-                        <Text style={{ color: '#ffffff', fontWeight: '600' }}>Change Role</Text>
+                        <Text style={{ color: '#ffffff', fontWeight: '600' }}>Change Roles</Text>
                       </TouchableOpacity>
                       
                       <TouchableOpacity
@@ -1288,35 +1288,41 @@ export default function UserManagement() {
               maxWidth: 400 
             }}>
               <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#111827', marginBottom: 16 }}>
-                Change User Role
+                Change User Roles
               </Text>
               
               {['ADMIN', 'ONBOARDING', 'EVENT_MANAGER', 'WRITER', 'VOLUNTEER', 'MEMBER'].map((role) => (
                 <TouchableOpacity
                   key={role}
-                  onPress={() => setNewRole(role)}
+                  onPress={() => {
+                    setNewRole(prev => 
+                      prev.includes(role) 
+                        ? prev.filter(r => r !== role) 
+                        : [...prev, role]
+                    );
+                  }}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     paddingVertical: 12,
                     paddingHorizontal: 16,
                     borderRadius: 8,
-                    backgroundColor: newRole === role ? '#d946ef20' : 'transparent',
+                    backgroundColor: newRole.includes(role) ? '#d946ef20' : 'transparent',
                     marginBottom: 8
                   }}
                 >
                   <View style={{
                     width: 20,
                     height: 20,
-                    borderRadius: 10,
+                    borderRadius: 4,
                     borderWidth: 2,
-                    borderColor: newRole === role ? '#d946ef' : '#d1d5db',
-                    backgroundColor: newRole === role ? '#d946ef' : 'transparent',
+                    borderColor: newRole.includes(role) ? '#d946ef' : '#d1d5db',
+                    backgroundColor: newRole.includes(role) ? '#d946ef' : 'transparent',
                     marginRight: 12,
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    {newRole === role && (
+                    {newRole.includes(role) && (
                       <Ionicons name="checkmark" size={12} color="#ffffff" />
                     )}
                   </View>
@@ -1337,7 +1343,7 @@ export default function UserManagement() {
                     alignItems: 'center'
                   }}
                 >
-                  <Text style={{ color: '#ffffff', fontWeight: '600' }}>Update Role</Text>
+                  <Text style={{ color: '#ffffff', fontWeight: '600' }}>Update Roles</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
