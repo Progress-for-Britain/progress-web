@@ -391,10 +391,13 @@ const Header = React.memo(function Header({ onMenuToggle }: { onMenuToggle?: (is
         { href: "/events", icon: "calendar", label: "Events" },
       ];
 
-      // Insert admin link after Events if user is admin
-      const hasAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('ONBOARDING');
-      if (hasAdmin) {
-        baseItems.push({ href: "/user-management", icon: "people", label: "User Management" });
+      // Insert admin link after Events if user is admin or onboarding
+      const hasAdmin = user?.roles?.includes('ADMIN');
+      const hasOnboarding = user?.roles?.includes('ONBOARDING');
+      
+      if (hasAdmin || hasOnboarding) {
+        const label = hasAdmin ? "User Management" : "Application Management";
+        baseItems.push({ href: "/user-management", icon: "people", label });
       }
 
       // Add remaining items
