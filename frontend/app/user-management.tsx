@@ -23,6 +23,13 @@ interface EventAssignment {
 }
 
 export default function UserManagement() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  // Check roles
+  const isAdmin = user?.roles && (user.roles.includes('ADMIN') || user.roles.includes('ONBOARDING'));
+  const isOnboardingOnly = user?.roles?.includes('ONBOARDING') && !user.roles.includes('ADMIN');
+
   const [users, setUsers] = useState<User[]>([]);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [events, setEvents] = useState<any[]>([]);
@@ -38,7 +45,6 @@ export default function UserManagement() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newRole, setNewRole] = useState<string[]>([]);
   const [reviewNotes, setReviewNotes] = useState('');
-  const [newStatus, setNewStatus] = useState('');
   const [statusNotes, setStatusNotes] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED'>('UNREVIEWED');
   const [selectedEvent, setSelectedEvent] = useState('');
@@ -61,13 +67,16 @@ export default function UserManagement() {
     signedNDA: false,
     gdprConsent: false,
   });
-  
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
+
+  // Set default tab for onboarding
+  React.useEffect(() => {
+    if (isOnboardingOnly) {
+      setActiveTab('pending');
+    }
+  }, [isOnboardingOnly]);
 
   // Redirect if not authenticated (but wait for loading to complete)
   React.useEffect(() => {
-    const isAdmin = (user?.roles && (user.roles.includes('ADMIN') || user.roles.includes('ONBOARDING')));
     if (!isLoading && (!isAuthenticated || !user || !isAdmin)) {
       Alert.alert('Access Denied', 'You must be an admin to access this page.');
       router.push('/');
@@ -79,12 +88,11 @@ export default function UserManagement() {
   const loadData = async () => {
     setLoading(true);
     try {
-      await Promise.all([
-        loadUsers(),
-        loadPendingUsers(),
-        loadEvents(),
-        loadStats()
-      ]);
+      const loadPromises = [loadPendingUsers()];
+      if (!isOnboardingOnly) {
+        loadPromises.push(loadUsers(), loadEvents(), loadStats());
+      }
+      await Promise.all(loadPromises);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -436,10 +444,10 @@ export default function UserManagement() {
           {/* Header */}
           <View style={{ padding: 20, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e5e7eb' }}>
             <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#111827', marginBottom: 8 }}>
-              User Management
+              {isOnboardingOnly ? 'Application Management' : 'User Management'}
             </Text>
             <Text style={{ fontSize: 16, color: '#6b7280' }}>
-              Manage users, approve applications, and assign roles
+              {isOnboardingOnly ? 'Review and approve membership applications' : 'Manage users, approve applications, and assign roles'}
             </Text>
           </View>
 
@@ -498,23 +506,25 @@ export default function UserManagement() {
             padding: 20,
             flexWrap: 'wrap'
           }}>
-            <View style={{ 
-              flex: 1, 
-              minWidth: 200,
-              backgroundColor: '#ffffff', 
-              padding: 20, 
-              borderRadius: 12, 
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3
-            }}>
-              <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 4 }}>Total Users</Text>
-              <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#111827' }}>
-                {Object.values(stats.usersByRole || {}).reduce((sum: number, count: any) => sum + count, 0)}
-              </Text>
-            </View>
+            {!isOnboardingOnly && (
+              <View style={{ 
+                flex: 1, 
+                minWidth: 200,
+                backgroundColor: '#ffffff', 
+                padding: 20, 
+                borderRadius: 12, 
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 4 }}>Total Users</Text>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#111827' }}>
+                  {Object.values(stats.usersByRole || {}).reduce((sum: number, count: any) => sum + count, 0)}
+                </Text>
+              </View>
+            )}
             
             <View style={{ 
               flex: 1, 
@@ -534,23 +544,25 @@ export default function UserManagement() {
               </Text>
             </View>
             
-            <View style={{ 
-              flex: 1, 
-              minWidth: 200,
-              backgroundColor: '#ffffff', 
-              padding: 20, 
-              borderRadius: 12, 
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3
-            }}>
-              <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 4 }}>Recent Registrations</Text>
-              <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>
-                {stats.recentRegistrations || 0}
-              </Text>
-            </View>
+            {!isOnboardingOnly && (
+              <View style={{ 
+                flex: 1, 
+                minWidth: 200,
+                backgroundColor: '#ffffff', 
+                padding: 20, 
+                borderRadius: 12, 
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <Text style={{ fontSize: 14, color: '#6b7280', marginBottom: 4 }}>Recent Registrations</Text>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#059669' }}>
+                  {stats.recentRegistrations || 0}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Tabs */}
@@ -564,9 +576,9 @@ export default function UserManagement() {
             marginBottom: 20
           }}>
             {[
-              { key: 'users', label: 'Users', icon: 'people' },
+              ...(isOnboardingOnly ? [] : [{ key: 'users', label: 'Users', icon: 'people' }]),
               { key: 'pending', label: 'All Applications', icon: 'hourglass' },
-              { key: 'assignments', label: 'Event Assignments', icon: 'calendar' }
+              ...(isOnboardingOnly ? [] : [{ key: 'assignments', label: 'Event Assignments', icon: 'calendar' }])
             ].map((tab) => (
               <TouchableOpacity
                 key={tab.key}
@@ -1044,28 +1056,30 @@ export default function UserManagement() {
                           borderLeftColor: '#059669',
                           marginBottom: 8
                         }}>
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                             <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>
                               Volunteer Application Details
                             </Text>
-                            <TouchableOpacity
-                              onPress={() => openEditVolunteerModal(selectedPendingUser)}
-                              style={{
-                                backgroundColor: '#0ea5e9',
-                                paddingHorizontal: 12,
-                                paddingVertical: 6,
-                                borderRadius: 6,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                gap: 4,
-                                ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
-                              }}
-                            >
-                              <Ionicons name="pencil" size={14} color="#ffffff" />
-                              <Text style={{ fontSize: 12, fontWeight: '600', color: '#ffffff' }}>
-                                Edit
-                              </Text>
-                            </TouchableOpacity>
+                            {!isOnboardingOnly && (
+                              <TouchableOpacity
+                                onPress={() => openEditVolunteerModal(selectedPendingUser)}
+                                style={{
+                                  backgroundColor: '#0ea5e9',
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 6,
+                                  borderRadius: 6,
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  gap: 4,
+                                  ...(Platform.OS === 'web' && { cursor: 'pointer' } as any)
+                                }}
+                              >
+                                <Ionicons name="pencil" size={14} color="#ffffff" />
+                                <Text style={{ fontSize: 12, fontWeight: '600', color: '#ffffff' }}>
+                                  Edit
+                                </Text>
+                              </TouchableOpacity>
+                            )}
                           </View>
                           
                           {selectedPendingUser.socialMediaHandle && (
@@ -1203,22 +1217,24 @@ export default function UserManagement() {
                     />
 
                     {/* Status Change Button */}
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSelectedStatus(selectedPendingUser.status);
-                        setStatusNotes('');
-                        setShowStatusModal(true);
-                      }}
-                      style={{
-                        backgroundColor: '#3b82f6',
-                        paddingVertical: 12,
-                        borderRadius: 8,
-                        alignItems: 'center',
-                        marginBottom: 16
-                      }}
-                    >
-                      <Text style={{ color: '#ffffff', fontWeight: '600' }}>Change Status</Text>
-                    </TouchableOpacity>
+                    {!isOnboardingOnly && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setSelectedStatus(selectedPendingUser.status);
+                          setStatusNotes('');
+                          setShowStatusModal(true);
+                        }}
+                        style={{
+                          backgroundColor: '#3b82f6',
+                          paddingVertical: 12,
+                          borderRadius: 8,
+                          alignItems: 'center',
+                          marginBottom: 16
+                        }}
+                      >
+                        <Text style={{ color: '#ffffff', fontWeight: '600' }}>Change Status</Text>
+                      </TouchableOpacity>
+                    )}
 
                     <View style={{ flexDirection: 'row', gap: 12 }}>
                       <TouchableOpacity
