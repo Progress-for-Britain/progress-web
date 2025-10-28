@@ -120,6 +120,33 @@ export default function Policy() {
     }
   };
 
+  const deleteRepo = async (repo: Repository) => {
+    Alert.alert(
+      'Delete Policy Repository',
+      `Are you sure you want to delete "${repo.displayName || repo.name}"? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.deletePolicyRepo(repo.name);
+              Alert.alert('Success', 'Policy repository deleted successfully!');
+              fetchRepos(); // Refresh the list
+            } catch (error) {
+              console.error('Error deleting repo:', error);
+              Alert.alert('Error', 'Failed to delete policy repository');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <>
       <View style={commonStyles.appContainer}>
@@ -156,23 +183,35 @@ export default function Policy() {
                 key={`cols-${isMobile ? 1 : 2}`}
                 numColumns={isMobile ? 1 : 2}
                 renderItem={({item}) => (
-                  <TouchableOpacity
-                    style={styles.repoCard}
-                    onPress={() => router.push(`/policy/${item.name}`)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Open ${item.displayName || item.name} policy`}
-                  >
-                    <MaterialIcons name="policy" size={32} color={colors.accent} />
-                    <Text style={[commonStyles.text, styles.repoCardText]}>{item.displayName || item.name}</Text>
-                    {item.tags && item.tags.length > 0 && (
-                      <View style={styles.tagsContainer}>
-                        {item.tags.slice(0, 3).map((tag, index) => (
-                          <Text key={index} style={styles.tag}>{tag}</Text>
-                        ))}
-                        {item.tags.length > 3 && <Text style={styles.moreTags}>+{item.tags.length - 3} more</Text>}
-                      </View>
+                  <View style={styles.repoCard}>
+                    <TouchableOpacity
+                      style={styles.repoCardContent}
+                      onPress={() => router.push(`/policy/${item.name}`)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Open ${item.displayName || item.name} policy`}
+                    >
+                      <MaterialIcons name="policy" size={32} color={colors.accent} />
+                      <Text style={[commonStyles.text, styles.repoCardText]}>{item.displayName || item.name}</Text>
+                      {item.tags && item.tags.length > 0 && (
+                        <View style={styles.tagsContainer}>
+                          {item.tags.slice(0, 3).map((tag, index) => (
+                            <Text key={index} style={styles.tag}>{tag}</Text>
+                          ))}
+                          {item.tags.length > 3 && <Text style={styles.moreTags}>+{item.tags.length - 3} more</Text>}
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                    {isAdmin && (
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => deleteRepo(item)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Delete ${item.displayName || item.name} policy`}
+                      >
+                        <MaterialIcons name="delete" size={20} color={colors.error || '#ff4444'} />
+                      </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
+                  </View>
                 )}
               />
             )}
@@ -249,13 +288,16 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
   },
   repoCard: {
     flex: 1,
-    alignItems: 'center',
-    padding: 24,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
     margin: 12,
     backgroundColor: colors.surface,
+    position: 'relative',
+  },
+  repoCardContent: {
+    alignItems: 'center',
+    padding: 24,
   },
   repoCardText: {
     marginTop: 8,
@@ -316,5 +358,13 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     color: colors.text,
     fontSize: isMobile ? 12 : 14,
     marginTop: 4,
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    padding: 8,
+    borderRadius: 4,
+    backgroundColor: colors.surface,
   },
 });
