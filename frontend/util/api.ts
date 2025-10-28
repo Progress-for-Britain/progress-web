@@ -988,6 +988,11 @@ class ApiClient {
     const response = await this.client.post(`/api/policies/${repo}/tags`, { tags });
     return response.data;
   }
+
+  async deletePolicyRepo(repo: string): Promise<any> {
+    const response = await this.client.delete(`/api/policies/${repo}`);
+    return response.data;
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

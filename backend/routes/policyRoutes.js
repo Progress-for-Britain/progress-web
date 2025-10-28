@@ -412,15 +412,27 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       private: true, // or false if needed
     });
 
-    // Create an empty policy.md file
-    const initialContent = `# ${name}\n\nThis is the initial policy document.\n\nPlease edit this file to add your policy content.`;
+    // Create policy.md file
+    const policyContent = `# ${name}\n\nThis is the initial policy document.\n\nPlease edit this file to add your policy content.`;
 
     await octokit.repos.createOrUpdateFileContents({
       owner,
       repo: repoName,
       path: 'policy.md',
       message: 'Initial commit: Add policy.md',
-      content: Buffer.from(initialContent).toString('base64'),
+      content: Buffer.from(policyContent).toString('base64'),
+      branch: 'main',
+    });
+
+    // Create README.md file
+    const readmeContent = `# ${name}\n\n${description || 'Policy repository for ' + name}\n\nTags: \nRelated Policies: \n\n## Files\n\n- policy.md - The main policy document`;
+
+    await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo: repoName,
+      path: 'README.md',
+      message: 'Initial commit: Add README.md',
+      content: Buffer.from(readmeContent).toString('base64'),
       branch: 'main',
     });
 
@@ -484,6 +496,33 @@ router.post('/:repo/tags', authenticateToken, requireAdmin, async (req, res) => 
   } catch (error) {
     console.error('Error setting tags:', error);
     res.status(500).json({ error: 'Failed to set tags' });
+  }
+});
+
+// Delete a policy repo (admin only)
+router.delete('/:repo', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const octokit = await initializeOctokit();
+    const { repo } = req.params;
+    const owner = getOrganization();
+
+    // Verify the repo is a policy repo (starts with 'policy-')
+    if (!repo.startsWith('policy-')) {
+      return res.status(400).json({ error: 'Can only delete policy repositories' });
+    }
+
+    // Delete the repository
+    await octokit.repos.delete({
+      owner,
+      repo,
+    });
+
+    res.json({ success: true, message: `Repository ${repo} deleted successfully` });
+  } catch (error) {
+    console.error('Error deleting policy repo:', error);
+    const status = error?.status || error?.response?.status;
+    const message = error?.response?.data?.message || error?.message || 'Unknown error';
+    res.status(status || 500).json({ error: `Failed to delete policy repo: ${message}` });
   }
 });
 
