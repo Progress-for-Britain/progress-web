@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/favicon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "transparent",
     "newArchEnabled": false,
     "scheme": "progressuk",
     "splash": {
