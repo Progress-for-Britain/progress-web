@@ -755,7 +755,103 @@ const getMarkdownStyles = (colors: any) => ({
   body: { color: colors.text },
   heading1: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: colors.text },
   heading2: { fontSize: 20, fontWeight: 'bold', marginBottom: 12, color: colors.text },
+  heading3: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: colors.text },
+  heading4: { fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: colors.text },
+  heading5: { fontSize: 14, fontWeight: 'bold', marginBottom: 6, color: colors.text },
+  heading6: { fontSize: 12, fontWeight: 'bold', marginBottom: 4, color: colors.text },
   paragraph: { marginBottom: 12, lineHeight: 20, color: colors.text },
   listItem: { marginBottom: 8, color: colors.text },
   link: { color: colors.accent },
+  // Emphasized text styling - toned down for dark mode
+  em: { 
+    fontStyle: 'italic',
+    color: colors.textSecondary, // Use secondary text color instead of bright white
+    opacity: 0.9 
+  },
+  strong: { 
+    fontWeight: 'bold',
+    color: colors.text,
+    opacity: 0.95 // Slightly less bright than regular text
+  },
+  // Blockquote styling
+  blockquote: {
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+    paddingLeft: 16,
+    marginLeft: 0,
+    marginBottom: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 4,
+  },
+  // Code styling
+  code_inline: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 3,
+    fontFamily: 'monospace',
+    fontSize: 14,
+    color: colors.text,
+  },
+  code_block: {
+    backgroundColor: colors.surface,
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  fence: {
+    backgroundColor: colors.surface,
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  // List styling
+  bullet_list: {
+    marginBottom: 12,
+  },
+  ordered_list: {
+    marginBottom: 12,
+  },
+  list_item: {
+    marginBottom: 4,
+    color: colors.text,
+  },
+  // Table styling
+  table: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 6,
+    marginBottom: 12,
+  },
+  thead: {
+    backgroundColor: colors.surface,
+  },
+  tbody: {
+    backgroundColor: colors.background,
+  },
+  th: {
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  td: {
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    color: colors.text,
+  },
+  // Horizontal rule
+  hr: {
+    backgroundColor: colors.border,
+    height: 1,
+    marginVertical: 16,
+    borderWidth: 0,
+  },
 });
