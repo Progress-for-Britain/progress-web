@@ -302,7 +302,7 @@ export default function PolicyContent() {
             </View>
           )}
 
-          <View style={styles.section}>
+          <View style={[styles.section, styles.contentSection]}>
             {loading ? (
               <View style={styles.loadingBox}>
                 <ActivityIndicator color={colors.accent} />
@@ -314,7 +314,9 @@ export default function PolicyContent() {
                 <Text style={[commonStyles.text, styles.errorText]}>{error}</Text>
               </View>
             ) : (
-              <Markdown style={getMarkdownStyles(colors)}>{content || 'No policy content found.'}</Markdown>
+              <View style={styles.markdownContainer}>
+                <Markdown style={getMarkdownStyles(colors)}>{content || 'No policy content found.'}</Markdown>
+              </View>
             )}
           </View>
 
@@ -469,6 +471,26 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
     marginBottom: 40,
     paddingHorizontal: isMobile ? 20 : 40,
   },
+  contentSection: {
+    backgroundColor: colors.background,
+    borderRadius: isMobile ? 0 : 12,
+    marginHorizontal: isMobile ? -20 : 0,
+    paddingHorizontal: isMobile ? 20 : 32,
+    paddingVertical: isMobile ? 16 : 24,
+    ...(isMobile ? {} : {
+      shadowColor: colors.text,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    }),
+  },
+  markdownContainer: {
+    backgroundColor: colors.background,
+    minHeight: 200,
+  },
   sectionTitle: {
     fontSize: isMobile ? 18 : 20,
     fontWeight: 'bold',
@@ -606,26 +628,40 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
     fontWeight: 'bold',
   },
   loadingBox: {
-    paddingVertical: 20,
+    paddingVertical: 40,
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginVertical: 20,
   },
   loadingText: {
-    opacity: .8,
+    opacity: 0.8,
+    fontSize: 16,
+    fontWeight: '500' as const,
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
+    gap: 12,
+    borderWidth: 2,
     borderColor: colors.error,
     backgroundColor: colors.surface,
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 12,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    shadowColor: colors.error,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   errorText: {
     color: colors.error,
+    fontSize: 16,
+    fontWeight: '500' as const,
   },
   backButton: {
     flexDirection: 'row',
@@ -752,10 +788,263 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
 });
 
 const getMarkdownStyles = (colors: any) => ({
-  body: { color: colors.text },
-  heading1: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: colors.text },
-  heading2: { fontSize: 20, fontWeight: 'bold', marginBottom: 12, color: colors.text },
-  paragraph: { marginBottom: 12, lineHeight: 20, color: colors.text },
-  listItem: { marginBottom: 8, color: colors.text },
-  link: { color: colors.accent },
+  body: { 
+    color: colors.text, 
+    lineHeight: 28,
+    fontSize: 16,
+    backgroundColor: colors.background,
+    padding: 8,
+    textAlign: 'left' as const,
+  },
+  
+  // Enhanced heading styles with colors and better spacing
+  heading1: { 
+    fontSize: 28, 
+    fontWeight: '800' as const, 
+    marginTop: 32, 
+    marginBottom: 24, 
+    color: colors.accent,
+    lineHeight: 34,
+    letterSpacing: -0.5,
+    borderBottomWidth: 3,
+    borderBottomColor: colors.accent,
+    paddingBottom: 12,
+  },
+  heading2: { 
+    fontSize: 24, 
+    fontWeight: '700' as const, 
+    marginTop: 28, 
+    marginBottom: 20, 
+    color: colors.text,
+    lineHeight: 30,
+    letterSpacing: -0.3,
+  },
+  heading3: { 
+    fontSize: 20, 
+    fontWeight: '600' as const, 
+    marginTop: 24, 
+    marginBottom: 18, 
+    color: colors.accent,
+    lineHeight: 26,
+    letterSpacing: -0.2,
+  },
+  heading4: { 
+    fontSize: 19, 
+    fontWeight: '600' as const, 
+    marginTop: 20, 
+    marginBottom: 16, 
+    color: colors.text,
+    lineHeight: 25,
+    opacity: 0.9,
+  },
+  heading5: { 
+    fontSize: 17, 
+    fontWeight: '600' as const, 
+    marginTop: 18, 
+    marginBottom: 14, 
+    color: colors.textSecondary,
+    lineHeight: 23,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  heading6: { 
+    fontSize: 15, 
+    fontWeight: '600' as const, 
+    marginTop: 16, 
+    marginBottom: 12, 
+    color: colors.textSecondary,
+    lineHeight: 21,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.8,
+  },
+  
+  // Enhanced paragraph styling
+  paragraph: { 
+    marginBottom: 18, 
+    lineHeight: 26, 
+    color: colors.text,
+    fontSize: 16,
+    textAlign: 'justify',
+  },
+  
+  // Enhanced list styling
+  listItem: { 
+    marginBottom: 10, 
+    marginTop: 6,
+    lineHeight: 24,
+    color: colors.text,
+    fontSize: 16,
+  },
+  
+  // Enhanced link styling
+  link: { 
+    color: colors.accent, 
+    textDecorationLine: 'underline' as const,
+    fontWeight: '500' as const,
+  },
+  
+  // Enhanced emphasis styling
+  em: { 
+    fontStyle: 'italic' as const,
+    color: colors.text,
+    opacity: 0.85,
+    fontWeight: '400' as const,
+  },
+  strong: { 
+    fontWeight: '700' as const,
+    color: colors.text,
+    opacity: 1,
+  },
+  
+  // Enhanced blockquote styling
+  blockquote: {
+    borderLeftWidth: 6,
+    borderLeftColor: colors.accent,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+    borderTopColor: colors.border,
+    borderBottomColor: colors.border,
+    borderRightColor: colors.border,
+    paddingLeft: 20,
+    paddingRight: 16,
+    marginLeft: 0,
+    marginTop: 20,
+    marginBottom: 24,
+    paddingVertical: 16,
+    backgroundColor: colors.surface,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+    shadowColor: colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    position: 'relative' as const,
+  },
+  
+  // Enhanced code styling
+  code_inline: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    fontFamily: 'monospace',
+    fontSize: 15,
+    color: colors.accent,
+    fontWeight: '500' as const,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  code_block: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  fence: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  
+  // Enhanced list styling
+  bullet_list: {
+    marginTop: 12,
+    marginBottom: 24,
+    paddingLeft: 8,
+  },
+  ordered_list: {
+    marginTop: 12,
+    marginBottom: 24,
+    paddingLeft: 8,
+  },
+  list_item: {
+    marginBottom: 10,
+    marginTop: 4,
+    lineHeight: 24,
+    color: colors.text,
+    fontSize: 16,
+    paddingLeft: 4,
+  },
+  
+  // Enhanced table styling
+  table: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    marginTop: 16,
+    marginBottom: 24,
+    overflow: 'hidden' as const,
+    shadowColor: colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  thead: {
+    backgroundColor: colors.accent,
+  },
+  tbody: {
+    backgroundColor: colors.background,
+  },
+  th: {
+    padding: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.border,
+    fontWeight: '700' as const,
+    color: '#fff',
+    fontSize: 16,
+  },
+  td: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    color: colors.text,
+    fontSize: 15,
+  },
+  
+  // Enhanced horizontal rule
+  hr: {
+    backgroundColor: colors.accent,
+    height: 3,
+    marginVertical: 32,
+    borderWidth: 0,
+    borderRadius: 2,
+    opacity: 0.6,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+
+  // Additional styling for better document structure
+  text: {
+    color: colors.text,
+    fontSize: 16,
+    lineHeight: 26,
+  },
+  
+  // Custom container for content sections
+  content: {
+    paddingHorizontal: 4,
+  },
 });
