@@ -752,15 +752,66 @@ const getStyles = (colors: any, isMobile: boolean) => StyleSheet.create({
 });
 
 const getMarkdownStyles = (colors: any) => ({
-  body: { color: colors.text },
-  heading1: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: colors.text },
-  heading2: { fontSize: 20, fontWeight: 'bold', marginBottom: 12, color: colors.text },
-  heading3: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: colors.text },
-  heading4: { fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: colors.text },
-  heading5: { fontSize: 14, fontWeight: 'bold', marginBottom: 6, color: colors.text },
-  heading6: { fontSize: 12, fontWeight: 'bold', marginBottom: 4, color: colors.text },
-  paragraph: { marginBottom: 12, lineHeight: 20, color: colors.text },
-  listItem: { marginBottom: 8, color: colors.text },
+  body: { color: colors.text, lineHeight: 22 },
+  heading1: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    marginTop: 24, 
+    marginBottom: 20, 
+    color: colors.text,
+    lineHeight: 28
+  },
+  heading2: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    marginTop: 20, 
+    marginBottom: 16, 
+    color: colors.text,
+    lineHeight: 24
+  },
+  heading3: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    marginTop: 18, 
+    marginBottom: 14, 
+    color: colors.text,
+    lineHeight: 22
+  },
+  heading4: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    marginTop: 16, 
+    marginBottom: 12, 
+    color: colors.text,
+    lineHeight: 20
+  },
+  heading5: { 
+    fontSize: 14, 
+    fontWeight: 'bold', 
+    marginTop: 14, 
+    marginBottom: 10, 
+    color: colors.text,
+    lineHeight: 18
+  },
+  heading6: { 
+    fontSize: 12, 
+    fontWeight: 'bold', 
+    marginTop: 12, 
+    marginBottom: 8, 
+    color: colors.text,
+    lineHeight: 16
+  },
+  paragraph: { 
+    marginBottom: 16, 
+    lineHeight: 24, 
+    color: colors.text 
+  },
+  listItem: { 
+    marginBottom: 8, 
+    marginTop: 4,
+    lineHeight: 22,
+    color: colors.text 
+  },
   link: { color: colors.accent },
   // Emphasized text styling - toned down for dark mode
   em: { 
@@ -779,8 +830,9 @@ const getMarkdownStyles = (colors: any) => ({
     borderLeftColor: colors.accent,
     paddingLeft: 16,
     marginLeft: 0,
-    marginBottom: 12,
-    paddingVertical: 8,
+    marginTop: 16,
+    marginBottom: 20,
+    paddingVertical: 12,
     backgroundColor: colors.surface,
     borderRadius: 4,
   },
@@ -812,13 +864,19 @@ const getMarkdownStyles = (colors: any) => ({
   },
   // List styling
   bullet_list: {
-    marginBottom: 12,
+    marginTop: 8,
+    marginBottom: 20,
+    paddingLeft: 4,
   },
   ordered_list: {
-    marginBottom: 12,
+    marginTop: 8,
+    marginBottom: 20,
+    paddingLeft: 4,
   },
   list_item: {
-    marginBottom: 4,
+    marginBottom: 6,
+    marginTop: 2,
+    lineHeight: 22,
     color: colors.text,
   },
   // Table styling
