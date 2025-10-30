@@ -4,7 +4,7 @@ export const isMobileWeb = typeof window !== 'undefined' &&
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL || 'http://localhost:3005';
 
-export const SITE_URL = process.env.EXPO_PUBLIC_SITE_URL || 'https://yourdomain.com';
+export const SITE_URL = process.env.EXPO_PUBLIC_SITE_URL || 'https://progressforbritain.org/';
 
 // Mobile web optimizations
 export const MOBILE_CONFIG = {
