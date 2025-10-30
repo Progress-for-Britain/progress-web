@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken, requireAdmin, requireWriterOrAdmin } = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
 
 // Initialize Octokit with GitHub App authentication
 let octokit;
@@ -40,8 +41,28 @@ const getOrganization = () => {
   return process.env.GITHUB_ORGANIZATION;
 };
 
+// Optional authentication middleware - allows both authenticated and unauthenticated requests
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+    if (err) {
+      req.user = null;
+    } else {
+      req.user = user;
+    }
+    next();
+  });
+};
+
 // Get list of policy repos
-router.get('/', async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
   try {
     const octokit = await initializeOctokit();
     const org = getOrganization();
@@ -65,8 +86,15 @@ router.get('/', async (req, res) => {
         throw err;
       }
     }
+    
     // Filter repos that are policies, e.g., name starts with 'policy-'
-    const policyRepos = repos.filter(repo => repo.name.startsWith('policy-'));
+    let policyRepos = repos.filter(repo => repo.name.startsWith('policy-'));
+    
+    // If user is not authenticated, only return public repositories
+    if (!req.user) {
+      policyRepos = policyRepos.filter(repo => !repo.private);
+    }
+    
     res.json(policyRepos);
   } catch (error) {
     const status = error?.status || error?.response?.status;
