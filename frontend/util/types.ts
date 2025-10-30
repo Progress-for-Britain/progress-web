@@ -9,6 +9,22 @@ export interface User {
   role: Role;
   roles?: Role[];
   address: string | null;
+  
+  // Volunteer application fields
+  phone?: string | null;
+  interests?: string[];
+  volunteer?: boolean;
+  briefBio?: string | null;
+  briefCV?: string | null;
+  canContribute?: string[];
+  gdprConsent?: boolean;
+  interestedIn?: string[];
+  isBritishCitizen?: boolean | null;
+  livesInUK?: boolean | null;
+  otherAffiliations?: string | null;
+  signedNDA?: boolean;
+  socialMediaHandle?: string | null;
+  
   createdAt: string;
   updatedAt?: string;
   payments?: Payment[];

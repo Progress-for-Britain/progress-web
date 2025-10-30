@@ -44,8 +44,6 @@ export default function UserManagement() {
   const [showEditVolunteerModal, setShowEditVolunteerModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newRole, setNewRole] = useState<string[]>([]);
-  const [reviewNotes, setReviewNotes] = useState('');
-  const [statusNotes, setStatusNotes] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'UNREVIEWED' | 'CONTACTED' | 'APPROVED' | 'REJECTED'>('UNREVIEWED');
   const [selectedEvent, setSelectedEvent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -154,7 +152,6 @@ export default function UserManagement() {
 
   const handlePendingUserClick = (pendingUser: PendingUser) => {
     setSelectedPendingUser(pendingUser);
-    setReviewNotes('');
     setShowPendingModal(true);
   };
 
@@ -182,7 +179,7 @@ export default function UserManagement() {
     if (!selectedPendingUser) return;
 
     try {
-      const response = await api.approveApplication(selectedPendingUser.id, { reviewNotes });
+      const response = await api.approveApplication(selectedPendingUser.id, {});
       setResponseMessage({
         success: true,
         message: `Application approved successfully! Access code: ${response.data.accessCode}`
@@ -201,7 +198,7 @@ export default function UserManagement() {
     if (!selectedPendingUser) return;
 
     try {
-      await api.rejectApplication(selectedPendingUser.id, { reviewNotes });
+      await api.rejectApplication(selectedPendingUser.id, {});
       setResponseMessage({
         success: true,
         message: 'Application rejected successfully'
@@ -221,8 +218,7 @@ export default function UserManagement() {
 
     try {
       const response = await api.updateApplicationStatus(selectedPendingUser.id, {
-        status: selectedStatus,
-        reviewNotes: statusNotes
+        status: selectedStatus
       });
       
       let successMessage = `Application status updated to ${selectedStatus.toLowerCase()}`;
@@ -235,7 +231,6 @@ export default function UserManagement() {
         message: successMessage
       });
       setShowStatusModal(false);
-      setStatusNotes('');
       loadPendingUsers();
     } catch (error) {
       setResponseMessage({
@@ -894,6 +889,117 @@ export default function UserManagement() {
                         Constituency: {selectedUser.constituency}
                       </Text>
                     )}
+
+                    {/* Volunteer Application Details */}
+                    {selectedUser.volunteer && (
+                      <View style={{ backgroundColor: '#f0f9ff', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+                        <Text style={{ fontSize: 16, fontWeight: '600', color: '#0369a1', marginBottom: 12 }}>
+                          ✓ Volunteer Application Details
+                        </Text>
+                        
+                        {selectedUser.socialMediaHandle && (
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Social Media:</Text>
+                            <Text style={{ fontSize: 14, color: '#6b7280' }}>{selectedUser.socialMediaHandle}</Text>
+                          </View>
+                        )}
+
+                        {selectedUser.phone && (
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Phone:</Text>
+                            <Text style={{ fontSize: 14, color: '#6b7280' }}>{selectedUser.phone}</Text>
+                          </View>
+                        )}
+
+                        {selectedUser.isBritishCitizen !== null && (
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>British Citizen:</Text>
+                            <Text style={{ fontSize: 14, color: '#6b7280' }}>
+                              {selectedUser.isBritishCitizen ? '✓ Yes' : '✗ No'}
+                            </Text>
+                          </View>
+                        )}
+
+                        {selectedUser.livesInUK !== null && (
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Lives in UK:</Text>
+                            <Text style={{ fontSize: 14, color: '#6b7280' }}>
+                              {selectedUser.livesInUK ? '✓ Yes' : '✗ No'}
+                            </Text>
+                          </View>
+                        )}
+
+                        {selectedUser.briefBio && (
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Bio:</Text>
+                            <Text style={{ fontSize: 14, color: '#6b7280' }}>{selectedUser.briefBio}</Text>
+                          </View>
+                        )}
+
+                        {selectedUser.briefCV && (
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>CV:</Text>
+                            <Text style={{ fontSize: 14, color: '#6b7280' }}>{selectedUser.briefCV}</Text>
+                          </View>
+                        )}
+
+                        {selectedUser.interestedIn && selectedUser.interestedIn.length > 0 && (
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Interested In:</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 }}>
+                              {selectedUser.interestedIn.map((interest, index) => (
+                                <View key={index} style={{ 
+                                  backgroundColor: '#dbeafe', 
+                                  paddingHorizontal: 8, 
+                                  paddingVertical: 4, 
+                                  borderRadius: 12, 
+                                  marginRight: 6, 
+                                  marginBottom: 4 
+                                }}>
+                                  <Text style={{ fontSize: 12, color: '#1e40af' }}>{interest}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          </View>
+                        )}
+
+                        {selectedUser.canContribute && selectedUser.canContribute.length > 0 && (
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Can Contribute:</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 }}>
+                              {selectedUser.canContribute.map((contribution, index) => (
+                                <View key={index} style={{ 
+                                  backgroundColor: '#dcfce7', 
+                                  paddingHorizontal: 8, 
+                                  paddingVertical: 4, 
+                                  borderRadius: 12, 
+                                  marginRight: 6, 
+                                  marginBottom: 4 
+                                }}>
+                                  <Text style={{ fontSize: 12, color: '#166534' }}>{contribution}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          </View>
+                        )}
+
+                        {selectedUser.otherAffiliations && (
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827' }}>Other Affiliations:</Text>
+                            <Text style={{ fontSize: 14, color: '#6b7280' }}>{selectedUser.otherAffiliations}</Text>
+                          </View>
+                        )}
+
+                        <View style={{ flexDirection: 'row', marginTop: 8 }}>
+                          {selectedUser.signedNDA && (
+                            <Text style={{ fontSize: 12, color: '#059669', marginRight: 16 }}>✓ NDA Signed</Text>
+                          )}
+                          {selectedUser.gdprConsent && (
+                            <Text style={{ fontSize: 12, color: '#059669' }}>✓ GDPR Consent</Text>
+                          )}
+                        </View>
+                      </View>
+                    )}
                     
                     <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
                       <TouchableOpacity
@@ -1197,31 +1303,11 @@ export default function UserManagement() {
                       </View>
                     )}
 
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
-                      Review Notes (Optional):
-                    </Text>
-                    <TextInput
-                      value={reviewNotes}
-                      onChangeText={setReviewNotes}
-                      placeholder="Add notes about this application..."
-                      multiline
-                      numberOfLines={3}
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#d1d5db',
-                        borderRadius: 8,
-                        padding: 12,
-                        marginBottom: 20,
-                        textAlignVertical: 'top'
-                      }}
-                    />
-
                     {/* Status Change Button */}
                     {!isOnboardingOnly && (
                       <TouchableOpacity
                         onPress={() => {
                           setSelectedStatus(selectedPendingUser.status);
-                          setStatusNotes('');
                           setShowStatusModal(true);
                         }}
                         style={{
@@ -1927,25 +2013,6 @@ export default function UserManagement() {
                   </TouchableOpacity>
                 ))}
               </View>
-
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 8 }}>
-                Notes (Optional):
-              </Text>
-              <TextInput
-                value={statusNotes}
-                onChangeText={setStatusNotes}
-                placeholder="Add notes about this status change..."
-                multiline
-                numberOfLines={3}
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#d1d5db',
-                  borderRadius: 8,
-                  padding: 12,
-                  marginBottom: 20,
-                  textAlignVertical: 'top'
-                }}
-              />
 
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 <TouchableOpacity
