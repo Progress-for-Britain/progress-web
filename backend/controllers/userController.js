@@ -38,6 +38,19 @@ const getAllUsers = async (req, res) => {
         createdAt: true,
         updatedAt: true,
         constituency: true,
+        phone: true,
+        interests: true,
+        volunteer: true,
+        briefBio: true,
+        briefCV: true,
+        canContribute: true,
+        gdprConsent: true,
+        interestedIn: true,
+        isBritishCitizen: true,
+        livesInUK: true,
+        otherAffiliations: true,
+        signedNDA: true,
+        socialMediaHandle: true,
         payments: {
           select: {
             id: true,
@@ -89,6 +102,20 @@ const getUserById = async (req, res) => {
         firstName: true,
         lastName: true,
         address: true,
+        constituency: true,
+        phone: true,
+        interests: true,
+        volunteer: true,
+        briefBio: true,
+        briefCV: true,
+        canContribute: true,
+        gdprConsent: true,
+        interestedIn: true,
+        isBritishCitizen: true,
+        livesInUK: true,
+        otherAffiliations: true,
+        signedNDA: true,
+        socialMediaHandle: true,
         createdAt: true,
         updatedAt: true,
         payments: {
@@ -207,13 +234,15 @@ const createUser = async (req, res) => {
       role = codeRoles[0];
       req._grantedRoles = codeRoles; // carry forward for user creation
 
-      // Get the pending user to determine role
+      // Get the pending user to determine role and transfer data
       const pendingUser = await prisma.pendingUser.findUnique({
         where: { email: email.toLowerCase() }
       });
 
       if (pendingUser && pendingUser.status === 'APPROVED') {
         userRole = pendingUser.volunteer ? 'VOLUNTEER' : 'MEMBER';
+        // Store pending user data for transfer
+        req._pendingUserData = pendingUser;
       }
     }
 
@@ -223,22 +252,57 @@ const createUser = async (req, res) => {
 
     // Create user in transaction
     const result = await prisma.$transaction(async (tx) => {
+      // Prepare user data with pending user information if available
+      const userData = {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        roles: (req._grantedRoles && req._grantedRoles.length) ? req._grantedRoles : [role || userRole],
+        constituency
+      };
+
+      // Transfer pending user data if available
+      if (req._pendingUserData) {
+        const pendingData = req._pendingUserData;
+        userData.phone = pendingData.phone;
+        userData.interests = pendingData.interests || [];
+        userData.volunteer = pendingData.volunteer;
+        userData.briefBio = pendingData.briefBio;
+        userData.briefCV = pendingData.briefCV;
+        userData.canContribute = pendingData.canContribute || [];
+        userData.gdprConsent = pendingData.gdprConsent;
+        userData.interestedIn = pendingData.interestedIn || [];
+        userData.isBritishCitizen = pendingData.isBritishCitizen;
+        userData.livesInUK = pendingData.livesInUK;
+        userData.otherAffiliations = pendingData.otherAffiliations;
+        userData.signedNDA = pendingData.signedNDA;
+        userData.socialMediaHandle = pendingData.socialMediaHandle;
+      }
+
       // Create user
       const user = await tx.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          firstName,
-          lastName,
-          roles: (req._grantedRoles && req._grantedRoles.length) ? req._grantedRoles : [role || userRole],
-          constituency
-        },
+        data: userData,
         select: {
           id: true,
           email: true,
           roles: true,
           firstName: true,
           lastName: true,
+          constituency: true,
+          phone: true,
+          interests: true,
+          volunteer: true,
+          briefBio: true,
+          briefCV: true,
+          canContribute: true,
+          gdprConsent: true,
+          interestedIn: true,
+          isBritishCitizen: true,
+          livesInUK: true,
+          otherAffiliations: true,
+          signedNDA: true,
+          socialMediaHandle: true,
           createdAt: true
         }
       });
@@ -380,6 +444,19 @@ const updateUser = async (req, res) => {
         lastName: true,
         address: true,
         constituency: true,
+        phone: true,
+        interests: true,
+        volunteer: true,
+        briefBio: true,
+        briefCV: true,
+        canContribute: true,
+        gdprConsent: true,
+        interestedIn: true,
+        isBritishCitizen: true,
+        livesInUK: true,
+        otherAffiliations: true,
+        signedNDA: true,
+        socialMediaHandle: true,
         updatedAt: true
       }
     });
@@ -1328,6 +1405,20 @@ const updateUserRole = async (req, res) => {
         roles: true,
         firstName: true,
         lastName: true,
+        constituency: true,
+        phone: true,
+        interests: true,
+        volunteer: true,
+        briefBio: true,
+        briefCV: true,
+        canContribute: true,
+        gdprConsent: true,
+        interestedIn: true,
+        isBritishCitizen: true,
+        livesInUK: true,
+        otherAffiliations: true,
+        signedNDA: true,
+        socialMediaHandle: true,
         updatedAt: true
       }
     });

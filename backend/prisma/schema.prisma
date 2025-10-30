@@ -18,6 +18,20 @@ model User {
   address                 String?
   discordUsername         String?                  @unique
   discordLinkedAt         DateTime?
+  phone                   String?
+  interests               String[]
+  volunteer               Boolean                  @default(false)
+  briefBio                String?
+  briefCV                 String?
+  canContribute           String[]
+  gdprConsent             Boolean                  @default(false)
+  interestedIn            String[]
+  isBritishCitizen        Boolean?
+  livesInUK               Boolean?
+  otherAffiliations       String?
+  signedNDA               Boolean                  @default(false)
+  socialMediaHandle       String?
+  
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   eventParticipants       EventParticipant[]

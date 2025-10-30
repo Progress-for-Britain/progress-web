@@ -120,33 +120,6 @@ export default function Policy() {
     }
   };
 
-  const deleteRepo = async (repo: Repository) => {
-    Alert.alert(
-      'Delete Policy Repository',
-      `Are you sure you want to delete "${repo.displayName || repo.name}"? This action cannot be undone.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.deletePolicyRepo(repo.name);
-              Alert.alert('Success', 'Policy repository deleted successfully!');
-              fetchRepos(); // Refresh the list
-            } catch (error) {
-              console.error('Error deleting repo:', error);
-              Alert.alert('Error', 'Failed to delete policy repository');
-            }
-          },
-        },
-      ]
-    );
-  };
-
   return (
     <>
       <View style={commonStyles.appContainer}>
@@ -201,16 +174,6 @@ export default function Policy() {
                         </View>
                       )}
                     </TouchableOpacity>
-                    {isAdmin && (
-                      <TouchableOpacity
-                        style={styles.deleteButton}
-                        onPress={() => deleteRepo(item)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Delete ${item.displayName || item.name} policy`}
-                      >
-                        <MaterialIcons name="delete" size={20} color={colors.error || '#ff4444'} />
-                      </TouchableOpacity>
-                    )}
                   </View>
                 )}
               />
@@ -358,13 +321,5 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     color: colors.text,
     fontSize: isMobile ? 12 : 14,
     marginTop: 4,
-  },
-  deleteButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    padding: 8,
-    borderRadius: 4,
-    backgroundColor: colors.surface,
   },
 });
