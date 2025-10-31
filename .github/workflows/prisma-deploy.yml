@@ -1,0 +1,55 @@
+name: Prisma Production Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_production:
+        description: 'Type "CONFIRM" to run against production'
+        required: true
+        default: ''
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/prisma/schema.prisma'
+      - 'backend/prisma/migrations/**'
+
+jobs:
+  prisma-deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.confirm_production == 'CONFIRM')
+
+    environment: production
+
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🧰 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+
+      - name: 📥 Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: 🔧 Generate Prisma client
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: npx prisma generate
+
+      - name: 🚀 Push database schema
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: npx prisma db push --accept-data-loss
+
+      - name: ✅ Verify deployment
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: npx prisma db pull --print
