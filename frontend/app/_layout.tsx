@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import Head from "expo-router/head";
 import { View, Platform } from "react-native";
 import { usePathname } from "expo-router";
 import { AuthProvider } from "../util/auth-context";
@@ -10,7 +11,6 @@ import Header from "../components/Header";
 import { useFonts } from "expo-font";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useEffect } from "react";
-import Head from "expo-router/head";
 
 function RootLayoutNav() {
   const { isDark } = useTheme();
