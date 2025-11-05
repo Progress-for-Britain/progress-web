@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import Head from 'expo-router/head';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -16,6 +17,10 @@ export default function About() {
   
   return (
     <>
+      <Head>
+        <title>About Us - Progress UK</title>
+        <meta name="description" content="Learn about Progress UK's mission, values, and vision for building a fairer future. Discover our progressive approach to politics and community engagement." />
+      </Head>
       <View style={commonStyles.appContainer}>
 
         {/* About Page Content */}

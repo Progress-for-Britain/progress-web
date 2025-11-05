@@ -74,14 +74,14 @@ Curious? Join us at ${websiteUrl}
           <link rel="icon" href="/favicon.png" />
           {/* Open Graph meta tags */}
           <meta property="og:title" content="Progress UK" />
-          <meta property="og:description" content="Progress UK - A progressive political movement unleashing potential across the UK" />
-          <meta property="og:image" content={`${SITE_URL}/favicon.png`} />
+          <meta property="og:description" content="Progress for the future" />
+          <meta property="og:image" content={`https://progress-web-backend.vercel.app/favicon.png`} />
           <meta property="og:type" content="website" />
           {/* Twitter meta tags */}
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content="Progress UK" />
-          <meta name="twitter:description" content="Progress UK - A progressive political movement unleashing potential across the UK" />
-          <meta name="twitter:image" content={`${SITE_URL}/favicon.png`} />
+          <meta name="twitter:description" content="Progress for the future" />
+          <meta name="twitter:image" content={`https://progress-web-backend.vercel.app/favicon.png`} />
         </Head>
       )}
       {/* Background aurora effect - only for unauthenticated routes and non-mobile platforms */}

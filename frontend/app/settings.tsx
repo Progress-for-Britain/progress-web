@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useAuth } from '../util/auth-context';
 import { useTheme } from '../util/theme-context';
 import { getCommonStyles, getColors } from '../util/commonStyles';
@@ -265,7 +266,12 @@ export default function Settings() {
   }
 
   return (
-    <ScrollView style={commonStyles.appContainer} contentContainerStyle={styles.scrollContent}>
+    <>
+      <Head>
+        <title>Settings - Progress UK</title>
+        <meta name="description" content="Manage your Progress UK account settings, update your profile, and configure your preferences." />
+      </Head>
+      <ScrollView style={commonStyles.appContainer} contentContainerStyle={styles.scrollContent}>
       <View style={commonStyles.content}>
         <Text style={commonStyles.title}>Settings</Text>
 
@@ -538,6 +544,7 @@ export default function Settings() {
         </View>
       </Modal>
     </ScrollView>
+    </>
   );
 }
 
