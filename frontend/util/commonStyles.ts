@@ -2,9 +2,24 @@ import { Platform, Dimensions, StyleSheet } from "react-native";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// Function to inject web aurora styles
+// Cache for injected styles to avoid redundant operations
+let currentInjectedTheme: boolean | null = null;
+let currentStyleElement: HTMLStyleElement | null = null;
+
+// Function to inject web aurora styles - optimized with caching
 export const injectWebAuroraStyles = (isDark: boolean = true) => {
   if (Platform.OS === 'web' && typeof document !== 'undefined') {
+    // Skip injection if the same theme is already active
+    if (currentInjectedTheme === isDark && currentStyleElement && document.head.contains(currentStyleElement)) {
+      return () => {
+        if (currentStyleElement && document.head.contains(currentStyleElement)) {
+          document.head.removeChild(currentStyleElement);
+          currentStyleElement = null;
+          currentInjectedTheme = null;
+        }
+      };
+    }
+
     // Remove existing aurora styles
     const existingStyle = document.getElementById('aurora-styles');
     if (existingStyle) {
@@ -13,6 +28,10 @@ export const injectWebAuroraStyles = (isDark: boolean = true) => {
 
     const style = document.createElement('style');
     style.id = 'aurora-styles';
+    
+    // Update cache references
+    currentStyleElement = style;
+    currentInjectedTheme = isDark;
     
     if (isDark) {
       style.textContent = `
@@ -124,6 +143,11 @@ export const injectWebAuroraStyles = (isDark: boolean = true) => {
     return () => {
       if (document.head.contains(style)) {
         document.head.removeChild(style);
+      }
+      // Clear cache when cleanup is called
+      if (currentStyleElement === style) {
+        currentStyleElement = null;
+        currentInjectedTheme = null;
       }
     };
   }
