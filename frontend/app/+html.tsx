@@ -21,7 +21,10 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <title>Progress UK</title>
         <meta name="description" content="Progress for the future" />
         <meta name="robots" content="index,follow" />
-        <meta name="theme-color" content="#111827" />
+  {/* Make the browser UI / status bar transparent where supported */}
+  <meta name="theme-color" content="transparent" />
+  {/* iOS: allow a translucent/transparent status bar when saved to home screen */}
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
         {/* Canonical + OG URL */}
         <link rel="canonical" href="https://progressforbritain.org" />
@@ -58,7 +61,10 @@ export default function Root({ children }: { children: React.ReactNode }) {
         />
         <meta name="twitter:site" content="@ProgressUK" />
 
-        {/* ---- /Your tags ---- */}
+  {/* Ensure the document background is transparent so underlying layers show through */}
+  <style>{`html, body, #root { background: transparent !important; }`}</style>
+
+  {/* ---- /Your tags ---- */}
       </head>
       <body>{children}</body>
     </html>
