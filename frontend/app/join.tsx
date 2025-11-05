@@ -266,7 +266,7 @@ export default function JoinVolunteer() {
                       Please complete the following fields for your application. Not sure if you should volunteer? {' '}
                       <TouchableOpacity
                         onPress={() => {
-                          const pdfUrl = `${process.env.EXPO_PUBLIC_BACKEND_API_URL}/public/should-i-join-progress.pdf`;
+                          const pdfUrl = `${process.env.EXPO_PUBLIC_BACKEND_API_URL}/should-i-join-progress.pdf`;
                           if (Platform.OS === 'web') {
                             window.open(pdfUrl, '_blank');
                           } else {
