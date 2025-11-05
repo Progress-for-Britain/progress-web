@@ -38,8 +38,6 @@
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/favicon.png",
-      "shortName": "",
-      "description": "",
       "backgroundColor": "transparent"
     },
     "plugins": [

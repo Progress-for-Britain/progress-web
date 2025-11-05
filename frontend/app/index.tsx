@@ -26,8 +26,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Progress UK - Progress for the future</title>
-        <meta name="description" content="Progress for the future" />
+        <title>Progress UK</title>
       </Head>
       <View style={commonStyles.appContainer}>
         {/* Home Page Content */}

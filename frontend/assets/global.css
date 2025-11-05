@@ -1,0 +1,15 @@
+/* Global styles for web build */
+html, body, #root {
+  background: transparent !important;
+}
+
+/* Ensure proper rendering on all devices */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
