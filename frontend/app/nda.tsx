@@ -263,11 +263,22 @@ export default function NDA() {
                       fontSize: 16,
                       color: colors.textSecondary,
                       lineHeight: 24,
-                      marginBottom: 8,
+                      marginBottom: 4,
                       textAlign: 'center'
                     }]}
                   >
-                    Bletchley Point Ltd. • Dated {currentDate}
+                    Progress • Dated {currentDate}
+                  </Text>
+                  <Text 
+                    style={[commonStyles.text, {
+                      fontSize: 12,
+                      color: colors.textSecondary,
+                      marginBottom: 8,
+                      textAlign: 'center',
+                      fontStyle: 'italic'
+                    }]}
+                  >
+                    Electoral Commission Registration: RPP 128-595-401
                   </Text>
                 </View>
 
@@ -277,7 +288,7 @@ export default function NDA() {
                     Agreement Overview
                   </Text>
                   <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 16, textAlign: 'left' }]}>
-                    This confidentiality agreement is between Bletchley Point Ltd., and any future entity to which 
+                    This confidentiality agreement is between Progress, and any future entity to which 
                     the venture may be renamed (the "Company"), represented by Maxi Gorynski [General Director], 
                     and you (the "New Member").
                   </Text>
@@ -300,7 +311,7 @@ export default function NDA() {
                       <View style={styles.termBullet} />
                       <Text style={[commonStyles.text, { fontSize: 14, flex: 1, lineHeight: 22, textAlign: 'left' }]}>
                         <Text style={{ fontWeight: '600' }}>Purpose Limitation:</Text> Confidential information may only 
-                        be used for work with Bletchley Point and its subsidiaries, including the Progress party.
+                        be used for work with Progress and its subsidiaries, including the Progress party.
                       </Text>
                     </View>
                     
@@ -475,7 +486,7 @@ export default function NDA() {
           >
             <View style={styles.modalContent}>
               <Text style={[commonStyles.title, { fontSize: 20, marginBottom: 8 }]}>
-                Bletchley Point Ltd.
+                Progress
               </Text>
               <Text style={[commonStyles.title, { fontSize: 18, marginBottom: 16 }]}>
                 Confidentiality Agreement
@@ -485,7 +496,7 @@ export default function NDA() {
               </Text>
 
               <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
-                The Agreement is to hold between Bletchley Point Ltd., and any future entity to which the venture in question may in future be renamed (the "Company"), represented by Maxi Gorynski [General Director], and <Text style={{ fontWeight: '600' }}>You</Text> (the "New Member").
+                The Agreement is to hold between Progress, and any future entity to which the venture in question may in future be renamed (the "Company"), represented by Maxi Gorynski [General Director], and <Text style={{ fontWeight: '600' }}>You</Text> (the "New Member").
               </Text>
 
               <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 12 }]}>
@@ -564,7 +575,7 @@ export default function NDA() {
                 2. Permitted Use
               </Text>
               <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
-                Confidential information may only be used for work with Bletchley Point and its subsidiaries, including the Progress party. The New Member shall not use confidential information for any commercial reason, independently or with third parties.
+                Confidential information may only be used for work with Progress and its subsidiaries, including the Progress party. The New Member shall not use confidential information for any commercial reason, independently or with third parties.
               </Text>
 
               <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 8, marginTop: 16 }]}>
@@ -611,6 +622,12 @@ export default function NDA() {
               <Text style={[commonStyles.text, { fontSize: 14, lineHeight: 22, marginBottom: 16, textAlign: 'left' }]}>
                 By signing this Agreement, both parties acknowledge that they have read, understood, and agree to be bound by these terms and conditions.
               </Text>
+
+              <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16, marginTop: 24 }}>
+                <Text style={[commonStyles.text, { fontSize: 12, color: colors.textSecondary, textAlign: 'center', fontStyle: 'italic' }]}>
+                  Electoral Commission Registration: RPP 128-595-401
+                </Text>
+              </View>
 
               <View style={{ backgroundColor: `${colors.warning}20`, borderColor: colors.warning, borderWidth: 1, borderRadius: 8, padding: 16, marginTop: 24 }}>
                 <Text style={[commonStyles.text, { fontSize: 14, color: colors.warning, lineHeight: 20, textAlign: 'left', fontWeight: '600' }]}>
