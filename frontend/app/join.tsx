@@ -219,7 +219,8 @@ export default function JoinVolunteer() {
                   <Text
                     style={[commonStyles.title, {
                       fontSize: 28,
-                      marginBottom: 8
+                      marginBottom: 8,
+                      textAlign: 'center'
                     }]}
                   >
                     Volunteer with Progress UK
@@ -475,7 +476,7 @@ export default function JoinVolunteer() {
                             styles.checkboxLabel,
                             !hasSignedNDA && styles.checkboxLabelWarning
                           ]}>
-                            I have signed the Progress NDA *
+                            I have signed the Progress NDA*
                           </Text>
                           {hasSignedNDA ? (
                             <Text style={[styles.checkboxSubtext, { color: colors.success }]}>
@@ -489,7 +490,9 @@ export default function JoinVolunteer() {
                               }}
                               style={{ marginTop: 4 }}
                             >
-                              <Text style={styles.checkboxLink}>
+                              <Text style={[styles.checkboxLink, { 
+                                color: isDark ? '#60A5FA' : colors.accent 
+                              }]}>
                                 View and sign NDA →
                               </Text>
                             </TouchableOpacity>
@@ -513,7 +516,7 @@ export default function JoinVolunteer() {
                           )}
                         </View>
                         <Text style={styles.checkboxLabel}>
-                          I consent to GDPR & Data Privacy requirements *
+                          I consent to GDPR & Data Privacy requirements*
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -623,12 +626,6 @@ export default function JoinVolunteer() {
                     !isFormValid() && styles.submitButtonDisabled
                   ]}
                 >
-                  <LinearGradient
-                    colors={isFormValid() ? gradients.accent : [colors.border, colors.border]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.submitButtonGradient}
-                  >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                       {!isFormValid() && !isLoading && (
                         <Ionicons
@@ -648,7 +645,6 @@ export default function JoinVolunteer() {
                           !isFormValid() ? 'Complete Required Fields' : 'Submit Volunteer Application'}
                       </Text>
                     </View>
-                  </LinearGradient>
                 </TouchableOpacity>
 
                 <View style={{ height: 32 }} />
