@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { View, Text, Platform, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { getCommonStyles, getGradients } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -24,6 +25,10 @@ export default function Home() {
 
   return (
     <>
+      <Head>
+        <title>Progress UK - Progress for the future</title>
+        <meta name="description" content="Progress for the future" />
+      </Head>
       <View style={commonStyles.appContainer}>
         {/* Home Page Content */}
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>

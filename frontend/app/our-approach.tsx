@@ -2,7 +2,8 @@ import React from "react";
 import { View, Text, Platform, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import { useRouter } from 'expo-router';  
+import { useRouter } from 'expo-router';
+import Head from 'expo-router/head';  
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -18,6 +19,10 @@ export default function OurApproach() {
   
   return (
     <>
+      <Head>
+        <title>Our Approach - Progress UK</title>
+        <meta name="description" content="Discover Progress UK's innovative approach to progressive politics, policy development, and community engagement across Britain." />
+      </Head>
       <View style={commonStyles.appContainer}>
 
         {/* Our Approach Page Content */}

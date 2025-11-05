@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, KeyboardAvoidingView, Linking, Modal, Alert } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -98,6 +99,10 @@ export default function JoinVolunteer() {
 
   return (
     <View style={commonStyles.appContainer}>
+      <Head>
+        <title>Join Us - Progress UK</title>
+        <meta name="description" content="Volunteer with Progress UK and help build a fairer future. Join our campaigns, contribute your skills, and make a difference in your community." />
+      </Head>
       <Stack.Screen options={{ 
         headerShown: false,
         title: 'Volunteer with Progress UK'
