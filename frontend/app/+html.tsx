@@ -40,27 +40,30 @@ export default function Root({ children }: PropsWithChildren) {
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="en_GB" />
         <meta property="og:site_name" content="Progress UK" />
-        <meta property="og:title" content="Progress UK" />
-        <meta property="og:description" content="Progress for the future" />
+        <meta property="og:title" content="Progress UK - A Political Party Beyond Left and Right" />
+        <meta property="og:description" content="Join Progress UK, a political movement focused on pragmatic solutions for Britain's future. Beyond traditional politics, we champion evidence-based policies and citizen engagement." />
         <meta
           property="og:image"
-          content="https://progress-web-backend.vercel.app/favicon.png"
+          content="https://progressforbritain.org/assets/og-image.png"
         />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="Progress UK - Political Party Logo" />
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Progress UK" />
+        <meta name="twitter:title" content="Progress UK - A Political Party Beyond Left and Right" />
         <meta
           name="twitter:description"
-          content="A political party beyond the left and right. Progress for the future"
+          content="Join Progress UK, a political movement focused on pragmatic solutions for Britain's future. Beyond traditional politics, we champion evidence-based policies."
         />
         <meta
           name="twitter:image"
-          content="https://progress-web-backend.vercel.app/favicon.png"
+          content="https://progressforbritain.org/assets/og-image.png"
         />
+        <meta name="twitter:image:alt" content="Progress UK - Political Party Logo" />
         <meta name="twitter:site" content="@ProgressUK" />
+        <meta name="twitter:creator" content="@ProgressUK" />
 
         {/* Ensure the document background is transparent so underlying layers show through */}
         <style>{`html, body, #root { background: transparent !important; }`}</style>
