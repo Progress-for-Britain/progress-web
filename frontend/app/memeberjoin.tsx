@@ -20,7 +20,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { Turnstile } from '@marsidev/react-turnstile';
 import Constants from 'expo-constants';
 
-export default function JoinVolunteer() {
+export default function Join() {
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
   const colors = getColors(isDark);
@@ -35,7 +35,7 @@ export default function JoinVolunteer() {
     phone: '',
     constituency: '',
     interests: [] as string[],
-    volunteer: true,
+    volunteer: false,
     newsletter: true,
     // Volunteer-specific fields
     socialMediaHandle: '',
@@ -154,10 +154,7 @@ export default function JoinVolunteer() {
   const saveFormData = () => {
     if (Platform.OS === 'web') {
       try {
-        localStorage.setItem('progressFormData', JSON.stringify({
-          ...formData,
-          volunteer: true,
-        }));
+        localStorage.setItem('progressFormData', JSON.stringify(formData));
       } catch (error) {
         console.error('Error saving form data:', error);
       }
@@ -171,10 +168,7 @@ export default function JoinVolunteer() {
         const savedData = localStorage.getItem('progressFormData');
         if (savedData) {
           const parsed = JSON.parse(savedData);
-          setFormData({
-            ...parsed,
-            volunteer: true,
-          });
+          setFormData(parsed);
           setHasSavedData(true);
         } else {
           setHasSavedData(false);
@@ -260,40 +254,42 @@ export default function JoinVolunteer() {
 
   // Function to check if form is valid for submission
   const isFormValid = () => {
-    const {
-      firstName,
-      lastName,
-      email,
-      constituency,
-      socialMediaHandle,
-      isBritishCitizen,
-      livesInUK,
-      briefBio,
-      briefCV,
-      signedNDA,
-      gdprConsent
-    } = formData;
+    const { firstName, lastName, email, constituency, volunteer } = formData;
 
+    // Basic required fields
     if (!firstName || !lastName || !email || !constituency) {
       return false;
     }
 
-    if (!socialMediaHandle ||
-      isBritishCitizen === undefined ||
-      livesInUK === undefined ||
-      !briefBio ||
-      !briefCV ||
-      !signedNDA ||
-      !hasSignedNDA ||
-      !gdprConsent) {
-      return false;
+    // If volunteering, check volunteer-specific requirements
+    if (volunteer) {
+      const {
+        socialMediaHandle,
+        isBritishCitizen,
+        livesInUK,
+        briefBio,
+        briefCV,
+        signedNDA,
+        gdprConsent
+      } = formData;
+
+      if (!socialMediaHandle ||
+        isBritishCitizen === undefined ||
+        livesInUK === undefined ||
+        !briefBio ||
+        !briefCV ||
+        !signedNDA ||
+        !hasSignedNDA ||
+        !gdprConsent) {
+        return false;
+      }
     }
 
     return true;
   };
 
   const handleJoin = async () => {
-    const { firstName, lastName, email, constituency } = formData;
+    const { firstName, lastName, email, constituency, volunteer } = formData;
 
     if (!firstName || !lastName || !email || !constituency) {
       setApiError('Please fill in all required fields: First Name, Last Name, Email Address, and Constituency.');
@@ -328,50 +324,57 @@ export default function JoinVolunteer() {
       return;
     }
 
-    const {
-      socialMediaHandle,
-      isBritishCitizen,
-      livesInUK,
-      briefBio,
-      briefCV,
-      signedNDA,
-      gdprConsent
-    } = formData;
+    // Validate volunteer-specific fields if volunteer is selected
+    if (volunteer) {
+      const {
+        socialMediaHandle,
+        isBritishCitizen,
+        livesInUK,
+        briefBio,
+        briefCV,
+        signedNDA,
+        gdprConsent
+      } = formData;
 
-    const missingFields = [];
+      const missingFields = [];
 
-    if (!socialMediaHandle) missingFields.push('Social media handle');
-    if (isBritishCitizen === undefined) missingFields.push('British citizenship status');
-    if (livesInUK === undefined) missingFields.push('UK residence status');
-    if (!briefBio) missingFields.push('Brief bio');
-    if (!briefCV) missingFields.push('Brief CV');
-    if (!signedNDA || !hasSignedNDA) {
-      setApiError('You must sign the Progress NDA before submitting your volunteer application. Please use the "View and sign NDA" link below.');
-      setShowApiError(true);
+      if (!socialMediaHandle) missingFields.push('Social media handle');
+      if (isBritishCitizen === undefined) missingFields.push('British citizenship status');
+      if (livesInUK === undefined) missingFields.push('UK residence status');
+      if (!briefBio) missingFields.push('Brief bio');
+      if (!briefCV) missingFields.push('Brief CV');
+      if (!signedNDA || !hasSignedNDA) {
+        setApiError('You must sign the Progress NDA before submitting your volunteer application. Please use the "View and sign NDA" link below.');
+        setShowApiError(true);
 
-      if (Platform.OS === 'web') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Scroll to top to show error
+        if (Platform.OS === 'web') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Auto-hide error after 8 seconds
+        setTimeout(() => {
+          setShowApiError(false);
+        }, 8000);
+        return;
       }
+      if (!gdprConsent) missingFields.push('GDPR consent');
 
-      setTimeout(() => {
-        setShowApiError(false);
-      }, 8000);
-      return;
-    }
-    if (!gdprConsent) missingFields.push('GDPR consent');
+      if (missingFields.length > 0) {
+        setApiError(`Please complete the following volunteer fields: ${missingFields.join(', ')}`);
+        setShowApiError(true);
 
-    if (missingFields.length > 0) {
-      setApiError(`Please complete the following volunteer fields: ${missingFields.join(', ')}`);
-      setShowApiError(true);
+        // Scroll to top to show error
+        if (Platform.OS === 'web') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-      if (Platform.OS === 'web') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Auto-hide error after 8 seconds
+        setTimeout(() => {
+          setShowApiError(false);
+        }, 8000);
+        return;
       }
-
-      setTimeout(() => {
-        setShowApiError(false);
-      }, 8000);
-      return;
     }
 
     setIsLoading(true);
@@ -379,48 +382,82 @@ export default function JoinVolunteer() {
     setShowApiError(false);
 
     try {
-      const response = await api.submitApplication({
-        ...formData,
-        volunteer: true,
-        captchaToken
-      });
+      if (volunteer) {
+        // Submit volunteer application
+        const response = await api.submitApplication({
+          ...formData,
+          captchaToken
+        });
 
-      if (response.success) {
-        clearCachedData();
+        if (response.success) {
+          // Clear cached form data and NDA signature since application was successful
+          clearCachedData();
 
-        setSuccessMessage(response.message || 'Your volunteer application has been submitted successfully. An admin will review your application and you\'ll receive an access code via email if approved.');
-        setIsSuccess(true);
+          setSuccessMessage(response.message || 'Your membership application has been submitted successfully. An admin will review your application and you\'ll receive an access code via email if approved.');
+          setIsSuccess(true);
+          // Scroll to top to show success message
+          if (Platform.OS === 'web') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        } else {
+          // Handle API errors with inline display
+          setApiError(response.message || 'Failed to submit application. Please try again.');
+          setShowApiError(true);
 
-        if (Platform.OS === 'web') {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          // Scroll to top to show error
+          if (Platform.OS === 'web') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+
+          // Auto-hide error after 10 seconds
+          setTimeout(() => {
+            setShowApiError(false);
+          }, 10000);
         }
       } else {
-        setApiError(response.message || 'Failed to submit application. Please try again.');
-        setShowApiError(true);
+        // Start subscription for non-volunteers
+        const response = await api.createSubscriptionCheckout('basic', 'monthly', formData);
 
+        // Clear cached form data
+        clearCachedData();
+
+        // Navigate to Stripe checkout
         if (Platform.OS === 'web') {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.location.href = response.url;
+        } else {
+          const supported = await Linking.canOpenURL(response.url);
+          
+          if (supported) {
+            await Linking.openURL(response.url);
+          } else {
+            // Fallback to WebBrowser if Linking isn't supported
+            await WebBrowser.openBrowserAsync(response.url);
+          }
         }
-
-        setTimeout(() => {
-          setShowApiError(false);
-        }, 10000);
       }
     } catch (error) {
       console.error('Error:', error);
       // Handle network/unexpected errors
       const errorMessage = error instanceof Error ? error.message : 'Network error. Please check your connection and try again.';
+      
+      if (!volunteer && errorMessage.includes('Failed to create checkout session')) {
+        setModalTitle('Membership Temporarily Unavailable');
+        setModalMessage('We are currently not admitting members at this time. Please try again later or apply as a volunteer.');
+        setIsModalVisible(true);
+      } else {
+        setApiError(errorMessage);
+        setShowApiError(true);
 
-      setApiError(errorMessage);
-      setShowApiError(true);
+        // Scroll to top to show error
+        if (Platform.OS === 'web') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-      if (Platform.OS === 'web') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Auto-hide error after 10 seconds
+        setTimeout(() => {
+          setShowApiError(false);
+        }, 10000);
       }
-
-      setTimeout(() => {
-        setShowApiError(false);
-      }, 10000);
     } finally {
       setIsLoading(false);
     }
@@ -454,10 +491,7 @@ export default function JoinVolunteer() {
 
   return (
     <View style={commonStyles.appContainer}>
-      <Stack.Screen options={{ 
-        headerShown: false,
-        title: 'Volunteer with Progress UK'
-      }} />
+      <Stack.Screen options={{ headerShown: false }} />
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Success State */}
@@ -609,7 +643,7 @@ export default function JoinVolunteer() {
                       marginBottom: 8
                     }]}
                   >
-                    Volunteer with Progress UK
+                    Join Progress UK
                   </Text>
                   <Text
                     style={[commonStyles.text, {
@@ -620,7 +654,7 @@ export default function JoinVolunteer() {
                       textAlign: 'center'
                     }]}
                   >
-                    Help with campaigns, events, and local organizing
+                    Become part of Britain's progressive movement
                   </Text>
 
                   {/* Draft saved indicator */}
@@ -705,17 +739,71 @@ export default function JoinVolunteer() {
                   </View>
                 </View>
 
-                {/* Application Details */}
-                <View style={[commonStyles.specialSection, {
+                {/* Engagement Options */}
+                <View style={{ gap: 16, marginBottom: 32 }}>
+                  <TouchableOpacity
+                    onPress={() => updateField('volunteer', !formData.volunteer)}
+                    style={[
+                      styles.optionCard,
+                      formData.volunteer && styles.optionCardSelected
+                    ]}
+                  >
+                    <View style={[
+                      styles.checkbox,
+                      formData.volunteer && styles.checkboxSelected
+                    ]}>
+                      {formData.volunteer && (
+                        <Ionicons name="checkmark" size={16} color={colors.text} />
+                      )}
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.optionTitle, formData.volunteer && styles.optionTitleSelected]}>
+                        I want to volunteer
+                      </Text>
+                      <Text style={[styles.optionDescription, formData.volunteer && styles.optionDescriptionSelected]}>
+                        Help with campaigns, events, and local organizing
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => updateField('newsletter', !formData.newsletter)}
+                    style={[
+                      styles.optionCard,
+                      formData.newsletter && styles.optionCardSelected
+                    ]}
+                  >
+                    <View style={[
+                      styles.checkbox,
+                      formData.newsletter && styles.checkboxSelected
+                    ]}>
+                      {formData.newsletter && (
+                        <Ionicons name="checkmark" size={16} color={colors.text} />
+                      )}
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.optionTitle, formData.newsletter && styles.optionTitleSelected]}>
+                        Weekly newsletter
+                      </Text>
+                      <Text style={[styles.optionDescription, formData.newsletter && styles.optionDescriptionSelected]}>
+                        Stay updated with policy developments and campaign news
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Volunteer-Specific Fields */}
+                {formData.volunteer && (
+                  <View style={[commonStyles.specialSection, {
                     backgroundColor: `${colors.secondary}20`,
                     borderLeftColor: colors.secondary,
                     borderColor: `${colors.secondary}30`,
                   }]}>
                     <Text style={[commonStyles.title, { fontSize: 18, marginBottom: 16 }]}>
-                      Application Details
+                      Volunteer Application Details
                     </Text>
                     <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 20, textAlign: 'left' }]}>
-                      Please complete the following fields for your application. Not sure if you should volunteer? {' '}
+                      Please complete the following fields for your volunteer application. Not sure if you should volunteer? {' '}
                       <TouchableOpacity
                         onPress={() => {
                           const pdfUrl = `${process.env.EXPO_PUBLIC_BACKEND_API_URL}/public/should-i-join-progress.pdf`;
@@ -1013,7 +1101,8 @@ export default function JoinVolunteer() {
                         </Text>
                       </TouchableOpacity>
                     </View>
-                </View>
+                  </View>
+                )}
 
                 {/* Cloudflare Turnstile Captcha */}
                 <View style={{ marginBottom: 24 }}>
@@ -1140,8 +1229,8 @@ export default function JoinVolunteer() {
                           !isFormValid() && styles.submitButtonTextDisabled
                         ]}
                       >
-                        {isLoading ? 'Submitting Volunteer Application...' :
-                          !isFormValid() ? 'Complete Required Fields' : 'Submit Volunteer Application'}
+                        {isLoading ? 'Joining Progress UK...' :
+                          !isFormValid() ? 'Complete Required Fields' : 'Join Progress UK'}
                       </Text>
                     </View>
                   </LinearGradient>
@@ -1157,31 +1246,32 @@ export default function JoinVolunteer() {
                       </Text>
                       {(() => {
                         const missing = [];
-                        const {
-                          firstName,
-                          lastName,
-                          email,
-                          constituency,
-                          socialMediaHandle,
-                          isBritishCitizen,
-                          livesInUK,
-                          briefBio,
-                          briefCV,
-                          signedNDA,
-                          gdprConsent
-                        } = formData;
+                        const { firstName, lastName, email, constituency, volunteer } = formData;
 
                         if (!firstName) missing.push('First name');
                         if (!lastName) missing.push('Last name');
                         if (!email) missing.push('Email address');
                         if (!constituency) missing.push('Constituency');
-                        if (!socialMediaHandle) missing.push('Social media handle');
-                        if (isBritishCitizen === undefined) missing.push('British citizenship status');
-                        if (livesInUK === undefined) missing.push('UK residence status');
-                        if (!briefBio) missing.push('Brief bio');
-                        if (!briefCV) missing.push('Brief CV');
-                        if (!signedNDA || !hasSignedNDA) missing.push('Sign the NDA (use link above)');
-                        if (!gdprConsent) missing.push('GDPR consent');
+
+                        if (volunteer) {
+                          const {
+                            socialMediaHandle,
+                            isBritishCitizen,
+                            livesInUK,
+                            briefBio,
+                            briefCV,
+                            signedNDA,
+                            gdprConsent
+                          } = formData;
+
+                          if (!socialMediaHandle) missing.push('Social media handle');
+                          if (isBritishCitizen === undefined) missing.push('British citizenship status');
+                          if (livesInUK === undefined) missing.push('UK residence status');
+                          if (!briefBio) missing.push('Brief bio');
+                          if (!briefCV) missing.push('Brief CV');
+                          if (!signedNDA || !hasSignedNDA) missing.push('Sign the NDA (use link above)');
+                          if (!gdprConsent) missing.push('GDPR consent');
+                        }
 
                         return missing.map((item, index) => (
                           <Text key={index} style={styles.helperItem}>
@@ -1194,7 +1284,7 @@ export default function JoinVolunteer() {
                 )}
 
                 <Text style={[commonStyles.text, { fontSize: 13, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 }]}>
-                  By volunteering with Progress UK, you agree to our terms of service and privacy policy. Volunteering is completely free and you can unsubscribe at any time. We'll never share your data with third parties.
+                  By joining, you agree to our terms of service and privacy policy. Membership is completely free and you can unsubscribe at any time. We'll never share your data with third parties.
                 </Text>
               </View>
             </View>
