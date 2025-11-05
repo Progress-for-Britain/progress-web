@@ -1,0 +1,31 @@
+name: Terraform
+
+on:
+  pull_request:
+    paths:
+      - 'infrastructure/**/*.tf'
+      - 'infrastructure/**/*.tfvars'
+      - '.github/workflows/terraform.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/**/*.tf'
+      - 'infrastructure/**/*.tfvars'
+      - '.github/workflows/terraform.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # for AWS OIDC
+  pull-requests: write
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: terraform
+    runs-on: ubuntu-latest
+    steps:
+    - uses: Progress-for-Britain/workflows@main
