@@ -87,7 +87,7 @@ export default function Root({ children }: PropsWithChildren) {
               "url": "https://progressforbritain.org",
               "logo": {
                 "@type": "ImageObject",
-                "url": "https://progressforbritain.org/assets/og-image.png",
+                "url": "https://progress-web-backend.vercel.app/assets/og-image.png",
                 "width": 1200,
                 "height": 630
               },
