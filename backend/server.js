@@ -24,6 +24,51 @@ const allowedOrigins = [
   'https://www.progressforbritain.org'
 ];
 
+// CORS configuration for Vercel
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl requests, or Vercel functions)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error(`Not allowed by CORS: ${origin}`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // For legacy browser support
+};
+
+// Manual CORS middleware for Vercel compatibility
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Set CORS headers manually for better Vercel compatibility
+  if (!origin || allowedOrigins.includes(origin)) {
+    // Only set origin header when there's an actual origin (required for credentials)
+    if (origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  } else {
+    console.log('Blocked by CORS:', origin);
+  }
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
 // Import routes
 const userRoutes = require('./routes/userRoutes');
 const newsRoutes = require('./routes/newsRoutes');
@@ -36,7 +81,6 @@ const policyRoutes = require('./routes/policyRoutes');
 const { seedAllTestUsers } = require('./utils/seedTestUser');
 
 // Middleware
-app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // API Routes
@@ -51,7 +95,8 @@ app.use('/api/policies', policyRoutes);
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Dynamic wrapper for public files with HTML, favicon, and branding
-app.get('/:filename', (req, res) => {
+// Only match files with extensions to avoid conflicts
+app.get('/:filename([^/]+\\.[a-zA-Z0-9]+)', (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(__dirname, 'public', filename);
   const fs = require('fs');
