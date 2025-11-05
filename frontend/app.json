@@ -35,11 +35,10 @@
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "shortName": "Progress UK",
-      "description": "Progress for the future",
-      "backgroundColor": "#ffffff"
+      "shortName": "",
+      "description": "",
+      "backgroundColor": "transparent"
     },
     "plugins": [
       "expo-secure-store",

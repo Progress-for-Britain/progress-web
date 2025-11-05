@@ -1,5 +1,4 @@
 import { Stack } from "expo-router";
-import Head from "expo-router/head";
 import { View, Platform } from "react-native";
 import { usePathname } from "expo-router";
 import { AuthProvider } from "../util/auth-context";
@@ -11,7 +10,6 @@ import Header from "../components/Header";
 import { useFonts } from "expo-font";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useEffect } from "react";
-import { SITE_URL } from "../util/config";
 
 function RootLayoutNav() {
   const { isDark } = useTheme();
@@ -58,31 +56,10 @@ Curious? Join us at ${websiteUrl}
     <View style={[{ flex: 1 }, commonStyles.appContainer]}>
       {/* Global web font links */}
       {Platform.OS === 'web' && (
-        <Head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
-            rel="stylesheet"
-          />
+        <>
           {/* Cloudflare Web Analytics */}
           <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "38c4f7c92a6f4feeb11e928a81207ea8"}'></script>
-          {/* Canonical and OG URL */}
-          <link rel="canonical" href={`${SITE_URL}${pathname}`} />
-          <meta property="og:url" content={`${SITE_URL}${pathname}`} />
-          {/* Favicon */}
-          <link rel="icon" href="/favicon.png" />
-          {/* Open Graph meta tags */}
-          <meta property="og:title" content="Progress UK" />
-          <meta property="og:description" content="Progress for the future" />
-          <meta property="og:image" content={`https://progress-web-backend.vercel.app/favicon.png`} />
-          <meta property="og:type" content="website" />
-          {/* Twitter meta tags */}
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content="Progress UK" />
-          <meta name="twitter:description" content="Progress for the future" />
-          <meta name="twitter:image" content={`https://progress-web-backend.vercel.app/favicon.png`} />
-        </Head>
+        </>
       )}
       {/* Background aurora effect - only for unauthenticated routes and non-mobile platforms */}
       {shouldShowAurora && <AuroraBackground />}
