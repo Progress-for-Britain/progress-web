@@ -33,8 +33,8 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* Favicon / PWA assets */}
         <link rel="icon" href="/assets/favicon.png" />
-        <link rel="apple-touch-icon" href="/assets/icon.png" />
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/assets/favicon.png" />
+        <link rel="manifest" href="/assets/manifest.json" />
 
         {/* Open Graph */}
         <meta property="og:type" content="website" />

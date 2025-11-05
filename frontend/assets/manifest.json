@@ -1,0 +1,26 @@
+{
+  "name": "Progress UK",
+  "short_name": "Progress",
+  "description": "A political party beyond the left and right. Progress for the future",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "categories": ["politics", "government", "news"],
+  "lang": "en-GB",
+  "icons": [
+    {
+      "src": "/assets/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
