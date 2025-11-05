@@ -1,8 +1,9 @@
 // app/+html.tsx
 // Learn more https://docs.expo.dev/router/reference/static-rendering/#root-html
 import { ScrollViewStyleReset } from 'expo-router/html';
+import { type PropsWithChildren } from 'react';
 
-export default function Root({ children }: { children: React.ReactNode }) {
+export default function Root({ children }: PropsWithChildren) {
   return (
     <html lang="en">
       <head>
@@ -21,10 +22,10 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <title>Progress UK</title>
         <meta name="description" content="Progress for the future" />
         <meta name="robots" content="index,follow" />
-  {/* Make the browser UI / status bar transparent where supported */}
-  <meta name="theme-color" content="transparent" />
-  {/* iOS: allow a translucent/transparent status bar when saved to home screen */}
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {/* Make the browser UI / status bar transparent where supported */}
+        <meta name="theme-color" content="transparent" />
+        {/* iOS: allow a translucent/transparent status bar when saved to home screen */}
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
         {/* Canonical + OG URL */}
         <link rel="canonical" href="https://progressforbritain.org" />
@@ -61,10 +62,10 @@ export default function Root({ children }: { children: React.ReactNode }) {
         />
         <meta name="twitter:site" content="@ProgressUK" />
 
-  {/* Ensure the document background is transparent so underlying layers show through */}
-  <style>{`html, body, #root { background: transparent !important; }`}</style>
+        {/* Ensure the document background is transparent so underlying layers show through */}
+        <style>{`html, body, #root { background: transparent !important; }`}</style>
 
-  {/* ---- /Your tags ---- */}
+        {/* ---- /Your tags ---- */}
       </head>
       <body>{children}</body>
     </html>

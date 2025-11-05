@@ -36,6 +36,7 @@
     },
     "web": {
       "bundler": "metro",
+      "output": "static",
       "shortName": "",
       "description": "",
       "backgroundColor": "transparent"
