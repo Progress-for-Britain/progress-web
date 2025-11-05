@@ -44,7 +44,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta property="og:description" content="Progress for the future" />
         <meta
           property="og:image"
-          content="https://progress-web-backend.vercel.app/og/cover-1200x630.png"
+          content="https://progress-web-backend.vercel.app/favicon.png"
         />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
@@ -58,7 +58,7 @@ export default function Root({ children }: PropsWithChildren) {
         />
         <meta
           name="twitter:image"
-          content="https://progress-web-backend.vercel.app/og/cover-1200x630.png"
+          content="https://progress-web-backend.vercel.app/favicon.png"
         />
         <meta name="twitter:site" content="@ProgressUK" />
 
