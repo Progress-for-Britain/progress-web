@@ -38,7 +38,7 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
       "shortName": "Progress UK",
-      "description": "Progress UK - A progressive political movement unleashing potential across the UK",
+      "description": "Progress for the future",
       "backgroundColor": "#ffffff"
     },
     "plugins": [

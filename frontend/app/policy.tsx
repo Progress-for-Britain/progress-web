@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, TextInput, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import Head from 'expo-router/head';
 import { getCommonStyles, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
@@ -122,6 +123,10 @@ export default function Policy() {
 
   return (
     <>
+      <Head>
+        <title>Policy - Progress UK</title>
+        <meta name="description" content="Explore Progress UK's policies and guiding principles. Access our comprehensive policy documentation and contribute to our democratic process." />
+      </Head>
       <View style={commonStyles.appContainer}>
         <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
