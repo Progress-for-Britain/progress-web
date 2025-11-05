@@ -44,7 +44,7 @@ export default function Root({ children }: PropsWithChildren) {
         {/* Favicon / PWA assets */}
         <link rel="icon" href="/assets/favicon.png" />
         <link rel="apple-touch-icon" href="/assets/favicon.png" />
-        <link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#ff00ff" />
+        <link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#660033" />
         <link rel="manifest" href="/assets/manifest.json" />
         
         {/* Global styles */}
@@ -59,7 +59,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta property="og:description" content="Join Progress UK, a political movement focused on pragmatic solutions for Britain's future. Beyond traditional politics, we champion evidence-based policies and citizen engagement." />
         <meta
           property="og:image"
-          content="https://progressforbritain.org/assets/og-image.png"
+          content="https://progress-web-backend.vercel.app/assets/og-image.png"
         />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
@@ -71,7 +71,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="twitter:creator" content="@ProgressUK" />
         <meta name="twitter:title" content="Progress UK - A Political Party Beyond Left and Right" />
         <meta name="twitter:description" content="Join Progress UK, a political movement focused on pragmatic solutions for Britain's future. Beyond traditional politics, we champion evidence-based policies and citizen engagement." />
-        <meta name="twitter:image" content="https://progressforbritain.org/assets/og-image.png" />
+        <meta name="twitter:image" content="https://progress-web-backend.vercel.app/assets/og-image.png" />
         <meta name="twitter:image:alt" content="Progress UK - Political Party Logo" />
 
         {/* Structured Data */}
