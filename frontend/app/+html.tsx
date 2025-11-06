@@ -32,7 +32,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="description" content="Join Progress UK, a political movement focused on pragmatic solutions for Britain's future. Beyond traditional politics, we champion evidence-based policies and citizen engagement." />
         <meta name="robots" content="index,follow" />
         {/* Theme colors for browser UI */}
-        <meta name="theme-color" content="#6366f1" />
+        <meta name="theme-color" content="#660033" />
         <meta name="theme-color" content="#1e1b4b" media="(prefers-color-scheme: dark)" />
         {/* iOS: allow a translucent/transparent status bar when saved to home screen */}
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
