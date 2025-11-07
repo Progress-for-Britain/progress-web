@@ -128,7 +128,7 @@ export default function OurApproach() {
             </View>
             <Text style={[commonStyles.text, styles.bodyText]}>
               Our culture is entrepreneurial and agentic - if you join, you will be expected to identify problems and 
-              opportunities, and go and solve them. We red team problems to enforce truth-seeking, and we eliminate 
+              opportunities, and go and solve them. We read team problems to enforce truth-seeking, and we eliminate 
               echo-chambers and in-group signalling.
             </Text>
           </View>
