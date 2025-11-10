@@ -49,7 +49,7 @@ Curious? Join us at ${websiteUrl}
   
   const unauthenticatedRoutes = ['/about']
   const isEditorRoute = /^\/policy\/[^/]+\/edit(\?.*)?$/.test(pathname || '');
-  const shouldShowAurora = (unauthenticatedRoutes.includes(pathname) || pathname.startsWith('/policy')) && !isMobile && !isEditorRoute;
+  const shouldShowAurora = (unauthenticatedRoutes.includes(pathname) && !isMobile && !isEditorRoute);
   
   return (
     <View style={[{ flex: 1 }, commonStyles.appContainer]}>
