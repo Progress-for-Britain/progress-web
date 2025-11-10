@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState, useCallback } from "react";
-import { View, Text, Platform, StyleSheet, TouchableOpacity, Animated, Dimensions, Modal } from "react-native";
+import { View, Text, Platform, StyleSheet, TouchableOpacity, Animated, Dimensions } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../util/theme-context";
@@ -8,9 +8,7 @@ import { getColors } from "../util/commonStyles";
 // Type definition for navigation items
 type NavigationItem = {
   href: string;
-  icon: string;
   label: string;
-  variant?: 'default' | 'primary' | 'secondary';
 };
 
 export default function Nav() {
@@ -48,12 +46,12 @@ export default function Nav() {
 
   // Navigation items
   const navigationItems: NavigationItem[] = useMemo(() => [
-    { href: "/", icon: "home", label: "Home" },
-    { href: "/about", icon: "information-circle", label: "About" },
-    { href: "/our-approach", icon: "analytics", label: "Our Approach" },
-    { href: "/policy", icon: "document-text", label: "Policies" },
-    { href: "/join", icon: "people", label: "Join Us", variant: "primary" as const },
-    { href: "/login", icon: "log-in", label: "Login" },
+    { href: "/", label: "Home" },
+    { href: "/about", label: "About" },
+    { href: "/our-approach", label: "Our Approach" },
+    { href: "/policy", label: "Policies" },
+    { href: "/join", label: "Join Us" },
+    { href: "/login", label: "Login" },
   ], []);
 
   // Initialize animation values
