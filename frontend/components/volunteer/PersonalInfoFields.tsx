@@ -62,10 +62,18 @@ export const PersonalInfoFields = memo(({ formData, onUpdateField }: PersonalInf
     },
   ], []);
 
+  // Memoize container styles to prevent recreation on each render
+  const containerStyles = useMemo(() => ({
+    fullWidthField: { marginBottom: 0 },
+    nameRow: [commonStyles.formRow, { marginBottom: 24 }],
+    emailContainer: { marginBottom: 24 },
+    bottomRow: [commonStyles.formRowLarge, { marginBottom: 8 }]
+  }), [commonStyles]);
+
   const renderField = (config: typeof fieldConfigs[0]) => (
     <View 
       key={config.key} 
-      style={config.fullWidth ? { marginBottom: 20 } : commonStyles.formField}
+      style={config.fullWidth ? containerStyles.fullWidthField : commonStyles.formField}
     >
       <Text style={styles.inputLabel}>
         {config.label}
@@ -85,15 +93,17 @@ export const PersonalInfoFields = memo(({ formData, onUpdateField }: PersonalInf
   return (
     <>
       {/* Name fields in a row */}
-      <View style={commonStyles.formRow}>
+      <View style={containerStyles.nameRow}>
         {fieldConfigs.slice(0, 2).map(renderField)}
       </View>
       
       {/* Email full width */}
-      {renderField(fieldConfigs[2])}
+      <View style={containerStyles.emailContainer}>
+        {renderField(fieldConfigs[2])}
+      </View>
       
       {/* Phone and Constituency in a row */}
-      <View style={commonStyles.formRowLarge}>
+      <View style={containerStyles.bottomRow}>
         {fieldConfigs.slice(3, 5).map(renderField)}
       </View>
     </>

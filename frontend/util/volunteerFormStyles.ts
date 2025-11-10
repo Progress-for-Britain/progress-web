@@ -74,26 +74,31 @@ export const createVolunteerFormStyles = (colors: any, isMobile: boolean, width:
       alignItems: 'center',
     },
     inputLabel: {
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '600',
       color: colors.text,
-      marginBottom: 8,
+      marginBottom: 10,
+      letterSpacing: -0.2,
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
       }),
     },
     textInput: {
-      borderWidth: 2,
-      borderColor: colors.background === '#ffffff' ? `${colors.text}40` : `${colors.text}30`,
-      borderRadius: isMobile ? 8 : 12,
-      paddingHorizontal: isMobile ? 12 : 16,
-      paddingVertical: isMobile ? 12 : 14,
-      fontSize: isMobile ? 14 : 16,
-      backgroundColor: colors.background === '#ffffff' ? `${colors.surface}80` : `${colors.surface}60`,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? '#E5E7EB' : `${colors.text}20`,
+      borderRadius: isMobile ? 10 : 12,
+      paddingHorizontal: isMobile ? 14 : 16,
+      paddingVertical: isMobile ? 13 : 15,
+      fontSize: isMobile ? 15 : 16,
+      backgroundColor: colors.background === '#ffffff' ? '#F9FAFB' : `${colors.surface}50`,
       color: colors.text,
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
         backdropFilter: 'blur(10px)',
+        boxShadow: colors.background === '#ffffff' 
+          ? '0 1px 3px rgba(0,0,0,0.05)' 
+          : '0 1px 3px rgba(0,0,0,0.2)',
+        transition: 'all 0.15s ease'
       } as any),
     },
     textInputMultiline: {
@@ -102,26 +107,31 @@ export const createVolunteerFormStyles = (colors: any, isMobile: boolean, width:
     },
     yesNoButton: {
       flex: 1,
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderRadius: 8,
-      borderWidth: 2,
-      borderColor: `${colors.text}30`,
-      backgroundColor: `${colors.surface}40`,
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? '#E5E7EB' : `${colors.text}20`,
+      backgroundColor: colors.background === '#ffffff' ? '#F9FAFB' : `${colors.surface}40`,
       alignItems: 'center',
       ...(Platform.OS === 'web' && {
         cursor: 'pointer',
         transition: 'all 0.2s ease',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       } as any)
     },
     yesNoButtonSelected: {
-      backgroundColor: colors.success,
-      borderColor: colors.success,
+      backgroundColor: '#10B981',
+      borderColor: '#10B981',
+      ...(Platform.OS === 'web' && {
+        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3), 0 1px 0 rgba(255,255,255,0.2) inset'
+      } as any)
     },
     yesNoButtonText: {
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: '600',
       color: colors.text,
+      letterSpacing: -0.2,
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
       }),
@@ -156,25 +166,30 @@ export const createVolunteerFormStyles = (colors: any, isMobile: boolean, width:
       }),
     },
     interestTag: {
-      backgroundColor: colors.background === '#ffffff' ? `${colors.surface}80` : `${colors.surface}60`,
-      borderWidth: 2,
-      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      backgroundColor: colors.background === '#ffffff' ? '#F9FAFB' : `${colors.surface}50`,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? '#E5E7EB' : `${colors.text}20`,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
       ...(Platform.OS === 'web' && {
         cursor: 'pointer',
         transition: 'all 0.2s ease',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       } as any)
     },
     interestTagSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
+      backgroundColor: '#B10024',
+      borderColor: '#B10024',
+      ...(Platform.OS === 'web' && {
+        boxShadow: '0 4px 12px rgba(177, 0, 36, 0.25), 0 1px 0 rgba(255,255,255,0.15) inset'
+      } as any)
     },
     interestTagText: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: '600',
       color: colors.text,
+      letterSpacing: -0.1,
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
       }),
@@ -184,25 +199,30 @@ export const createVolunteerFormStyles = (colors: any, isMobile: boolean, width:
       fontWeight: '600',
     },
     contributionTag: {
-      backgroundColor: colors.background === '#ffffff' ? `${colors.surface}80` : `${colors.surface}60`,
-      borderWidth: 2,
-      borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      backgroundColor: colors.background === '#ffffff' ? '#F9FAFB' : `${colors.surface}50`,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? '#E5E7EB' : `${colors.text}20`,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
       ...(Platform.OS === 'web' && {
         cursor: 'pointer',
         transition: 'all 0.2s ease',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       } as any)
     },
     contributionTagSelected: {
-      backgroundColor: colors.success,
-      borderColor: colors.success,
+      backgroundColor: '#001A4F',
+      borderColor: '#001A4F',
+      ...(Platform.OS === 'web' && {
+        boxShadow: '0 4px 12px rgba(0, 26, 79, 0.3), 0 1px 0 rgba(255,255,255,0.1) inset'
+      } as any)
     },
     contributionTagText: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: '600',
       color: colors.text,
+      letterSpacing: -0.1,
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
       }),
@@ -214,55 +234,66 @@ export const createVolunteerFormStyles = (colors: any, isMobile: boolean, width:
     checkboxContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: `${colors.surface}40`,
-      borderRadius: 8,
-      padding: 12,
-      borderWidth: 2,
-      borderColor: `${colors.text}30`,
+      backgroundColor: colors.background === '#ffffff' ? '#F9FAFB' : `${colors.surface}40`,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.background === '#ffffff' ? '#E5E7EB' : `${colors.text}20`,
       ...(Platform.OS === 'web' && {
         cursor: 'pointer',
         transition: 'all 0.2s ease',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       } as any)
     },
     checkboxContainerSelected: {
-      backgroundColor: `${colors.success}20`,
+      backgroundColor: colors.background === '#ffffff' ? '#ECFDF5' : `${colors.success}15`,
       borderColor: colors.success,
+      ...(Platform.OS === 'web' && {
+        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)'
+      } as any)
     },
     checkboxContainerWarning: {
-      backgroundColor: `${colors.warning}20`,
-      borderColor: colors.warning,
-      opacity: 0.7,
+      backgroundColor: colors.background === '#ffffff' ? '#FEF3C7' : `#78350F`,
+      borderColor: '#F59E0B',
+      opacity: 1,
     },
     checkboxIcon: {
-      width: 20,
-      height: 20,
+      width: 22,
+      height: 22,
       borderWidth: 2,
-      borderColor: `${colors.text}40`,
-      borderRadius: 4,
-      backgroundColor: `${colors.surface}20`,
-      marginRight: 12,
+      borderColor: colors.background === '#ffffff' ? '#D1D5DB' : `${colors.text}30`,
+      borderRadius: 6,
+      backgroundColor: colors.background === '#ffffff' ? '#ffffff' : `${colors.surface}20`,
+      marginRight: 14,
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      ...(Platform.OS === 'web' && {
+        boxShadow: '0 1px 2px rgba(0,0,0,0.05) inset'
+      } as any)
     },
     checkboxIconSelected: {
       backgroundColor: colors.success,
       borderColor: colors.success,
+      ...(Platform.OS === 'web' && {
+        boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3), 0 1px 0 rgba(255,255,255,0.2) inset'
+      } as any)
     },
     checkboxIconWarning: {
-      borderColor: colors.warning,
-      backgroundColor: `${colors.warning}20`,
+      borderColor: '#F59E0B',
+      backgroundColor: colors.background === '#ffffff' ? '#FEF3C7' : `#78350F`,
     },
     checkboxLabel: {
       fontSize: 14,
       fontWeight: '500',
       color: colors.text,
       flex: 1,
+      lineHeight: 20,
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
       }),
     },
     checkboxLabelWarning: {
-      color: colors.warning,
+      color: colors.background === '#ffffff' ? '#92400E' : '#FCD34D',
     },
     checkboxSubtext: {
       fontSize: 12,
