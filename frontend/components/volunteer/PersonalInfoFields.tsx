@@ -65,7 +65,7 @@ export const PersonalInfoFields = memo(({ formData, onUpdateField }: PersonalInf
   const renderField = (config: typeof fieldConfigs[0]) => (
     <View 
       key={config.key} 
-      style={config.fullWidth ? { marginBottom: 20 } : commonStyles.formField}
+      style={config.fullWidth ? { marginBottom: 0 } : commonStyles.formField}
     >
       <Text style={styles.inputLabel}>
         {config.label}

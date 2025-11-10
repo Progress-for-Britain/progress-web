@@ -151,28 +151,85 @@ export default function NDA() {
       
       {/* Success State */}
       {isSuccess && (
-        <Animated.View style={[successStyle, styles.successContainer]}>
-          <View style={styles.successContent}>
-            <Animated.View style={[checkmarkStyle, styles.checkmarkContainer]}>
-              <Ionicons name="checkmark" size={40} color="#ffffff" />
+        <Animated.View style={[successStyle, {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: `${colors.background}F0`,
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          paddingHorizontal: 20,
+          ...Platform.OS === 'web' && {
+            backdropFilter: 'blur(10px)'
+          }
+        }]}>
+          <View style={{
+            backgroundColor: isDark ? `${colors.surface}95` : '#ffffff',
+            borderRadius: isMobile ? 20 : 28,
+            padding: isMobile ? 32 : 48,
+            maxWidth: isMobile ? width - 40 : 500,
+            width: '100%',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: isDark ? `${colors.text}15` : '#E5E7EB',
+            ...Platform.OS === 'web' && {
+              boxShadow: isDark 
+                ? '0 20px 60px rgba(0,0,0,0.40), 0 1px 0 rgba(255,255,255,0.05) inset'
+                : '0 20px 60px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.9) inset'
+            }
+          }}>
+            <Animated.View style={[checkmarkStyle, {
+              backgroundColor: colors.success,
+              borderRadius: 40,
+              width: 80,
+              height: 80,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 24,
+              ...Platform.OS === 'web' && {
+                boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3), 0 1px 0 rgba(255,255,255,0.2) inset'
+              }
+            }]}>
+              <Ionicons name="checkmark" size={44} color="#ffffff" />
             </Animated.View>
             
-            <Text style={[commonStyles.title, { marginBottom: 12 }]}>
+            <Text style={[commonStyles.title, { 
+              marginBottom: 12,
+              fontSize: isMobile ? 24 : 28,
+              textAlign: 'center',
+              fontWeight: '700'
+            }]}>
               NDA Signed Successfully!
             </Text>
             
-            <Text style={[commonStyles.text, { marginBottom: 24, maxWidth: 400 }]}>
+            <Text style={[commonStyles.text, { 
+              marginBottom: 28, 
+              maxWidth: 400,
+              textAlign: 'center',
+              color: colors.textSecondary,
+              lineHeight: 24
+            }]}>
               Thank you {name}! Redirecting you back to complete your application...
             </Text>
             
-            <View style={styles.infoContainer}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <View style={{
+              backgroundColor: isDark ? `${colors.success}15` : '#ECFDF5',
+              borderRadius: 16,
+              padding: 20,
+              width: '100%',
+              borderWidth: 1,
+              borderColor: isDark ? `${colors.success}30` : '#D1FAE5'
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
                 <Ionicons name="information-circle" size={20} color={colors.success} style={{ marginRight: 8 }} />
-                <Text style={[commonStyles.text, { fontWeight: '600', color: colors.success }]}>
+                <Text style={[commonStyles.text, { fontWeight: '600', color: colors.success, fontSize: 15 }]}>
                   What happens next?
                 </Text>
               </View>
-              <Text style={[commonStyles.text, { color: colors.success, lineHeight: 20 }]}>
+              <Text style={[commonStyles.text, { color: colors.success, lineHeight: 22, fontSize: 14 }]}>
                 • You can now complete your volunteer application{'\n'}
                 • Your NDA signature is securely stored{'\n'}
                 • Redirecting automatically...
@@ -190,81 +247,136 @@ export default function NDA() {
           <ScrollView 
             style={[{ flex: 1 }, styles.scrollView]} 
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollViewContent}
+            contentContainerStyle={{ 
+              paddingTop: isMobile ? 80 : 100,
+              paddingBottom: 100,
+              paddingHorizontal: isMobile ? 20 : 40
+            }}
           >
             {/* Main Content */}
-            <View style={commonStyles.content}>
+            <View style={{ maxWidth: 900, marginHorizontal: 'auto', width: '100%' }}>
               {/* Hero Section */}
-              <Animated.View style={[fadeInStyle, styles.heroContainer]}>
-                <View style={styles.highlightContainer}>
-                  <LinearGradient
-                    colors={gradients.primary}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={commonStyles.highlightBackground}
-                  >
-                    <Text style={commonStyles.highlightText}>Confidentiality Agreement</Text>
-                  </LinearGradient>
+              <Animated.View style={[fadeInStyle, { 
+                alignItems: 'center', 
+                marginBottom: isMobile ? 48 : 60,
+                paddingHorizontal: isMobile ? 0 : 20
+              }]}>
+                <View style={{ marginBottom: 20 }}>
+                  <View style={{
+                    backgroundColor: isDark ? '#001A4F' : '#F0F4FF',
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: isDark ? '#123995' : '#E0E7FF'
+                  }}>
+                    <Text style={{
+                      color: isDark ? '#60A5FA' : '#001A4F',
+                      fontSize: 13,
+                      fontWeight: '600',
+                      letterSpacing: 0.5,
+                      textTransform: 'uppercase'
+                    }}>Confidentiality Agreement</Text>
+                  </View>
                 </View>
                 
                 <Text style={[commonStyles.title, { 
-                  fontSize: isMobile ? 32 : 48, 
-                  marginBottom: 20,
+                  fontSize: isMobile ? 36 : 56, 
+                  marginBottom: 16,
                   textAlign: 'center',
-                  paddingHorizontal: isMobile ? 16 : 0
+                  fontWeight: '700',
+                  letterSpacing: -1,
+                  color: colors.text
                 }]}>
                   Secure Your Access
                 </Text>
                 
                 <Text style={[commonStyles.text, { 
-                  fontSize: isMobile ? 16 : 18, 
+                  fontSize: isMobile ? 16 : 19, 
                   marginBottom: 32, 
-                  lineHeight: isMobile ? 24 : 28, 
-                  maxWidth: isMobile ? width - 32 : 600,
+                  lineHeight: isMobile ? 26 : 30, 
+                  maxWidth: isMobile ? width - 40 : 680,
                   textAlign: 'center',
-                  paddingHorizontal: isMobile ? 16 : 0
+                  color: colors.textSecondary,
+                  fontWeight: '400'
                 }]}>
                   To protect sensitive information and maintain confidentiality within Progress UK, all volunteers must sign our confidentiality agreement.
                 </Text>
 
-                <View style={styles.benefitsRow}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 10,
+                  backgroundColor: isDark ? `${colors.success}15` : '#ECFDF5',
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: isDark ? `${colors.success}30` : '#D1FAE5'
+                }}>
                   <Ionicons name="shield-checkmark" size={20} color={colors.success} />
-                  <Text style={[commonStyles.text, { marginLeft: 8 }]}>
+                  <Text style={[commonStyles.text, { 
+                    fontSize: 14,
+                    color: colors.success,
+                    fontWeight: '500'
+                  }]}>
                     Secure • Confidential • Legally Binding
                   </Text>
                 </View>
               </Animated.View>
 
               {/* Form Container */}
-              <Animated.View style={[fadeInStyle, styles.formContainer]}>
-                <View style={{ alignItems: 'center', marginBottom: 32 }}>
-                  <LinearGradient
-                    colors={gradients.accent}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
+              <Animated.View style={[fadeInStyle, {
+                backgroundColor: isDark ? `${colors.surface}95` : '#ffffff',
+                borderRadius: isMobile ? 20 : 28,
+                padding: isMobile ? 28 : 48,
+                borderWidth: 1,
+                borderColor: isDark ? `${colors.text}15` : '#E5E7EB',
+                ...Platform.OS === 'web' && {
+                  boxShadow: isDark 
+                    ? '0 20px 60px rgba(0,0,0,0.30), 0 1px 0 rgba(255,255,255,0.05) inset'
+                    : '0 20px 60px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.9) inset'
+                }
+              }]}>
+                <View style={{ alignItems: 'center', marginBottom: 40 }}>
+                  <View
                     style={{
+                      width: 72,
+                      height: 72,
                       borderRadius: 20,
-                      padding: 16,
-                      marginBottom: 16,
+                      backgroundColor: isDark ? '#001A4F' : '#F0F4FF',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 20,
+                      borderWidth: 1,
+                      borderColor: isDark ? '#123995' : '#E0E7FF',
+                      ...Platform.OS === 'web' && {
+                        boxShadow: isDark
+                          ? '0 10px 30px rgba(1, 33, 104, 0.3), 0 1px 0 rgba(255,255,255,0.1) inset'
+                          : '0 10px 30px rgba(0, 26, 79, 0.15), 0 1px 0 rgba(255,255,255,0.9) inset'
+                      }
                     }}
                   >
-                    <MaterialIcons name="security" size={32} color={colors.text} />
-                  </LinearGradient>
+                    <MaterialIcons name="security" size={36} color={isDark ? '#60A5FA' : '#001A4F'} />
+                  </View>
                   <Text 
                     style={[commonStyles.title, { 
-                      fontSize: 28,
-                      marginBottom: 8
+                      fontSize: isMobile ? 24 : 32,
+                      marginBottom: 8,
+                      fontWeight: '700',
+                      letterSpacing: -0.5
                     }]}
                   >
                     Confidentiality Agreement
                   </Text>
                   <Text 
                     style={[commonStyles.text, {
-                      fontSize: 16,
+                      fontSize: isMobile ? 14 : 16,
                       color: colors.textSecondary,
                       lineHeight: 24,
                       marginBottom: 4,
-                      textAlign: 'center'
+                      textAlign: 'center',
+                      fontWeight: '400'
                     }]}
                   >
                     Progress • Dated {currentDate}
@@ -273,9 +385,10 @@ export default function NDA() {
                     style={[commonStyles.text, {
                       fontSize: 12,
                       color: colors.textSecondary,
-                      marginBottom: 8,
+                      marginBottom: 0,
                       textAlign: 'center',
-                      fontStyle: 'italic'
+                      fontStyle: 'italic',
+                      opacity: 0.7
                     }]}
                   >
                     Electoral Commission Registration: RPP 128-595-401
@@ -284,20 +397,20 @@ export default function NDA() {
 
                 {/* NDA Content */}
                 <View style={{ marginBottom: 32 }}>
-                  <Text style={[styles.inputLabel, { fontSize: 18, marginBottom: 16 }]}>
+                  <Text style={[styles.inputLabel, { fontSize: 18, marginBottom: 16, fontWeight: '600', letterSpacing: -0.3 }]}>
                     Agreement Overview
                   </Text>
-                  <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 16, textAlign: 'left' }]}>
+                  <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 20, textAlign: 'left', lineHeight: 22 }]}>
                     This confidentiality agreement is between Progress, and any future entity to which 
                     the venture may be renamed (the "Company"), represented by Maxi Gorynski [General Director], 
                     and you (the "New Member").
                   </Text>
 
-                  <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 12 }]}>
+                  <Text style={[styles.inputLabel, { fontSize: 16, marginBottom: 14, fontWeight: '600', letterSpacing: -0.2 }]}>
                     Key Terms:
                   </Text>
                   
-                  <View style={{ marginBottom: 16 }}>
+                  <View style={{ marginBottom: 20 }}>
                     <View style={styles.termItem}>
                       <View style={styles.termBullet} />
                       <Text style={[commonStyles.text, { fontSize: 14, flex: 1, lineHeight: 22, textAlign: 'left' }]}>
@@ -340,10 +453,17 @@ export default function NDA() {
                     </View>
                   </View>
 
-                  <View style={styles.warningContainer}>
+                  <View style={{
+                    backgroundColor: isDark ? '#78350F' : '#FEF3C7',
+                    borderColor: '#F59E0B',
+                    borderWidth: 1,
+                    borderRadius: 16,
+                    padding: 20,
+                    marginBottom: 24
+                  }}>
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                      <Ionicons name="warning" size={20} color={colors.warning} style={{ marginRight: 8, marginTop: 2 }} />
-                      <Text style={[commonStyles.text, { fontSize: 14, color: colors.warning, flex: 1, lineHeight: 20, textAlign: 'left' }]}>
+                      <Ionicons name="warning" size={24} color={isDark ? '#FCD34D' : '#F59E0B'} style={{ marginRight: 12, marginTop: 2 }} />
+                      <Text style={[commonStyles.text, { fontSize: 14, color: isDark ? '#FCD34D' : '#92400E', flex: 1, lineHeight: 22, textAlign: 'left' }]}>
                         <Text style={{ fontWeight: '600' }}>Important:</Text> This is a legally binding agreement. 
                         Please read the full terms carefully. By signing, you acknowledge understanding and agreement 
                         to all terms and conditions.
@@ -353,10 +473,24 @@ export default function NDA() {
 
                   <TouchableOpacity 
                     onPress={() => setShowFullNDA(true)}
-                    style={styles.viewFullButton}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: isDark ? `${colors.primary}15` : '#FEF2F2',
+                      paddingVertical: 14,
+                      paddingHorizontal: 20,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: isDark ? `${colors.primary}30` : '#FEE2E2',
+                      ...Platform.OS === 'web' && {
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }
+                    }}
                   >
-                    <MaterialIcons name="article" size={20} color={colors.accent} style={{ marginRight: 8 }} />
-                    <Text style={[commonStyles.text, { color: colors.accent, fontSize: 14, fontWeight: '500' }]}>
+                    <MaterialIcons name="article" size={20} color={colors.primary} style={{ marginRight: 8 }} />
+                    <Text style={[commonStyles.text, { color: colors.primary, fontSize: 14, fontWeight: '600' }]}>
                       View Full Legal Document
                     </Text>
                   </TouchableOpacity>
@@ -376,7 +510,12 @@ export default function NDA() {
                     placeholderTextColor={colors.textSecondary}
                     style={[
                       styles.textInput,
-                      nameFocused && styles.textInputFocused
+                      nameFocused && {
+                        borderColor: colors.primary,
+                        ...Platform.OS === 'web' && {
+                          boxShadow: `0 0 0 3px ${colors.primary}20`
+                        }
+                      }
                     ]}
                     autoCapitalize="words"
                     autoComplete="name"
@@ -386,24 +525,57 @@ export default function NDA() {
                 {/* Agreement Checkbox */}
                 <TouchableOpacity 
                   onPress={() => setAgreed(!agreed)}
-                  style={[
-                    styles.optionCard,
-                    agreed && styles.optionCardSelected
-                  ]}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: agreed 
+                      ? (isDark ? `${colors.success}15` : '#ECFDF5')
+                      : (isDark ? `${colors.surface}40` : '#F9FAFB'),
+                    borderRadius: 12,
+                    padding: 16,
+                    borderWidth: 1,
+                    borderColor: agreed ? colors.success : (isDark ? `${colors.text}20` : '#E5E7EB'),
+                    marginBottom: 24,
+                    ...Platform.OS === 'web' && {
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: agreed ? '0 2px 8px rgba(16, 185, 129, 0.15)' : '0 1px 3px rgba(0,0,0,0.05)'
+                    }
+                  }}
                 >
-                  <View style={[
-                    styles.checkbox,
-                    agreed && styles.checkboxSelected
-                  ]}>
+                  <View style={{
+                    width: 22,
+                    height: 22,
+                    borderWidth: 2,
+                    borderColor: agreed ? colors.success : (isDark ? `${colors.text}30` : '#D1D5DB'),
+                    borderRadius: 6,
+                    backgroundColor: agreed ? colors.success : (isDark ? `${colors.surface}20` : '#ffffff'),
+                    marginRight: 14,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    ...Platform.OS === 'web' && agreed && {
+                      boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3), 0 1px 0 rgba(255,255,255,0.2) inset'
+                    }
+                  }}>
                     {agreed && (
-                      <Ionicons name="checkmark" size={16} color={colors.text} />
+                      <Ionicons name="checkmark" size={16} color="#ffffff" />
                     )}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.optionTitle, agreed && styles.optionTitleSelected]}>
+                    <Text style={{
+                      fontSize: 15,
+                      fontWeight: '600',
+                      color: colors.text,
+                      marginBottom: 4,
+                      letterSpacing: -0.2
+                    }}>
                       I agree to the terms
                     </Text>
-                    <Text style={[styles.optionDescription, agreed && styles.optionDescriptionSelected]}>
+                    <Text style={{
+                      fontSize: 13,
+                      color: colors.textSecondary,
+                      lineHeight: 20
+                    }}>
                       I have read, understood, and agree to be bound by the terms of this Confidentiality Agreement. 
                       I acknowledge that this creates a legally binding obligation.
                     </Text>
@@ -415,50 +587,84 @@ export default function NDA() {
                   onPress={handleSubmit}
                   disabled={isLoading || !name.trim() || !agreed}
                   style={[
-                    styles.submitButton,
-                    (!name.trim() || !agreed) && styles.submitButtonDisabled
+                    {
+                      backgroundColor: (name.trim() && agreed) ? colors.primary : (isDark ? '#374151' : '#E5E7EB'),
+                      borderRadius: isMobile ? 14 : 16,
+                      paddingVertical: isMobile ? 16 : 18,
+                      paddingHorizontal: isMobile ? 24 : 32,
+                      alignItems: 'center',
+                      marginTop: 8,
+                      borderWidth: 1,
+                      borderColor: (name.trim() && agreed) ? colors.primary : 'transparent'
+                    },
+                    Platform.OS === 'web' && {
+                      cursor: (name.trim() && agreed) ? 'pointer' : 'not-allowed',
+                      boxShadow: (name.trim() && agreed)
+                        ? '0 10px 30px rgba(177, 0, 36, 0.3), 0 1px 0 rgba(255,255,255,0.1) inset'
+                        : 'none',
+                      transition: 'all 0.2s ease'
+                    } as any
                   ]}
                 >
-                  <LinearGradient
-                    colors={(!name.trim() || !agreed) ? [colors.border, colors.border] : gradients.accent}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.submitButtonGradient}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                      {isLoading ? (
-                        <>
-                          <Animated.View style={[rotateStyle, { marginRight: 8 }]}>
-                            <Ionicons name="refresh" size={20} color={colors.text} />
-                          </Animated.View>
-                          <Text style={styles.submitButtonText}>
-                            Signing NDA...
-                          </Text>
-                        </>
-                      ) : (
-                        <>
-                          <MaterialIcons name="security" size={20} color={colors.text} style={{ marginRight: 8 }} />
-                          <Text style={styles.submitButtonText}>
-                            Sign NDA Agreement
-                          </Text>
-                        </>
-                      )}
-                    </View>
-                  </LinearGradient>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                    {isLoading ? (
+                      <>
+                        <Animated.View style={[rotateStyle, { marginRight: 8 }]}>
+                          <Ionicons name="refresh" size={20} color="#ffffff" />
+                        </Animated.View>
+                        <Text style={{
+                          color: '#ffffff',
+                          fontSize: isMobile ? 16 : 18,
+                          fontWeight: '600',
+                          letterSpacing: -0.2
+                        }}>
+                          Signing NDA...
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <MaterialIcons 
+                          name="security" 
+                          size={20} 
+                          color={(name.trim() && agreed) ? '#ffffff' : (isDark ? '#9CA3AF' : '#6B7280')} 
+                          style={{ marginRight: 8 }} 
+                        />
+                        <Text style={{
+                          color: (name.trim() && agreed) ? '#ffffff' : (isDark ? '#9CA3AF' : '#6B7280'),
+                          fontSize: isMobile ? 16 : 18,
+                          fontWeight: '600',
+                          letterSpacing: -0.2
+                        }}>
+                          Sign NDA Agreement
+                        </Text>
+                      </>
+                    )}
+                  </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
                   onPress={() => router.back()}
-                  style={styles.cancelButton}
+                  style={{
+                    alignItems: 'center',
+                    paddingVertical: 14,
+                    marginTop: 12,
+                    ...Platform.OS === 'web' && {
+                      cursor: 'pointer'
+                    }
+                  }}
                 >
-                  <Text style={styles.cancelButtonText}>
+                  <Text style={{
+                    color: colors.textSecondary,
+                    fontSize: 15,
+                    fontWeight: '500'
+                  }}>
                     Cancel
                   </Text>
                 </TouchableOpacity>
               </Animated.View>
             </View>
             {/* Bottom spacing */}
-            <View style={{ height: 40 }} />
+            <View style={{ height: isMobile ? 80 : 100 }} />
           </ScrollView>
         )}
       </KeyboardAvoidingView>
@@ -480,9 +686,9 @@ export default function NDA() {
           </View>
           
           <ScrollView 
-            style={[{ flex: 1, padding: 16 }, styles.scrollView]} 
+            style={[{ flex: 1, padding: 16 }]} 
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollViewContent}
+            contentContainerStyle={{ paddingBottom: 40 }}
           >
             <View style={styles.modalContent}>
               <Text style={[commonStyles.title, { fontSize: 20, marginBottom: 8 }]}>
@@ -643,284 +849,60 @@ export default function NDA() {
 }
 
 const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.create({
-  successContainer: {
-    backgroundColor: colors.surface,
-    marginHorizontal: isMobile ? 16 : 20,
-    marginTop: 20,
-    borderRadius: isMobile ? 16 : 20,
-    padding: isMobile ? 24 : 32,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.success,
-    position: 'relative',
-    zIndex: 3,
-  },
-  successContent: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  checkmarkContainer: {
-    backgroundColor: colors.success,
-    borderRadius: 40,
-    width: 80,
-    height: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  infoContainer: {
-    backgroundColor: `${colors.success}20`,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    width: '100%',
-    maxWidth: 400,
-  },
-  heroContainer: {
-    alignItems: 'center',
-    marginBottom: isMobile ? 40 : 60,
-    paddingVertical: isMobile ? 20 : 40,
-    paddingHorizontal: isMobile ? 16 : 0,
-  },
-  highlightContainer: {
-    marginBottom: 16,
-  },
-  benefitsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  formContainer: {
-    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}95` : `${colors.surface}80`,
-    borderRadius: isMobile ? 16 : 24,
-    padding: isMobile ? 20 : 40,
-    maxWidth: isMobile ? width - 32 : 700,
-    alignSelf: 'center',
-    width: '100%',
-    marginHorizontal: isMobile ? 16 : 0,
-    borderWidth: 1,
-    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
-    position: 'relative',
-    zIndex: 2,
-    ...(Platform.OS === 'web' && {
-      backdropFilter: 'blur(10px)',
-    } as any),
-  },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 10,
+    letterSpacing: -0.2,
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
   },
   textInput: {
-    borderWidth: 2,
-    borderColor: colors.background === '#ffffff' ? `${colors.text}40` : `${colors.text}30`,
-    borderRadius: isMobile ? 8 : 12,
-    paddingHorizontal: isMobile ? 12 : 16,
-    paddingVertical: isMobile ? 12 : 14,
-    fontSize: isMobile ? 14 : 16,
-    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}80` : `${colors.surface}60`,
+    borderWidth: 1,
+    borderColor: colors.background === '#ffffff' ? '#E5E7EB' : `${colors.text}20`,
+    borderRadius: isMobile ? 10 : 12,
+    paddingHorizontal: isMobile ? 14 : 16,
+    paddingVertical: isMobile ? 13 : 15,
+    fontSize: isMobile ? 15 : 16,
+    backgroundColor: colors.background === '#ffffff' ? '#F9FAFB' : `${colors.surface}50`,
     color: colors.text,
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
       backdropFilter: 'blur(10px)',
+      boxShadow: colors.background === '#ffffff' 
+        ? '0 1px 3px rgba(0,0,0,0.05)' 
+        : '0 1px 3px rgba(0,0,0,0.2)',
+      transition: 'all 0.15s ease'
     } as any),
-  },
-  textInputFocused: {
-    borderColor: colors.accent,
   },
   termItem: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 16,
+    paddingLeft: 4
   },
   termBullet: {
-    backgroundColor: colors.accent,
-    borderRadius: 4,
-    width: 8,
-    height: 8,
-    marginTop: 8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
     marginRight: 12,
-  },
-  warningContainer: {
-    backgroundColor: `${colors.warning}20`,
-    borderColor: colors.warning,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  viewFullButton: {
-    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}60` : `${colors.surface}40`,
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    marginBottom: 24,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.accent,
-    ...(Platform.OS === 'web' && { 
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-    } as any)
-  },
-  optionCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}60` : `${colors.surface}40`,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
-    marginBottom: 32,
-    ...(Platform.OS === 'web' && { 
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-    } as any)
-  },
-  optionCardSelected: {
-    backgroundColor: `${colors.accent}20`,
-    borderColor: colors.accent,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
-    borderColor: `${colors.text}40`,
-    borderRadius: 6,
-    backgroundColor: `${colors.surface}20`,
-    marginRight: 12,
-    marginTop: 2,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  checkboxSelected: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accent,
-  },
-  optionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-    ...(Platform.OS === 'web' && {
-      fontFamily: "'Montserrat', sans-serif",
-    }),
-  },
-  optionTitleSelected: {
-    color: colors.text,
-  },
-  optionDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    ...(Platform.OS === 'web' && {
-      fontFamily: "'Montserrat', sans-serif",
-    }),
-  },
-  optionDescriptionSelected: {
-    color: colors.textSecondary,
-  },
-  submitButton: {
-    borderRadius: 16,
-    marginBottom: 20,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    ...(Platform.OS === 'web' && { 
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-    } as any)
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    ...(Platform.OS === 'web' && { 
-      cursor: 'not-allowed' 
-    } as any)
-  },
-  submitButtonGradient: {
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitButtonText: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-    ...(Platform.OS === 'web' && {
-      fontFamily: "'Montserrat', sans-serif",
-    }),
-  },
-  cancelButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    ...(Platform.OS === 'web' && { 
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-    } as any)
-  },
-  cancelButtonText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '500',
-    ...(Platform.OS === 'web' && {
-      fontFamily: "'Montserrat', sans-serif",
-    }),
+    marginTop: 8
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: colors.surface,
+    padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingTop: Platform.OS === 'ios' ? 50 : 16,
+    borderBottomColor: colors.background === '#ffffff' ? '#E5E7EB' : `${colors.text}15`,
+    backgroundColor: colors.background === '#ffffff' ? '#ffffff' : colors.surface
   },
   modalContent: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    paddingBottom: 40
   },
   scrollView: {
-    ...(Platform.OS === 'web' && {
-      // Custom scrollbar for web
-      '&::-webkit-scrollbar': {
-        width: '8px',
-      },
-      '&::-webkit-scrollbar-track': {
-        background: colors.background === '#ffffff' ? '#f1f1f1' : '#2a2a2a',
-        borderRadius: '4px',
-      },
-      '&::-webkit-scrollbar-thumb': {
-        background: colors.accent,
-        borderRadius: '4px',
-        opacity: 0.7,
-      },
-      '&::-webkit-scrollbar-thumb:hover': {
-        background: colors.accent,
-        opacity: 1,
-      },
-    } as any),
-  },
-  scrollViewContent: {
-    paddingBottom: Platform.OS === 'web' ? 20 : 0,
-  },
+    flex: 1
+  }
 });
