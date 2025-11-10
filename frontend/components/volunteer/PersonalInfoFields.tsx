@@ -85,15 +85,17 @@ export const PersonalInfoFields = memo(({ formData, onUpdateField }: PersonalInf
   return (
     <>
       {/* Name fields in a row */}
-      <View style={commonStyles.formRow}>
+      <View style={[commonStyles.formRow, { marginBottom: 24 }]}>
         {fieldConfigs.slice(0, 2).map(renderField)}
       </View>
       
       {/* Email full width */}
-      {renderField(fieldConfigs[2])}
+      <View style={{ marginBottom: 24 }}>
+        {renderField(fieldConfigs[2])}
+      </View>
       
       {/* Phone and Constituency in a row */}
-      <View style={commonStyles.formRowLarge}>
+      <View style={[commonStyles.formRowLarge, { marginBottom: 8 }]}>
         {fieldConfigs.slice(3, 5).map(renderField)}
       </View>
     </>

@@ -1,7 +1,5 @@
 import { Platform, Dimensions, StyleSheet } from "react-native";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
 // Cache for injected styles to avoid redundant operations
 let currentInjectedTheme: boolean | null = null;
 let currentStyleElement: HTMLStyleElement | null = null;
@@ -440,6 +438,210 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
         fontFamily: "'Montserrat', sans-serif",
       }),
     },
+    
+    // Homepage specific styles
+    homePage: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    homeCanvas: {
+      minHeight: "100%",
+      paddingTop: 120,
+      paddingBottom: 120,
+      paddingHorizontal: 28,
+      alignItems: "stretch",
+      justifyContent: "center",
+    },
+    homeHeroRow: {
+      width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 60,
+      ...(Platform.OS !== "web" && {
+        flexDirection: "column",
+        gap: 40,
+      }),
+    },
+    homeImageSection: {
+      flex: 1.4,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    homeProductWrap: {
+      width: "100%",
+      maxWidth: 650,
+      aspectRatio: 1.55,
+      alignItems: "center",
+      justifyContent: "center",
+      ...(Platform.OS === "web" && {
+        filter: isDark 
+          ? "drop-shadow(0px 26px 60px rgba(255,255,255,0.15))" 
+          : "drop-shadow(0px 26px 60px rgba(0,0,0,0.10))",
+      }),
+    },
+    homeTextSection: {
+      flex: 1,
+      alignItems: "flex-start",
+      justifyContent: "center",
+      paddingLeft: Platform.OS === "web" ? 40 : 0,
+      paddingTop: Platform.OS !== "web" ? 20 : 0,
+    },
+    homeTextContent: {
+      maxWidth: 480,
+    },
+    homeWelcomeTitle: {
+      fontSize: 42,
+      fontWeight: "700",
+      color: themeColors.text,
+      marginBottom: 8,
+      letterSpacing: -0.8,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    homeSubtitle: {
+      fontSize: 18,
+      color: themeColors.textSecondary,
+      marginBottom: 24,
+      fontWeight: "500",
+      letterSpacing: -0.2,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    homeDescription: {
+      fontSize: 16,
+      lineHeight: 26,
+      color: themeColors.textSecondary,
+      marginBottom: 16,
+      fontWeight: "400",
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    homeSeparator: {
+      height: 20,
+    },
+    homeClosingText: {
+      fontSize: 17,
+      lineHeight: 28,
+      color: themeColors.textSecondary,
+      marginBottom: 32,
+      fontWeight: "600",
+      letterSpacing: -0.1,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    homeProductImage: {
+      width: "100%",
+      height: "100%",
+    },
+    homeMockCube: {
+      width: "86%",
+      height: "86%",
+      borderRadius: 22,
+      backgroundColor: isDark ? "#374151" : "#F3F4F6",
+      borderWidth: 1,
+      borderColor: isDark ? "#4B5563" : "#E5E7EB",
+      overflow: "hidden",
+      alignItems: "center",
+      justifyContent: "center",
+      ...(Platform.OS === "web" && {
+        boxShadow: isDark 
+          ? "0 20px 60px rgba(0,0,0,0.30), 0 1px 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(255,255,255,0.1)"
+          : "0 20px 60px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.9) inset, 0 0 0 1px rgba(0,0,0,0.03)",
+      }),
+    },
+    homeMockFace: {
+      position: "absolute",
+      left: "8%",
+      width: "48%",
+      height: "54%",
+      borderRadius: 18,
+      backgroundColor: isDark ? "#1F2937" : "#0B0F19",
+      ...(Platform.OS === "web" && { 
+        boxShadow: isDark 
+          ? "0 10px 20px rgba(0,0,0,0.40)" 
+          : "0 10px 20px rgba(0,0,0,0.25)" 
+      }),
+    },
+    homeMockDial: {
+      position: "absolute",
+      right: "8%",
+      width: 78,
+      height: 78,
+      borderRadius: 999,
+      backgroundColor: isDark ? "#6B7280" : "#D1D5DB",
+      borderWidth: 1,
+      borderColor: isDark ? "#9CA3AF" : "#E5E7EB",
+      ...(Platform.OS === "web" && { 
+        boxShadow: isDark 
+          ? "0 10px 20px rgba(0,0,0,0.25)" 
+          : "0 10px 20px rgba(0,0,0,0.12)" 
+      }),
+    },
+    homeMockTime: {
+      position: "absolute",
+      left: "13%",
+      top: "35%",
+      fontSize: 52,
+      letterSpacing: 4,
+      color: "#FFFFFF",
+      fontVariant: ["tabular-nums"],
+      fontWeight: "500",
+    },
+    homeBottomLeft: {
+      position: "absolute",
+      left: 28,
+      bottom: 32,
+      maxWidth: 360,
+    },
+    homeCta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: isDark ? "#FFFFFF" : "#0A0A0A",
+      paddingHorizontal: 18,
+      paddingVertical: 12,
+      borderRadius: 999,
+      ...(Platform.OS === "web" && {
+        boxShadow: isDark 
+          ? "0 8px 20px rgba(255,255,255,0.12)" 
+          : "0 8px 20px rgba(0,0,0,0.12)",
+        cursor: "pointer",
+      }),
+    },
+    homeCtaText: { 
+      color: isDark ? "#0A0A0A" : "#FFFFFF", 
+      fontSize: 14, 
+      fontWeight: "600" 
+    },
+    homeCtaArrow: { 
+      color: isDark ? "#0A0A0A" : "#FFFFFF", 
+      fontSize: 16, 
+      top: -1 
+    },
+    homeScrollCue: {
+      position: "absolute",
+      right: 24,
+      bottom: 24,
+      width: 28,
+      height: 46,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: isDark ? "#6B7280" : "#D1D5DB",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      paddingTop: 6,
+    },
+    homeScrollDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 999,
+      backgroundColor: isDark ? "#9CA3AF" : "#9CA3AF",
+    },
   });
 };
 
@@ -492,6 +694,226 @@ export const getOptimizedShadow = (
     shadowRadius: config.shadowRadius,
     elevation: config.elevation,
   };
+};
+
+// Homepage-specific styles with dark mode support
+export const getHomepageStyles = (isDark: boolean, isMobile: boolean = false) => {
+  const themeColors = getColors(isDark);
+  
+  return StyleSheet.create({
+    page: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+
+    /* CANVAS */
+    canvas: {
+      minHeight: "100%",
+      paddingTop: 120,
+      paddingBottom: 120,
+      paddingHorizontal: 28,
+      alignItems: "stretch",
+      justifyContent: "center",
+    },
+
+    /* HERO */
+    heroRow: {
+      width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 60,
+      ...(Platform.OS !== "web" && {
+        flexDirection: "column",
+        gap: 40,
+      }),
+    },
+    imageSection: {
+      flex: 1.4,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    productWrap: {
+      width: "100%",
+      maxWidth: 650,
+      aspectRatio: 1.55,
+      alignItems: "center",
+      justifyContent: "center",
+      ...(Platform.OS === "web" && {
+        filter: isDark 
+          ? "drop-shadow(0px 26px 60px rgba(255,255,255,0.15))" 
+          : "drop-shadow(0px 26px 60px rgba(0,0,0,0.10))",
+      }),
+    },
+    textSection: {
+      flex: 1,
+      alignItems: "flex-start",
+      justifyContent: "center",
+      paddingLeft: Platform.OS === "web" ? 40 : 0,
+      paddingTop: Platform.OS !== "web" ? 20 : 0,
+    },
+    textContent: {
+      maxWidth: 480,
+    },
+    welcomeTitle: {
+      fontSize: 42,
+      fontWeight: "700",
+      color: themeColors.text,
+      marginBottom: 8,
+      letterSpacing: -0.8,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    subtitle: {
+      fontSize: 18,
+      color: themeColors.textSecondary,
+      marginBottom: 24,
+      fontWeight: "500",
+      letterSpacing: -0.2,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    description: {
+      fontSize: 16,
+      lineHeight: 26,
+      color: themeColors.textSecondary,
+      marginBottom: 16,
+      fontWeight: "400",
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    separator: {
+      height: 20,
+    },
+    closingText: {
+      fontSize: 17,
+      lineHeight: 28,
+      color: themeColors.textSecondary,
+      marginBottom: 32,
+      fontWeight: "600",
+      letterSpacing: -0.1,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    productImage: {
+      width: "100%",
+      height: "100%",
+    },
+
+    /* Fallback mock product (subtle 3D accents) */
+    mockCube: {
+      width: "86%",
+      height: "86%",
+      borderRadius: 22,
+      backgroundColor: isDark ? "#374151" : "#F3F4F6",
+      borderWidth: 1,
+      borderColor: isDark ? "#4B5563" : "#E5E7EB",
+      overflow: "hidden",
+      alignItems: "center",
+      justifyContent: "center",
+      ...(Platform.OS === "web" && {
+        boxShadow: isDark 
+          ? "0 20px 60px rgba(0,0,0,0.30), 0 1px 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(255,255,255,0.1)"
+          : "0 20px 60px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.9) inset, 0 0 0 1px rgba(0,0,0,0.03)",
+      }),
+    },
+    mockFace: {
+      position: "absolute",
+      left: "8%",
+      width: "48%",
+      height: "54%",
+      borderRadius: 18,
+      backgroundColor: isDark ? "#1F2937" : "#0B0F19",
+      ...(Platform.OS === "web" && { 
+        boxShadow: isDark 
+          ? "0 10px 20px rgba(0,0,0,0.40)" 
+          : "0 10px 20px rgba(0,0,0,0.25)" 
+      }),
+    },
+    mockDial: {
+      position: "absolute",
+      right: "8%",
+      width: 78,
+      height: 78,
+      borderRadius: 999,
+      backgroundColor: isDark ? "#6B7280" : "#D1D5DB",
+      borderWidth: 1,
+      borderColor: isDark ? "#9CA3AF" : "#E5E7EB",
+      ...(Platform.OS === "web" && { 
+        boxShadow: isDark 
+          ? "0 10px 20px rgba(0,0,0,0.25)" 
+          : "0 10px 20px rgba(0,0,0,0.12)" 
+      }),
+    },
+    mockTime: {
+      position: "absolute",
+      left: "13%",
+      top: "35%",
+      fontSize: 52,
+      letterSpacing: 4,
+      color: "#FFFFFF",
+      fontVariant: ["tabular-nums"],
+      fontWeight: "500",
+    },
+
+    /* BOTTOM LEFT */
+    bottomLeft: {
+      position: "absolute",
+      left: 28,
+      bottom: 32,
+      maxWidth: 360,
+    },
+    cta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: isDark ? "#FFFFFF" : "#0A0A0A",
+      paddingHorizontal: 18,
+      paddingVertical: 12,
+      borderRadius: 999,
+      ...(Platform.OS === "web" && {
+        boxShadow: isDark 
+          ? "0 8px 20px rgba(255,255,255,0.12)" 
+          : "0 8px 20px rgba(0,0,0,0.12)",
+        cursor: "pointer",
+      }),
+    },
+    ctaText: { 
+      color: isDark ? "#0A0A0A" : "#FFFFFF", 
+      fontSize: 14, 
+      fontWeight: "600" 
+    },
+    ctaArrow: { 
+      color: isDark ? "#0A0A0A" : "#FFFFFF", 
+      fontSize: 16, 
+      top: -1 
+    },
+
+    /* SCROLL CUE */
+    scrollCue: {
+      position: "absolute",
+      right: 24,
+      bottom: 24,
+      width: 28,
+      height: 46,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: isDark ? "#6B7280" : "#D1D5DB",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      paddingTop: 6,
+    },
+    scrollDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 999,
+      backgroundColor: isDark ? "#9CA3AF" : "#9CA3AF",
+    },
+  });
 };
 
 // Common styles (backward compatibility - dark theme)

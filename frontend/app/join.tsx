@@ -68,16 +68,6 @@ export default function JoinVolunteer() {
   // Captcha state (kept local as it's UI-specific)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
-  // Memoized animated styles to prevent recreation
-  const fadeInStyle = useAnimatedStyle(() => ({
-    opacity: fadeAnim.value,
-    transform: [{ translateY: slideAnim.value }],
-  }));
-
-  const rotateStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotateAnim.value}deg` }],
-  }));
-
   const successStyle = useAnimatedStyle(() => ({
     opacity: successAnim.value,
     transform: [{ translateY: withTiming(isSuccess ? 0 : -50, { duration: 500 }) }],
@@ -124,58 +114,87 @@ export default function JoinVolunteer() {
         style={{ flex: 1 }}
       >
         {!isSuccess && (
-          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={{ flex: 1 }} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ 
+              paddingTop: isMobile ? 80 : 100,
+              paddingBottom: 100,
+              paddingHorizontal: isMobile ? 20 : 40
+            }}
+          >
             {/* Main Content */}
-            <View style={commonStyles.content}>
+            <View style={{ maxWidth: 900, marginHorizontal: 'auto', width: '100%' }}>
               {/* Hero Section */}
-              <View style={commonStyles.heroContainer}>
+              <View style={{ 
+                alignItems: 'center', 
+                marginBottom: isMobile ? 48 : 60,
+                paddingHorizontal: isMobile ? 0 : 20
+              }}>
                 <Text style={[commonStyles.title, {
-                  fontSize: isMobile ? 32 : 48,
-                  marginBottom: 20,
-                  textAlign: 'center'
+                  fontSize: isMobile ? 36 : 56,
+                  marginBottom: 16,
+                  textAlign: 'center',
+                  fontWeight: '700',
+                  letterSpacing: -1,
+                  color: colors.text
                 }]}>
                   {HERO_TEXT.title}
                 </Text>
 
                 <Text style={[commonStyles.text, {
-                  fontSize: isMobile ? 16 : 18,
-                  marginBottom: 32,
-                  lineHeight: isMobile ? 24 : 28,
-                  maxWidth: isMobile ? width - 32 : 800,
-                  textAlign: isMobile ? 'left' : 'justify'
+                  fontSize: isMobile ? 16 : 19,
+                  marginBottom: 0,
+                  lineHeight: isMobile ? 26 : 30,
+                  maxWidth: isMobile ? width - 40 : 680,
+                  textAlign: 'center',
+                  color: colors.textSecondary,
+                  fontWeight: '400'
                 }]}>
                   {HERO_TEXT.description}
                 </Text>
               </View>
 
               {/* Form Container */}
-              <View style={commonStyles.cardContainer}>
+              <View style={[commonStyles.cardContainer, {
+                backgroundColor: isDark ? `${colors.surface}95` : '#ffffff',
+                borderRadius: isMobile ? 20 : 28,
+                padding: isMobile ? 28 : 48,
+                borderWidth: 1,
+                borderColor: isDark ? `${colors.text}15` : '#E5E7EB',
+                ...Platform.OS === 'web' && {
+                  boxShadow: isDark 
+                    ? '0 20px 60px rgba(0,0,0,0.30), 0 1px 0 rgba(255,255,255,0.05) inset'
+                    : '0 20px 60px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.9) inset'
+                }
+              }]}>
                 {/* NDA Success Notification */}
                 {showNDASuccess && (
                   <Animated.View
                     style={{
-                      backgroundColor: '#D1FAE5',
+                      backgroundColor: '#ECFDF5',
                       borderColor: '#10B981',
-                      borderWidth: 2,
-                      borderRadius: 12,
-                      padding: 16,
-                      marginBottom: 24,
+                      borderWidth: 1,
+                      borderRadius: 16,
+                      padding: 20,
+                      marginBottom: 32,
                       flexDirection: 'row',
                       alignItems: 'center',
-                      shadowColor: '#10B981',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 8,
-                      elevation: 4,
+                      ...Platform.OS === 'web' && {
+                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)'
+                      }
                     }}
                   >
                     <View style={{
                       backgroundColor: '#10B981',
-                      borderRadius: 20,
-                      padding: 8,
-                      marginRight: 12
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 16
                     }}>
-                      <Ionicons name="checkmark" size={20} color="#ffffff" />
+                      <Ionicons name="checkmark" size={24} color="#ffffff" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{
@@ -184,65 +203,91 @@ export default function JoinVolunteer() {
                         color: '#065F46',
                         marginBottom: 4
                       }}>
-                        ✅ NDA Successfully Signed!
+                        NDA Successfully Signed
                       </Text>
                       <Text style={{
                         fontSize: 14,
                         color: '#047857',
                         lineHeight: 20
                       }}>
-                        Thank you {ndaSignerName}! Your confidentiality agreement is now on file. You can complete your volunteer application below.
+                        Thank you {ndaSignerName}! Your confidentiality agreement is on file.
                       </Text>
                     </View>
                     <TouchableOpacity
                       onPress={() => setShowNDASuccess(false)}
-                      style={{ padding: 8 }}
+                      style={{ 
+                        padding: 8,
+                        marginLeft: 8,
+                        ...Platform.OS === 'web' && { cursor: 'pointer' }
+                      }}
                     >
-                      <Ionicons name="close" size={20} color="#065F46" />
+                      <Ionicons name="close" size={22} color="#065F46" />
                     </TouchableOpacity>
                   </Animated.View>
                 )}
 
-                <View style={{ alignItems: 'center', marginBottom: 32 }}>
-                  <LinearGradient
-                    colors={gradients.accent}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
+                <View style={{ alignItems: 'center', marginBottom: 40 }}>
+                  <View
                     style={{
+                      width: 72,
+                      height: 72,
                       borderRadius: 20,
-                      padding: 16,
-                      marginBottom: 16,
+                      backgroundColor: isDark ? '#001A4F' : '#F0F4FF',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 20,
+                      borderWidth: 1,
+                      borderColor: isDark ? '#123995' : '#E0E7FF',
+                      ...Platform.OS === 'web' && {
+                        boxShadow: isDark
+                          ? '0 10px 30px rgba(1, 33, 104, 0.3), 0 1px 0 rgba(255,255,255,0.1) inset'
+                          : '0 10px 30px rgba(0, 26, 79, 0.15), 0 1px 0 rgba(255,255,255,0.9) inset'
+                      }
                     }}
                   >
-                    <FontAwesome5 name="user-plus" size={32} color={colors.text} />
-                  </LinearGradient>
+                    <FontAwesome5 name="user-plus" size={32} color={isDark ? '#60A5FA' : '#001A4F'} />
+                  </View>
                   <Text
                     style={[commonStyles.title, {
-                      fontSize: 28,
+                      fontSize: isMobile ? 24 : 32,
                       marginBottom: 8,
-                      textAlign: 'center'
+                      textAlign: 'center',
+                      fontWeight: '700',
+                      letterSpacing: -0.5
                     }]}
                   >
-                    Volunteer with Progress UK
+                    Volunteer Application
                   </Text>
                   <Text
                     style={[commonStyles.text, {
-                      fontSize: 16,
+                      fontSize: isMobile ? 15 : 17,
                       color: colors.textSecondary,
-                      lineHeight: 24,
-                      marginBottom: 8,
-                      textAlign: 'center'
+                      lineHeight: 26,
+                      marginBottom: 0,
+                      textAlign: 'center',
+                      fontWeight: '400'
                     }]}
                   >
-                    Help with campaigns, events, and local organizing
+                    Join our team and help build a better Britain
                   </Text>
 
                   {/* Draft saved indicator */}
                   {hasSavedData && (
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 }}>
+                    <View style={{ 
+                      flexDirection: 'row', 
+                      justifyContent: 'center', 
+                      alignItems: 'center', 
+                      marginTop: 16,
+                      backgroundColor: isDark ? `${colors.success}15` : '#ECFDF5',
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: isDark ? `${colors.success}30` : '#D1FAE5'
+                    }}>
                       <Ionicons name="cloud-done" size={16} color={colors.success} style={{ marginRight: 6 }} />
-                      <Text style={{ fontSize: 12, color: colors.success, fontWeight: '500' }}>
-                        Draft automatically saved
+                      <Text style={{ fontSize: 13, color: colors.success, fontWeight: '500' }}>
+                        Draft saved automatically
                       </Text>
                     </View>
                   )}
@@ -256,14 +301,29 @@ export default function JoinVolunteer() {
 
                 {/* Application Details */}
                 <View style={[commonStyles.specialSection, {
-                    backgroundColor: `${colors.secondary}20`,
+                    backgroundColor: isDark ? `${colors.secondary}10` : '#F8FAFC',
                     borderLeftColor: colors.secondary,
-                    borderColor: `${colors.secondary}30`,
+                    borderLeftWidth: 3,
+                    borderColor: isDark ? `${colors.secondary}20` : '#E2E8F0',
+                    borderRadius: 16,
+                    padding: isMobile ? 20 : 28,
+                    marginBottom: 32
                   }]}>
-                    <Text style={[commonStyles.title, { fontSize: 18, marginBottom: 16 }]}>
+                    <Text style={[commonStyles.title, { 
+                      fontSize: isMobile ? 18 : 20, 
+                      marginBottom: 12,
+                      fontWeight: '600',
+                      letterSpacing: -0.3
+                    }]}>
                       Application Details
                     </Text>
-                    <Text style={[commonStyles.text, { fontSize: 14, color: colors.textSecondary, marginBottom: 20, textAlign: 'left' }]}>
+                    <Text style={[commonStyles.text, { 
+                      fontSize: 14, 
+                      color: colors.textSecondary, 
+                      marginBottom: 24, 
+                      textAlign: 'left',
+                      lineHeight: 22
+                    }]}>
                       Please complete the following fields for your application. Not sure if you should volunteer? {' '}
                       <TouchableOpacity
                         onPress={() => {
@@ -274,9 +334,14 @@ export default function JoinVolunteer() {
                             Linking.openURL(pdfUrl);
                           }
                         }}
-                        style={{ marginTop: 4 }}
+                        style={{ marginTop: 2 }}
                       >
-                        <Text style={[commonStyles.text, { fontSize: 14, color: colors.accent, textDecorationLine: 'underline' }]}>
+                        <Text style={[commonStyles.text, { 
+                          fontSize: 14, 
+                          color: colors.primary, 
+                          textDecorationLine: 'underline',
+                          fontWeight: '500'
+                        }]}>
                           Read this guide
                         </Text>
                       </TouchableOpacity>
@@ -548,71 +613,76 @@ export default function JoinVolunteer() {
                 {showApiError && apiError && (
                   <Animated.View
                     style={{
-                      backgroundColor: '#FEE2E2',
+                      backgroundColor: isDark ? '#7F1D1D' : '#FEF2F2',
                       borderColor: '#DC2626',
-                      borderWidth: 2,
-                      borderRadius: 12,
-                      padding: 16,
-                      marginBottom: 24,
+                      borderWidth: 1,
+                      borderRadius: 16,
+                      padding: 20,
+                      marginBottom: 32,
                       flexDirection: 'row',
                       alignItems: 'flex-start',
-                      shadowColor: '#DC2626',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 8,
-                      elevation: 4,
+                      ...Platform.OS === 'web' && {
+                        boxShadow: '0 4px 12px rgba(220, 38, 38, 0.15)'
+                      }
                     }}
                   >
                     <View style={{
                       backgroundColor: '#DC2626',
-                      borderRadius: 20,
-                      padding: 8,
-                      marginRight: 12,
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 16,
                       marginTop: 2
                     }}>
-                      <Ionicons name="alert-circle" size={20} color="#ffffff" />
+                      <Ionicons name="alert-circle" size={24} color="#ffffff" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{
                         fontSize: 16,
                         fontWeight: '600',
-                        color: '#991B1B',
+                        color: isDark ? '#FCA5A5' : '#991B1B',
                         marginBottom: 4
                       }}>
                         Application Error
                       </Text>
                       <Text style={{
                         fontSize: 14,
-                        color: '#B91C1C',
+                        color: isDark ? '#FCA5A5' : '#B91C1C',
                         lineHeight: 20
                       }}>
                         {apiError}
                       </Text>
                       {apiError.includes('email is already pending') && (
                         <View style={{
-                          backgroundColor: '#FEF3C7',
-                          borderRadius: 8,
-                          padding: 12,
-                          marginTop: 8,
-                          borderLeftWidth: 4,
+                          backgroundColor: isDark ? '#78350F' : '#FEF3C7',
+                          borderRadius: 12,
+                          padding: 16,
+                          marginTop: 12,
+                          borderLeftWidth: 3,
                           borderLeftColor: '#F59E0B'
                         }}>
-                          <Text style={{ fontSize: 13, color: '#92400E', fontWeight: '500', marginBottom: 4 }}>
+                          <Text style={{ fontSize: 13, color: isDark ? '#FCD34D' : '#92400E', fontWeight: '600', marginBottom: 6 }}>
                             💡 What can you do?
                           </Text>
-                          <Text style={{ fontSize: 13, color: '#92400E', lineHeight: 18 }}>
-                            • Check your email for any previous application confirmations{'\n'}
-                            • Contact our support team if you need to update your application{'\n'}
-                            • Use a different email address if this was submitted in error
+                          <Text style={{ fontSize: 13, color: isDark ? '#FCD34D' : '#92400E', lineHeight: 20 }}>
+                            • Check your email for previous confirmations{'\n'}
+                            • Contact support to update your application{'\n'}
+                            • Use a different email if submitted in error
                           </Text>
                         </View>
                       )}
                     </View>
                     <TouchableOpacity
                       onPress={dismissApiError}
-                      style={{ padding: 8, marginTop: -4 }}
+                      style={{ 
+                        padding: 8, 
+                        marginTop: -4,
+                        ...Platform.OS === 'web' && { cursor: 'pointer' }
+                      }}
                     >
-                      <Ionicons name="close" size={20} color="#991B1B" />
+                      <Ionicons name="close" size={22} color={isDark ? '#FCA5A5' : '#991B1B'} />
                     </TouchableOpacity>
                   </Animated.View>
                 )}
@@ -622,8 +692,23 @@ export default function JoinVolunteer() {
                   onPress={handleSubmit}
                   disabled={isLoading || !isFormValid()}
                   style={[
-                    styles.submitButton,
-                    !isFormValid() && styles.submitButtonDisabled
+                    {
+                      backgroundColor: isFormValid() ? colors.primary : isDark ? '#374151' : '#E5E7EB',
+                      borderRadius: isMobile ? 14 : 16,
+                      paddingVertical: isMobile ? 16 : 18,
+                      paddingHorizontal: isMobile ? 24 : 32,
+                      alignItems: 'center',
+                      marginTop: 32,
+                      borderWidth: 1,
+                      borderColor: isFormValid() ? colors.primary : 'transparent'
+                    },
+                    Platform.OS === 'web' && {
+                      cursor: isFormValid() ? 'pointer' : 'not-allowed',
+                      boxShadow: isFormValid()
+                        ? '0 10px 30px rgba(177, 0, 36, 0.3), 0 1px 0 rgba(255,255,255,0.1) inset'
+                        : 'none',
+                      transition: 'all 0.2s ease'
+                    } as any
                   ]}
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -631,18 +716,20 @@ export default function JoinVolunteer() {
                         <Ionicons
                           name="warning-outline"
                           size={20}
-                          color={colors.textSecondary}
+                          color={isDark ? '#9CA3AF' : '#6B7280'}
                           style={{ marginRight: 8 }}
                         />
                       )}
                       <Text
-                        style={[
-                          styles.submitButtonText,
-                          !isFormValid() && styles.submitButtonTextDisabled
-                        ]}
+                        style={{
+                          color: isFormValid() ? '#ffffff' : (isDark ? '#9CA3AF' : '#6B7280'),
+                          fontSize: isMobile ? 16 : 18,
+                          fontWeight: '600',
+                          letterSpacing: -0.2
+                        }}
                       >
-                        {isLoading ? 'Submitting Volunteer Application...' :
-                          !isFormValid() ? 'Complete Required Fields' : 'Submit Volunteer Application'}
+                        {isLoading ? 'Submitting Application...' :
+                          !isFormValid() ? 'Complete Required Fields' : 'Submit Application'}
                       </Text>
                     </View>
                 </TouchableOpacity>
@@ -651,10 +738,33 @@ export default function JoinVolunteer() {
 
                 {/* Helper text when form is invalid */}
                 {!isFormValid() && !isLoading && (
-                  <View style={styles.helperContainer}>
-                    <Ionicons name="information-circle" size={20} color={colors.warning} style={{ marginRight: 8, marginTop: 1 }} />
+                  <View style={{
+                    backgroundColor: isDark ? '#78350F' : '#FEF3C7',
+                    borderColor: '#F59E0B',
+                    borderWidth: 1,
+                    borderRadius: 16,
+                    padding: 20,
+                    marginTop: 24,
+                    marginBottom: 16,
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    ...Platform.OS === 'web' && {
+                      boxShadow: '0 4px 12px rgba(245, 158, 11, 0.12)'
+                    }
+                  }}>
+                    <Ionicons 
+                      name="information-circle" 
+                      size={24} 
+                      color={isDark ? '#FCD34D' : '#F59E0B'} 
+                      style={{ marginRight: 12, marginTop: 1 }} 
+                    />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.helperTitle}>
+                      <Text style={{
+                        fontSize: 15,
+                        fontWeight: '600',
+                        color: isDark ? '#FCD34D' : '#92400E',
+                        marginBottom: 8
+                      }}>
                         Please complete the following:
                       </Text>
                       {(() => {
@@ -686,7 +796,15 @@ export default function JoinVolunteer() {
                         if (!gdprConsent) missing.push('GDPR consent');
 
                         return missing.map((item, index) => (
-                          <Text key={index} style={styles.helperItem}>
+                          <Text 
+                            key={index} 
+                            style={{
+                              fontSize: 14,
+                              color: isDark ? '#FCD34D' : '#92400E',
+                              marginBottom: 4,
+                              lineHeight: 20
+                            }}
+                          >
                             • {item}
                           </Text>
                         ));
@@ -695,13 +813,21 @@ export default function JoinVolunteer() {
                   </View>
                 )}
 
-                <Text style={[commonStyles.text, { fontSize: 13, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 }]}>
-                  By volunteering with Progress UK, you agree to our terms of service and privacy policy. Volunteering is completely free and you can unsubscribe at any time. We'll never share your data with third parties.
+                <Text style={[commonStyles.text, { 
+                  fontSize: 13, 
+                  color: colors.textSecondary, 
+                  textAlign: 'center', 
+                  lineHeight: 20,
+                  marginTop: 24,
+                  opacity: 0.8
+                }]}>
+                  By volunteering with Progress UK, you agree to our terms of service and privacy policy. 
+                  Volunteering is completely free and you can unsubscribe at any time.
                 </Text>
               </View>
             </View>
             {/* Add extra space at the bottom for mobile scroll */}
-            <View style={{ height: 200 }} />
+            <View style={{ height: isMobile ? 100 : 150 }} />
 
             {/* Footer */}
             <Footer />

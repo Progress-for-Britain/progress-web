@@ -2,19 +2,21 @@ import { Stack } from "expo-router";
 import Head from "expo-router/head";
 import { View, Platform } from "react-native";
 import { usePathname } from "expo-router";
-import { AuthProvider } from "../util/auth-context";
+import { AuthProvider, useAuth } from "../util/auth-context";
 import { ThemeProvider, useTheme } from "../util/theme-context";
-import { AuroraBackground } from "../util/auroraComponents";
 import { getCommonStyles } from "../util/commonStyles";
 import { useResponsive } from "../util/useResponsive";
 import Header from "../components/Header";
+import Nav from "../components/nav";
 import { useFonts } from "expo-font";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useEffect } from "react";
+import { AuroraBackground } from "../util/auroraComponents";
 
 function RootLayoutNav() {
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
+  const { isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
   const commonStyles = getCommonStyles(isDark, isMobile, width);
   
@@ -45,13 +47,9 @@ Curious? Join us at ${websiteUrl}
     }
   }, []); // Empty dependency array ensures this runs only once
   
-  // Determine if this is a mobile platform (iOS or Android)
-  const isMobilePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
-  
-  // Define unauthenticated routes that should show aurora background
-  const unauthenticatedRoutes = ['/', '/about', '/our-approach', '/join', '/login', '/register', '/nda', '/settings', '/eula', '/privacy-policy', '/terms-of-service'];
+  const unauthenticatedRoutes = ['/about']
   const isEditorRoute = /^\/policy\/[^/]+\/edit(\?.*)?$/.test(pathname || '');
-  const shouldShowAurora = (unauthenticatedRoutes.includes(pathname) || pathname.startsWith('/policy')) && !isMobilePlatform && !isEditorRoute;
+  const shouldShowAurora = (unauthenticatedRoutes.includes(pathname) || pathname.startsWith('/policy')) && !isMobile && !isEditorRoute;
   
   return (
     <View style={[{ flex: 1 }, commonStyles.appContainer]}>
@@ -63,11 +61,11 @@ Curious? Join us at ${websiteUrl}
         </Head>
       )}
       {/* Background aurora effect - only for unauthenticated routes and non-mobile platforms */}
-      {shouldShowAurora && <AuroraBackground />}
+      {shouldShowAurora && <AuroraBackground />} 
       
-      {/* Removed offscreen icon preloading to avoid extra work */}
-      
-      {!isEditorRoute && <Header />}
+      {!isEditorRoute && (
+        isAuthenticated ? <Header /> : <Nav />
+      )}
       <View style={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false }} />
       </View>
