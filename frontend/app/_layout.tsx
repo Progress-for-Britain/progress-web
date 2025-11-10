@@ -47,7 +47,7 @@ Curious? Join us at ${websiteUrl}
     }
   }, []); // Empty dependency array ensures this runs only once
   
-  const unauthenticatedRoutes = ['/about']
+  const unauthenticatedRoutes = ['']
   const isEditorRoute = /^\/policy\/[^/]+\/edit(\?.*)?$/.test(pathname || '');
   const shouldShowAurora = (unauthenticatedRoutes.includes(pathname) && !isMobile && !isEditorRoute);
   
