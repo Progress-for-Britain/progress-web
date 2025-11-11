@@ -16,7 +16,7 @@ export function SpaceSpinner({ isDark, size = 120 }: { isDark: boolean; size?: n
     Animated.loop(
       Animated.timing(rotation, {
         toValue: 1,
-        duration: 3000,
+        duration: 4500,
         useNativeDriver: true,
       })
     ).start();
@@ -25,7 +25,7 @@ export function SpaceSpinner({ isDark, size = 120 }: { isDark: boolean; size?: n
     Animated.loop(
       Animated.timing(orbit1, {
         toValue: 1,
-        duration: 2000,
+        duration: 3000,
         useNativeDriver: true,
       })
     ).start();
@@ -34,7 +34,7 @@ export function SpaceSpinner({ isDark, size = 120 }: { isDark: boolean; size?: n
     Animated.loop(
       Animated.timing(orbit2, {
         toValue: 1,
-        duration: 3500,
+        duration: 5250,
         useNativeDriver: true,
       })
     ).start();
@@ -44,12 +44,12 @@ export function SpaceSpinner({ isDark, size = 120 }: { isDark: boolean; size?: n
       Animated.sequence([
         Animated.timing(pulse, {
           toValue: 1.2,
-          duration: 1000,
+          duration: 1500,
           useNativeDriver: true,
         }),
         Animated.timing(pulse, {
           toValue: 1,
-          duration: 1000,
+          duration: 1500,
           useNativeDriver: true,
         }),
       ])
