@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useEffect, useState, useCallback } from "react";
 import { View, Text, Platform, StyleSheet, TouchableOpacity, Animated, Dimensions } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, usePathname } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../util/theme-context";
-import { getColors } from "../util/commonStyles";
+import { getColors, getOptimizedShadow } from "../util/commonStyles";
 
 // Type definition for navigation items
 type NavigationItem = {
@@ -20,6 +20,7 @@ export default function Nav() {
   const [screenWidth, setScreenWidth] = useState(
     Platform.OS === 'web' ? window?.innerWidth || 1400 : Dimensions.get('window').width
   );
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
   
   // Animation refs for each navigation item
   const animationRefs = useRef<{ [key: string]: Animated.Value }>({});
@@ -133,17 +134,23 @@ export default function Nav() {
 
   const styles = useMemo(() => StyleSheet.create({
     /* HEADER */
+    headerContainer: {
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+      ...getOptimizedShadow('medium', isDark, isDark ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)'),
+      width: '100%',
+    },
+    headerInner: {
+      width: '100%',
+      paddingHorizontal: 28,
+    },
     header: {
-      position: "absolute",
-      top: 18,
-      left: 28,
-      right: 28,
-      height: 48,
-      zIndex: 10,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      pointerEvents: "box-none",
+      height: 64,
+      paddingVertical: 8,
+      width: '100%',
     },
     brandContainer: {
       ...(Platform.OS === "web" && {
@@ -151,12 +158,13 @@ export default function Nav() {
       }),
     },
     brand: {
-      fontSize: 40,
-      fontWeight: "600",
-      letterSpacing: -0.5,
+      fontSize: 22,
+      fontWeight: "700",
+      letterSpacing: 1,
       color: colors.text,
+      lineHeight: 26,
       ...(Platform.OS === "web" && {
-        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+        fontFamily: "'Montserrat', sans-serif",
       }),
     },
   headerRight: { 
@@ -361,77 +369,71 @@ export default function Nav() {
       bottom: 0,
       zIndex: 999,
     },
-    
-    // Theme toggle styles
-    dropdownSeparator: {
-      height: 1,
-      marginHorizontal: 20,
-      marginVertical: 8,
-    },
-    themeToggleItem: {
-      borderBottomWidth: 0,
-    },
-    themeToggleContent: {
-      flexDirection: "row",
-      alignItems: "center",
-      flex: 1,
-    },
-    themeToggleIcon: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 12,
-    },
   }), [isDark, colors]);
 
   return (
     <>
       {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.push("/")}
-          style={styles.brandContainer}
-          activeOpacity={0.7}
+      <Animated.View
+        style={!isLargeScreen ? {
+          transform: [{ translateY: headerTranslateY }]
+        } : undefined}
+      >
+        <SafeAreaView 
+          style={{
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.2)',
+          }}
+          edges={['top']}
         >
-          <Text style={[styles.brand, { color: colors.text }]}>Progress</Text>
-        </TouchableOpacity>
+          <View style={styles.headerContainer}>
+            <View style={styles.headerInner}>
+              <View style={styles.header}>
+                <TouchableOpacity 
+                  onPress={() => router.push("/")}
+                  style={styles.brandContainer}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.brand, { color: colors.text }]}>Progress</Text>
+                </TouchableOpacity>
 
-        <View style={styles.headerRight}>
-          {/* Dark Mode Toggle */}
-          <TouchableOpacity
-            onPress={toggleTheme}
-            style={[styles.darkModeToggle, { 
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'
-            }]}
-            activeOpacity={0.8}
-          >
-            <Animated.View style={[
-              styles.darkModeSlider,
-              {
-                backgroundColor: isDark ? '#FFC107' : '#6B7280',
-                transform: [{ translateX: isDark ? 16 : 2 }]
-              }
-            ]}>
-              <Text style={styles.darkModeIcon}>
-                {isDark ? '🌙' : '☀️'}
-              </Text>
-            </Animated.View>
-          </TouchableOpacity>
+                <View style={styles.headerRight}>
+                  {/* Dark Mode Toggle */}
+                  <TouchableOpacity
+                    onPress={toggleTheme}
+                    style={[styles.darkModeToggle, { 
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'
+                    }]}
+                    activeOpacity={0.8}
+                  >
+                    <Animated.View style={[
+                      styles.darkModeSlider,
+                      {
+                        backgroundColor: isDark ? '#FFC107' : '#6B7280',
+                        transform: [{ translateX: isDark ? 16 : 2 }]
+                      }
+                    ]}>
+                      <Text style={styles.darkModeIcon}>
+                        {isDark ? '🌙' : '☀️'}
+                      </Text>
+                    </Animated.View>
+                  </TouchableOpacity>
 
-          <TouchableOpacity 
-            onPress={isLargeScreen ? () => console.log('Menu pressed') : handleMenuToggle} 
-            style={[styles.menuPill, {
-              backgroundColor: isDark ? colors.surface : "#0F172A",
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
-            }]}
-          >
-            <Text style={[styles.menuPillText, { color: isDark ? colors.text : "#FFFFFF" }]}>Menu</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+                  <TouchableOpacity 
+                    onPress={isLargeScreen ? () => console.log('Menu pressed') : handleMenuToggle} 
+                    style={[styles.menuPill, {
+                      backgroundColor: isDark ? colors.surface : "#0F172A",
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'transparent'
+                    }]}
+                  >
+                    <Text style={[styles.menuPillText, { color: isDark ? colors.text : "#FFFFFF" }]}>Menu</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Animated.View>
 
       {/* LARGE SCREEN - RIGHT RAIL NAVIGATION */}
       {isLargeScreen && (
@@ -540,32 +542,6 @@ export default function Nav() {
               </TouchableOpacity>
             );
           })}
-          
-          {/* Theme Toggle for Small Screens */}
-          <View style={[styles.dropdownSeparator, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }]} />
-          <TouchableOpacity
-            onPress={toggleTheme}
-            style={[styles.dropdownItem, styles.themeToggleItem]}
-            activeOpacity={0.7}
-          >
-            <View style={styles.themeToggleContent}>
-              <View style={[styles.themeToggleIcon, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
-                <Ionicons
-                  name={isDark ? "moon" : "sunny"}
-                  size={16}
-                  color={isDark ? "#FFD700" : "#F59E0B"}
-                />
-              </View>
-              <Text style={[styles.dropdownItemText, { color: colors.text }]}>
-                {isDark ? 'Dark Mode' : 'Light Mode'}
-              </Text>
-            </View>
-            <Ionicons
-              name="chevron-forward"
-              size={16}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
         </Animated.View>
       )}
 

@@ -12,9 +12,6 @@
   "lang": "en-GB",
   "categories": ["politics", "government", "news"],
   "icons": [
-    { "src": "/assets/favicon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/assets/favicon.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/assets/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/assets/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/favicon512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

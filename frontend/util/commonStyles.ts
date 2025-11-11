@@ -156,7 +156,7 @@ export const injectWebAuroraStyles = (isDark: boolean = true) => {
 export const lightColors = {
   primary: '#B10024',
   secondary: '#001A4F',
-  accent: '#660033',
+  accent: '#000000',
   success: '#10b981',
   error: '#DC2626',
   warning: '#F59E0B',
@@ -235,7 +235,7 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
       fontWeight: '700',
       marginBottom: 20,
       color: themeColors.text,
-      textAlign: 'left',
+      textAlign: 'center',
       ...(Platform.OS === 'web' && {
         fontFamily: "'Montserrat', sans-serif",
       }),
@@ -442,7 +442,7 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
     // Homepage specific styles
     homePage: {
       flex: 1,
-      backgroundColor: themeColors.background,
+      // backgroundColor removed - now handled by CelestialBackground
     },
     homeCanvas: {
       minHeight: "100%",

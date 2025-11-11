@@ -199,10 +199,6 @@ export default function Join() {
     transform: [{ translateY: slideAnim.value }],
   }));
 
-  const rotateStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotateAnim.value}deg` }],
-  }));
-
   const successStyle = useAnimatedStyle(() => ({
     opacity: successAnim.value,
     transform: [{ translateY: withTiming(isSuccess ? 0 : -50, { duration: 500 }) }],
