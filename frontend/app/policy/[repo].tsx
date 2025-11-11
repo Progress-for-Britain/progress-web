@@ -8,6 +8,7 @@ import { useResponsive } from '../../util/useResponsive';
 import { getCommonStyles, getColors } from '../../util/commonStyles';
 import { useAuth } from '../../util/auth-context';
 import { api } from '../../util/api';
+import { SpaceSpinner } from '../../components/spaceSpinner';
 
 // Define interfaces for our data types
 interface Repository {
@@ -195,8 +196,13 @@ export default function PolicyContent() {
 
   return (
     <>
-      <View style={commonStyles.appContainer}>
-        <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>
+      {loading ? (
+        <View style={[commonStyles.appContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+          <SpaceSpinner isDark={isDark} />
+        </View>
+      ) : (
+        <View style={commonStyles.appContainer}>
+          <ScrollView contentContainerStyle={commonStyles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.heroSection}>
             <View style={styles.titleContainer}>
               <Text style={commonStyles.title}>{title}</Text>
@@ -440,6 +446,7 @@ export default function PolicyContent() {
           <View style={{ height: 100 }} />
         </ScrollView>
       </View>
+      )}
     </>
   );
 }

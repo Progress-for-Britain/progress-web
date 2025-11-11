@@ -9,6 +9,7 @@ import { getCommonStyles } from '../util/commonStyles';
 import { useResponsive } from '../util/useResponsive';
 import api from '../util/api';
 import { UserActivity, UserStats } from '../util/types';
+import { SpaceSpinner } from '../components/spaceSpinner';
 
 export default function Account() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -110,12 +111,12 @@ export default function Account() {
       {/* Show loading screen while auth is being determined */}
       {isLoading ? (
         <View style={[styles.homePage, { justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={styles.homeWelcomeTitle}>Loading...</Text>
+          <SpaceSpinner isDark={isDark} />
         </View> 
       ) : /* Show loading screen if not authenticated (while redirect is happening) */
       (!isAuthenticated || !user) ? (
         <View style={[styles.homePage, { justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={styles.homeWelcomeTitle}>Loading...</Text>
+          <SpaceSpinner isDark={isDark} />
         </View>
       ) : (
 

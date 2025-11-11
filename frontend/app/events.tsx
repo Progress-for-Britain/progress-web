@@ -15,10 +15,13 @@ import api from '../util/api';
 import { CreateEventModal } from '../components/createEventModal';
 import { EditEventModal } from '../components/editEventModal';
 import { Event } from '../util/types';
+import { useTheme } from '../util/theme-context';
+import { SpaceSpinner } from '../components/spaceSpinner';
 
 export default function Events() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const { isDark } = useTheme();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -595,7 +598,7 @@ export default function Events() {
           alignItems: 'center', 
           backgroundColor: '#f8fafc' 
         }}>
-          <Text style={{ fontSize: 18, color: '#6B7280' }}>Loading...</Text>
+          <SpaceSpinner isDark={isDark} />
         </View>
       ) : /* Show loading screen if not authenticated (while redirect is happening) */
       (!isAuthenticated) ? (
@@ -605,7 +608,7 @@ export default function Events() {
           alignItems: 'center', 
           backgroundColor: '#f8fafc' 
         }}>
-          <Text style={{ fontSize: 18, color: '#6B7280' }}>Loading...</Text>
+          <SpaceSpinner isDark={isDark} />
         </View>
       ) : (
         <>

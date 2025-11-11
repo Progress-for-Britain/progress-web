@@ -8,6 +8,7 @@ import { useTheme } from '../util/theme-context';
 import { useResponsive } from '../util/useResponsive';
 import { useAuth } from '../util/auth-context';
 import { api } from '../util/api';
+import { SpaceSpinner } from '../components/spaceSpinner';
 
 // Define interfaces for our data types
 interface Repository {
@@ -150,8 +151,7 @@ export default function Policy() {
             <Text style={[commonStyles.text, styles.sectionTitle]}>Select a Policy</Text>
             {loading ? (
               <View style={styles.loadingBox}>
-                <ActivityIndicator color={colors.accent} />
-                <Text style={[commonStyles.text, styles.loadingText]}>Loading policies…</Text>
+                <SpaceSpinner isDark={isDark} size={80} />
               </View>
             ) : (
               <FlatList
