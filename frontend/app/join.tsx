@@ -1614,11 +1614,11 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
   },
   interestTag: {
     backgroundColor: colors.background === '#ffffff' ? `${colors.text}08` : `${colors.surface}40`,
-    borderWidth: 2,
-    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}30`,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: colors.background === '#ffffff' ? '#E5E7EB' : `${colors.text}25`,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
@@ -1629,9 +1629,9 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     borderColor: colors.accent,
   },
   interestTagText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: colors.background === '#ffffff' ? colors.text : colors.text,
+    color: colors.text,
     ...(Platform.OS === 'web' && {
       fontFamily: "'Montserrat', sans-serif",
     }),
@@ -1643,11 +1643,11 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background === '#ffffff' ? `${colors.surface}60` : `${colors.surface}40`,
+    backgroundColor: colors.background === '#ffffff' ? '#F9FAFB' : `${colors.surface}40`,
     borderRadius: 12,
     padding: 16,
-    borderWidth: 2,
-    borderColor: colors.background === '#ffffff' ? `${colors.text}25` : `${colors.text}20`,
+    borderWidth: 1,
+    borderColor: colors.background === '#ffffff' ? '#E5E7EB' : `${colors.text}20`,
     ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'all 0.2s ease',
@@ -1656,6 +1656,7 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
   optionCardSelected: {
     backgroundColor: `${colors.accent}20`,
     borderColor: colors.accent,
+    borderWidth: 2,
   },
   checkbox: {
     width: 24,
