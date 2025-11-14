@@ -4,9 +4,10 @@ import Head from "expo-router/head";
 import { useRouter } from "expo-router";
 import { useAuth } from "../util/auth-context";
 import { useTheme } from "../util/theme-context";
-import { getCommonStyles } from "../util/commonStyles";
+import { getCommonStyles, getColors } from "../util/commonStyles";
 import { useResponsive } from "../util/useResponsive";
-import CelestialBackground from "../components/CelestialBackground";
+import { GameCard } from "../components/gamecard";
+import CelestialDecoration from "../components/CelestialDecoration";
 
 export default function Home() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function Home() {
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
   const styles = getCommonStyles(isDark, isMobile, width);
+  const colors = getColors(isDark);
 
   const heroImageUri = isDark 
   ? require('../assets/background-dark.png') 
@@ -24,14 +26,13 @@ export default function Home() {
   }, [isAuthenticated, isLoading]);
 
   return (
-    <CelestialBackground>
-      <>
-        <Head>
-          <title>Progress UK</title>
-        </Head>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <Head>
+        <title>Progress UK</title>
+      </Head>
 
-        {/* PAGE */}
-        <View style={styles.homePage}>
+      {/* PAGE */}
+      <View style={styles.homePage}>
 
           {/* CONTENT CANVAS */}
           <ScrollView
@@ -40,10 +41,17 @@ export default function Home() {
             style={{ flex: 1 }}
           >
             {/* MAIN HERO */}
+            
             <View style={styles.homeHeroRow}>
               {/* Left side - Image */}
               <View style={styles.homeImageSection}>
                 <View style={styles.homeProductWrap}>
+                  {/* Celestial Decoration - fills the entire image container */}
+                  <CelestialDecoration 
+                    containerWidth={width * (isMobile ? 1 : 0.5)} 
+                    containerHeight={isMobile ? 400 : 500} 
+                  />
+                  
                   {heroImageUri ? (
                     <Image
                       source={heroImageUri}
@@ -88,9 +96,9 @@ export default function Home() {
                 </View>
               </View>
             </View>
-
-            {/* BOTTOM-LEFT COPY & CTA */}
-            <View style={styles.homeBottomLeft}>
+            
+            {/* CTA SECTION */}
+            <View style={{ alignItems: 'flex-start', marginTop: isMobile ? 60 : 100 }}>
               <Pressable
                 onPress={() => router.push("/join")}
                 style={({ pressed }) => [
@@ -102,14 +110,42 @@ export default function Home() {
                 <Text style={styles.homeCtaArrow}>→</Text>
               </Pressable>
             </View>
+            
+            {/* Spacer for visual separation */}
+            <View style={{ height: isMobile ? 60 : 100 }} />
 
-            {/* SCROLL CUE (bottom-right) */}
-            <View style={styles.homeScrollCue}>
-              <View style={styles.homeScrollDot} />
+            {/* GAMES SECTION */}
+            <View style={styles.gamesSection}>
+              <Text style={styles.gamesSectionTitle}>Explore Our Games</Text>
+              <Text style={styles.gamesSectionSubtitle}>
+                Interactive experiences that teach the principles of governance and democracy
+              </Text>
+              
+              <View style={styles.gamesGrid}>
+                {/* Game Card 1 */}
+                <GameCard 
+                  index={0}
+                  title="Nick Sim"
+                  description="Expereience the challenges of living as an average 30 year old in modern Britain"
+                  image={require('../assets/nick-sim.png')}
+                  url="https://nicksimulator.com/"
+                  styles={styles}
+                />
+
+                {/* Game Card 2 */}
+                <GameCard 
+                  index={1}
+                  title="Quiz Night"
+                  description="Would you believe it? A pub-quiz challenge about UK politics."
+                  image={require('../assets/quiz-night.png')}
+                  url="https://quiz.progressforbritain.org"
+                  styles={styles}
+                />
+
+              </View>
             </View>
           </ScrollView>
         </View>
-      </>
-    </CelestialBackground>
+      </View>
   );
 }

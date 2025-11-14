@@ -641,6 +641,144 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
       borderRadius: 999,
       backgroundColor: isDark ? "#9CA3AF" : "#9CA3AF",
     },
+
+    // Games Section Styles
+    gamesSection: {
+      width: "100%",
+      marginTop: isMobile ? 60 : 100,
+      paddingTop: isMobile ? 40 : 60,
+      borderTopWidth: 1,
+      borderTopColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+    },
+    gamesSectionTitle: {
+      fontSize: isMobile ? 32 : 42,
+      fontWeight: "700",
+      color: themeColors.text,
+      marginBottom: 12,
+      textAlign: "center",
+      letterSpacing: -0.8,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    gamesSectionSubtitle: {
+      fontSize: isMobile ? 16 : 18,
+      color: themeColors.textSecondary,
+      textAlign: "center",
+      marginBottom: isMobile ? 32 : 48,
+      fontWeight: "500",
+      maxWidth: 600,
+      alignSelf: "center",
+      letterSpacing: -0.2,
+      lineHeight: isMobile ? 24 : 28,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    gamesGrid: {
+      width: "100%",
+      flexDirection: isMobile ? "column" : "row",
+      flexWrap: "wrap",
+      gap: isMobile ? 24 : 32,
+      justifyContent: "center",
+      alignItems: "stretch",
+    },
+    gameCard: {
+      width: isMobile ? "100%" : Math.min((width - 120) / 3, 380),
+      minWidth: isMobile ? undefined : 300,
+      backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.8)",
+      borderRadius: 16,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+      ...(Platform.OS === "web" && {
+        boxShadow: isDark 
+          ? "0 10px 40px rgba(0,0,0,0.3)" 
+          : "0 10px 40px rgba(0,0,0,0.1)",
+        cursor: "pointer",
+        transition: "transform 0.2s ease, opacity 0.2s ease",
+      }),
+    },
+    gameImageContainer: {
+      width: "100%",
+      height: isMobile ? 200 : 220,
+      position: "relative",
+      backgroundColor: isDark ? "#1F2937" : "#F3F4F6",
+      overflow: "hidden",
+    },
+    gameImage: {
+      width: "100%",
+      height: "100%",
+    },
+    gameImagePlaceholder: {
+      width: "100%",
+      height: "100%",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: isDark ? "#1F2937" : "#F3F4F6",
+    },
+    gamePlaceholderIcon: {
+      fontSize: 60,
+    },
+    gameOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: isDark ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.1)",
+    },
+    gameContent: {
+      padding: isMobile ? 20 : 24,
+      gap: 12,
+    },
+    gameTitle: {
+      fontSize: isMobile ? 20 : 22,
+      fontWeight: "700",
+      color: themeColors.text,
+      letterSpacing: -0.5,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    gameDescription: {
+      fontSize: isMobile ? 14 : 15,
+      lineHeight: isMobile ? 20 : 22,
+      color: themeColors.textSecondary,
+      fontWeight: "400",
+      marginBottom: 8,
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    gamePlayButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      backgroundColor: isDark ? "#FFFFFF" : "#0A0A0A",
+      borderRadius: 999,
+      alignSelf: "flex-start",
+      marginTop: 4,
+      ...(Platform.OS === "web" && {
+        boxShadow: isDark 
+          ? "0 4px 12px rgba(255,255,255,0.15)" 
+          : "0 4px 12px rgba(0,0,0,0.15)",
+      }),
+    },
+    gamePlayText: {
+      color: isDark ? "#0A0A0A" : "#FFFFFF",
+      fontSize: 13,
+      fontWeight: "600",
+      ...(Platform.OS === "web" && {
+        fontFamily: "ui-sans-serif, -apple-system, Segoe UI, Helvetica, Arial",
+      }),
+    },
+    gamePlayArrow: {
+      color: isDark ? "#0A0A0A" : "#FFFFFF",
+      fontSize: 14,
+    },
   });
 };
 
