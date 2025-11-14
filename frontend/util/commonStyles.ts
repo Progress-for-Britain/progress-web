@@ -446,8 +446,8 @@ export const getCommonStyles = (isDark: boolean, isMobile: boolean = false, widt
     },
     homeCanvas: {
       minHeight: "100%",
-      paddingTop: isMobile ? 80 : 120,
-      paddingBottom: isMobile ? 80 : 120,
+      paddingTop: isMobile ? 40 : 60,
+      paddingBottom: isMobile ? 120 : 180,
       paddingHorizontal: isMobile ? 20 : 28,
       alignItems: "stretch",
       justifyContent: "center",
