@@ -126,7 +126,7 @@ export default function Home() {
                 <GameCard 
                   index={0}
                   title="Nick Sim"
-                  description="Expereience the challenges of living as an average 30 year old in modern Britain"
+                  description="Experience the challenges of living as an average 30 year old in modern Britain"
                   image={require('../assets/nick-sim.png')}
                   url="https://nicksimulator.com/"
                   styles={styles}
@@ -138,7 +138,7 @@ export default function Home() {
                   title="Quiz Night"
                   description="Would you believe it? A pub-quiz challenge about UK politics."
                   image={require('../assets/quiz-night.png')}
-                  url="https://quiz.progressforbritain.org"
+                  url="https://believe-quiz.vercel.app/"
                   styles={styles}
                 />
 
