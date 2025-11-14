@@ -120,7 +120,7 @@ export default function Login() {
                 borderColor: isDark ? 'rgba(217, 70, 239, 0.3)' : 'transparent',
               }}
             >
-              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: isMobile ? 24 : 32 }]}>
+              <Text style={[commonStyles.title, { marginBottom: 8, fontSize: isMobile ? 24 : 32, textAlign: 'center' }]}>
                 Welcome Back
               </Text>
               <Text 
