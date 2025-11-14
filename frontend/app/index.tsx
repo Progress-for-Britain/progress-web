@@ -42,7 +42,7 @@ export default function Home() {
           >
             {/* MAIN HERO */}
             
-            <View style={styles.homeHeroRow}>
+            <View style={[styles.homeHeroRow, { minHeight: isMobile ? 600 : 700 }]}>
               {/* Left side - Image */}
               <View style={styles.homeImageSection}>
                 <View style={styles.homeProductWrap}>
@@ -98,7 +98,7 @@ export default function Home() {
             </View>
             
             {/* CTA SECTION */}
-            <View style={{ alignItems: 'flex-start', marginTop: isMobile ? 60 : 100 }}>
+            <View style={{ alignItems: 'flex-start', marginTop: isMobile ? 24 : 32 }}>
               <Pressable
                 onPress={() => router.push("/join")}
                 style={({ pressed }) => [
@@ -112,7 +112,7 @@ export default function Home() {
             </View>
             
             {/* Spacer for visual separation */}
-            <View style={{ height: isMobile ? 60 : 100 }} />
+            <View style={{ height: isMobile ? 40 : 60 }} />
 
             {/* GAMES SECTION */}
             <View style={styles.gamesSection}>
