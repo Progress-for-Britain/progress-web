@@ -1,6 +1,8 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { getCommonStyles, getGradients, getColors } from '../util/commonStyles';
 import { useTheme } from '../util/theme-context';
@@ -9,6 +11,7 @@ import { useResponsive } from '../util/useResponsive';
 export default function WhatWeBelieve() {
   const { isDark } = useTheme();
   const { isMobile, width } = useResponsive();
+  const router = useRouter();
   const commonStyles = getCommonStyles(isDark, isMobile, width);
   const gradients = getGradients(isDark);
   const colors = getColors(isDark);
@@ -75,13 +78,23 @@ export default function WhatWeBelieve() {
           </View>
 
           {/* Call to Action Section */}
-          <View style={styles.ctaSection}>
-            <Text style={[commonStyles.text, styles.ctaText]}>
-              Britain can't wait any longer. We must act. It can be done.
-            </Text>
-            <Text style={[commonStyles.text, styles.ctaSubtext]}>
-              Join us
-            </Text>
+          <View style={styles.closingSection}>
+            <TouchableOpacity 
+              onPress={() => router.push('/join')}
+              style={styles.joinButton}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={gradients.primary}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.closingGradient}
+              >
+                <Text style={styles.closingText}>
+                  Britain can't wait any longer. We must act. It can be done.{'\n\n'}Join us
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
 
           {/* Add extra space at the bottom for mobile scroll */}
@@ -118,21 +131,26 @@ const getStyles = (colors: any, isMobile: boolean, width: number) => StyleSheet.
     fontSize: isMobile ? 20 : 24,
     fontWeight: 'bold',
   },
-  ctaSection: {
-    marginTop: 20,
+  closingSection: {
     marginBottom: 40,
     alignItems: 'center',
     paddingHorizontal: isMobile ? 20 : 40,
   },
-  ctaText: {
-    fontSize: isMobile ? 18 : 22,
+  joinButton: {
+    minWidth: isMobile ? '90%' : '60%',
+  },
+  closingGradient: {
+    paddingVertical: 24,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  closingText: {
+    color: '#FFFFFF',
+    fontSize: isMobile ? 16 : 18,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 16,
-  },
-  ctaSubtext: {
-    fontSize: isMobile ? 16 : 20,
-    textAlign: 'center',
-    fontWeight: '600',
+    lineHeight: isMobile ? 24 : 28,
   },
 });
