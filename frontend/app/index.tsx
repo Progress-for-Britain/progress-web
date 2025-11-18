@@ -73,25 +73,21 @@ export default function Home() {
               <View style={styles.homeTextSection}>
                 <View style={styles.homeTextContent}>
                   <Text style={styles.homeWelcomeTitle}>Welcome to Progress</Text>
-                  <Text style={styles.homeSubtitle}>A political party beyond left and right.</Text>
                   
                   <Text style={styles.homeDescription}>
-                    A workshop in which the future of Britain is being built.{'\n'}
-                    A partnership of the able.
+                    Britain's decline ends now.
                   </Text>
 
                   <View style={styles.homeSeparator} />
 
                   <Text style={styles.homeDescription}>
-                    Maybe you hate politics.{'\n'}
-                    Maybe you think ordinary people could govern better than politicians do.{'\n'}
-                    We think you're right.
+                    We're a political movement beyond left and right building a better future for Britain.
                   </Text>
 
                   <View style={styles.homeSeparator} />
 
                   <Text style={styles.homeClosingText}>
-                    That's what Progress is - a party full of ordinary people, doing extraordinary things.
+                    We all deserve better.
                   </Text>
                 </View>
               </View>
@@ -114,6 +110,19 @@ export default function Home() {
             {/* Spacer for visual separation */}
             <View style={{ height: isMobile ? 40 : 60 }} />
 
+            {/* ABOUT SECTION */}
+            <View style={styles.gamesSection}>
+              <Text style={styles.gamesSectionTitle}>About</Text>
+              <Text style={styles.gamesSectionSubtitle}>
+                Progress is formed by a group of patriotic engineers, founders of data and AI companies, megaproject managers, network builders, grassroots organisers, NHS professionals, astrophysicists, world-class educators, inventors, polling and focus grouping experts, and more – united by three common beliefs:{'\n\n'}
+                That Britain, one of the most successful nations in history, is in terminal decline.{'\n\n'}
+                That this decline can be stopped if we fundamentally change how politics works to serve the public, enabling Britain to attain unprecedented success and stability.{'\n\n'}
+                And that this decline must be stopped.{'\n\n'}
+                We're taking on responsibility to make this happen.
+              </Text>
+            </View>
+          
+
             {/* GAMES SECTION */}
             <View style={styles.gamesSection}>
               <Text style={styles.gamesSectionTitle}>Explore Our Games</Text>
@@ -135,8 +144,8 @@ export default function Home() {
                 {/* Game Card 2 */}
                 <GameCard 
                   index={1}
-                  title="Quiz Night"
-                  description="Would you believe it? A pub-quiz challenge about UK politics."
+                  title="Would you believe it?"
+                  description="Test your political knowledge and challenge common misconceptions in British politics"
                   image={require('../assets/quiz-night.png')}
                   url="https://believe-quiz.vercel.app/"
                   styles={styles}

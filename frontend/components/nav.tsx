@@ -50,6 +50,7 @@ export default function Nav() {
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: "/our-approach", label: "Our Approach" },
+    { href: "/what-we-believe", label: "What We Believe" },
     { href: "/policy", label: "Policies" },
     { href: "/join", label: "Join Us" },
     { href: "/login", label: "Login" },
