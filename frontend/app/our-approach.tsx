@@ -43,75 +43,20 @@ export default function OurApproach() {
               <Text style={[commonStyles.text, styles.sectionTitle]}>The Opportunity</Text>
             </View>
             <Text style={[commonStyles.text, styles.bodyText]}>
-              2029 is an historic opportunity. First-past-the-post is prone to long periods of stability, then decline, 
-              then sudden realignments to new parties. This cycle typically repeats every 80-100 years, and last occurred 
-              in Britain in 1918, ushering in the Labour-Conservative binary.{'\n\n'}
+              Britain stands at a crossroads. The political establishment is crumbling as the country's decline accelerates. 
+              Support for both Labour and the Conservatives is collapsing as the public gives up on their ability to improve 
+              Britain, while Reform's newfound popularity is fragile. Voters don't trust them, and they're right. Reform doesn't 
+              have the talent nor professionalism to bring about the change Britain needs.{'\n\n'}
               
-              Today, both Labour and the Conservatives are almost universally hated. Not disliked - hated. In fact, 
-              citizens are questioning the legitimacy of the British state itself.{'\n\n'}
+              It's time for something new. It's time for Progress.{'\n\n'}
               
-              People know that the system is broken, but don't know how to fix it.{'\n\n'}
+              We see it as our duty to bring some of the most talented people in the country into politics. We're not trying to 
+              pressure the existing parties to change - we're doing the hard work to prepare a credible alternative.{'\n\n'}
               
-              People are crying out for regime change, but don't know who to vote for.
-            </Text>
-          </View>
-
-          {/* Reform Analysis */}
-          <View style={styles.section}>
-            <Text style={[commonStyles.text, styles.bodyText]}>
-              Enter Reform. This new party is led by Nigel Farage, historically a man with a low ceiling of support, 
-              and a record of unprofessionalism. Despite their lead in the polls, focus grouping tells us Reform is 
-              untrusted even among supporters - the hard ceiling remains, and we do not expect them to professionalise. 
-              We think that they are currently the default choice for the politically homeless, not a preferred choice.{'\n\n'}
+              A former scientific advisor to the Prime Minister described us as, "by far the most advanced entity that exists for 
+              these purposes so far. You would be amazed at how little the other challengers have."{'\n\n'}
               
-              This leaves the ground ripe for another party to sweep to victory.{'\n\n'}
-              
-              No existing party, large or small, has the technological capability, logistical appreciation, profile 
-              breadth, or talent density we do.
-            </Text>
-          </View>
-
-          {/* Call to Action */}
-          <View style={styles.section}>
-            <Text style={[commonStyles.text, styles.bodyText]}>
-              We need to win to avoid another five years of instability and turmoil. We need to win so Reform can't 
-              discredit the notion of new parties. We need to win to turn this ship around.{'\n\n'}
-              
-              It can be done.
-            </Text>
-          </View>
-
-          {/* The People Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <FontAwesome5 
-                name="users" 
-                size={22} 
-                color={colors.accent} 
-                style={styles.sectionIcon}
-              />
-              <Text style={[commonStyles.text, styles.sectionTitle]}>The People</Text>
-            </View>
-            <Text style={[commonStyles.text, styles.bodyText]}>
-              The core purpose of PROGRESS - outside of winning elections - is to bring some of the most talented 
-              people in the country into politics.{'\n\n'}
-              
-              A former scientific advisor to the PM described us as, 'by far the most advanced entity that exists for 
-              these purposes so far. You would be amazed at how little the other challengers have.'
-            </Text>
-          </View>
-
-          {/* Team Composition */}
-          <View style={styles.section}>
-            <Text style={[commonStyles.text, styles.bodyText]}>
-              We have a core team of top engineers, ML experts, engineering PhDs, founders of data and AI companies, 
-              policy experts, megaproject managers, network builders, NHS professionals, education specialists, polling 
-              and focus grouping experts… And so on.{'\n\n'}
-              
-              We're all extremely anguished at the state of the UK and are determined to do something about it.{'\n\n'}
-              
-              We've been spinning up the most sophisticated new party machine in the country, defined by big-tent 
-              politics that defies typical left-right conventions in favour of obsessive focus on voter needs.
+              You'd be surprised by what we've already achieved.
             </Text>
           </View>
 
@@ -127,9 +72,8 @@ export default function OurApproach() {
               <Text style={[commonStyles.text, styles.sectionTitle]}>Our Culture</Text>
             </View>
             <Text style={[commonStyles.text, styles.bodyText]}>
-              Our culture is entrepreneurial and agentic - if you join, you will be expected to identify problems and 
-              opportunities, and go and solve them. We read team problems to enforce truth-seeking, and we eliminate 
-              echo-chambers and in-group signalling.
+              We're entrepreneurial and proactive. If you join, you will be expected to identify problems and opportunities, 
+              and go and solve them.
             </Text>
           </View>
 
